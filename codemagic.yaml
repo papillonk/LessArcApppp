@@ -1,0 +1,49 @@
+workflows:
+  ios_maui_release:
+    name: iOS MAUI Release (MAUI .NET 8)
+    environment:
+      xcode: latest
+      vars:
+        # .csproj yolun repo köküne göre. Senin ekranına göre csproj kökte:
+        IOS_CSPROJ_PATH: "LessArcApppp.csproj"
+    scripts:
+      - name: .NET ve Xcode hazırlığı
+        script: |
+          set -euo pipefail
+          dotnet --info
+          dotnet workload install maui
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          sudo xcodebuild -license accept || true
+
+      - name: NuGet Restore
+        script: |
+          set -euo pipefail
+          dotnet restore "$IOS_CSPROJ_PATH"
+
+      - name: IPA üret (Release, iOS arm64)
+        script: |
+          set -euo pipefail
+          dotnet publish "$IOS_CSPROJ_PATH" \
+            -f net8.0-ios -c Release \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:ArchiveOnBuild=true \
+            -p:BuildIpa=true
+          
+      - name: IPA’yı topla (Artifacts)
+        script: |
+          set -euo pipefail
+          mkdir -p "$CM_EXPORT_DIR"
+          echo "IPA arıyorum..."
+          find . -type f -name "*.ipa" -print -exec cp {} "$CM_EXPORT_DIR" \;
+
+    artifacts:
+      - $CM_EXPORT_DIR/*.ipa
+
+    # İstersen sadece tag/push’ta tetiklensin:
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "ana"   # ana dalın adı 'ana'
+          include: true
+          source: true
