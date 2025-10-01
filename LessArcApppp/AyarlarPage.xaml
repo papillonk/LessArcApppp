@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Name="__page"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:LessArcApppp.Controls"
+    x:Class="LessArcApppp.AyarlarPage"
+    Title=""
+    BackgroundColor="Transparent"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False">
+
+    <!-- ÜST BAR + GÖVDE -->
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- 🔹 ÜST: Custom Title Bar (geri ok açık) -->
+        <controls:CustomTitleBar
+            Grid.Row="0"
+            ShowBack="True" />
+
+        <!-- 🔹 ALT: Mevcut gövde -->
+        <Grid Grid.Row="1">
+
+            <!-- Arka plan -->
+            <Image Source="arkaplann.png"
+                   Aspect="AspectFill"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill"
+                   IsEnabled="False" />
+
+            <ScrollView>
+                <VerticalStackLayout
+                    Padding="{Binding PagePadding}"
+                    Spacing="{Binding PageSpacing}"
+                    HorizontalOptions="Center">
+
+                    <VerticalStackLayout x:Name="FormContainer"
+                                         Spacing="{Binding FormSpacing}"
+                                         BackgroundColor="Transparent"
+                                         WidthRequest="{Binding FormWidth}">
+
+                        <!-- Başlık -->
+                        <HorizontalStackLayout Spacing="{Binding SmallSpacing}"
+                                               HorizontalOptions="Center">
+                            <Image Source="ayar.png"
+                                   WidthRequest="{Binding IconSize}"
+                                   HeightRequest="{Binding IconSize}" />
+                            <Label Text="AYARLAR"
+                                   FontSize="{Binding TitleFontSize}"
+                                   FontAttributes="Bold"
+                                   TextColor="#ECECEC" />
+                        </HorizontalStackLayout>
+
+                        <Label Text="BİLGİLERİ GÜNCELLE"
+                               FontSize="{Binding SectionTitleFontSize}"
+                               FontAttributes="Bold"
+                               TextColor="#ECECEC"
+                               HorizontalOptions="Center" />
+
+                        <!-- Ad -->
+                        <Label Text="Ad:"
+                               FontSize="{Binding LabelFontSize}"
+                               FontAttributes="Bold"
+                               TextColor="#ECECEC" />
+                        <Entry x:Name="entryAd"
+                               Placeholder="Yeni ad"
+                               BackgroundColor="#F5F5F5"
+                               TextColor="#000000"
+                               FontSize="{Binding EntryFontSize}"
+                               HeightRequest="{Binding EntryHeight}"
+                               Margin="{Binding EntryMargin}" />
+
+                        <!-- Soyad -->
+                        <Label Text="Soyad:"
+                               FontSize="{Binding LabelFontSize}"
+                               FontAttributes="Bold"
+                               TextColor="#ECECEC" />
+                        <Entry x:Name="entrySoyad"
+                               Placeholder="Yeni soyad"
+                               BackgroundColor="#F5F5F5"
+                               TextColor="#000000"
+                               FontSize="{Binding EntryFontSize}"
+                               HeightRequest="{Binding EntryHeight}"
+                               Margin="{Binding EntryMargin}" />
+
+                        <!-- Kullanıcı Adı -->
+                        <Label Text="Kullanıcı Adı:"
+                               FontSize="{Binding LabelFontSize}"
+                               FontAttributes="Bold"
+                               TextColor="#ECECEC" />
+                        <Entry x:Name="entryKullaniciAdi"
+                               Placeholder="Yeni kullanıcı adı"
+                               BackgroundColor="#F5F5F5"
+                               TextColor="#000000"
+                               FontSize="{Binding EntryFontSize}"
+                               HeightRequest="{Binding EntryHeight}"
+                               Margin="{Binding EntryMargin}" />
+
+                        <!-- Şifre -->
+                        <Label Text="Şifre:"
+                               FontSize="{Binding LabelFontSize}"
+                               FontAttributes="Bold"
+                               TextColor="#ECECEC" />
+                        <Entry x:Name="entrySifre"
+                               Placeholder="Yeni şifre"
+                               IsPassword="True"
+                               BackgroundColor="#F5F5F5"
+                               TextColor="#000000"
+                               FontSize="{Binding EntryFontSize}"
+                               HeightRequest="{Binding EntryHeight}"
+                               Margin="{Binding EntryMargin}" />
+
+                        <!-- E-posta -->
+                        <Label Text="E-posta:"
+                               FontSize="{Binding LabelFontSize}"
+                               FontAttributes="Bold"
+                               TextColor="#ECECEC" />
+                        <Entry x:Name="entryEposta"
+                               Placeholder="Yeni e-posta"
+                               BackgroundColor="#F5F5F5"
+                               TextColor="#000000"
+                               FontSize="{Binding EntryFontSize}"
+                               HeightRequest="{Binding EntryHeight}"
+                               Margin="{Binding EntryMargin}" />
+
+                        <!-- Butonlar -->
+                        <Button Text="Güncelle"
+                                Clicked="BtnGuncelle_Clicked"
+                                BackgroundColor="#4CAF50"
+                                TextColor="#FFFFFF"
+                                CornerRadius="{Binding ButtonCorner}"
+                                HorizontalOptions="Center"
+                                WidthRequest="{Binding ButtonWidth}"
+                                HeightRequest="{Binding ButtonHeight}"
+                                FontSize="{Binding ButtonFontSize}"
+                                Padding="{Binding ButtonPadding}" />
+
+                        <Button Text="ÇIKIŞ YAP"
+                                Clicked="BtnCikisYap_Clicked"
+                                BackgroundColor="#757575"
+                                TextColor="#FFFFFF"
+                                CornerRadius="{Binding ButtonCorner}"
+                                HorizontalOptions="Center"
+                                WidthRequest="{Binding ButtonWidth}"
+                                HeightRequest="{Binding ButtonHeight}"
+                                FontSize="{Binding ButtonFontSize}"
+                                Padding="{Binding ButtonPadding}" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+    </Grid>
+</ContentPage>

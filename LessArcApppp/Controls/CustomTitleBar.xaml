@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView
+    x:Class="LessArcApppp.Controls.CustomTitleBar"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Name="self"
+    BackgroundColor="Transparent"
+    TitleFontSize="24"
+    BarHeight="65"
+    BarPadding="16,12"
+    IconSize="32"
+    IconTouchSize="64">
+
+    <Grid x:Name="Root"
+          HeightRequest="{Binding Source={x:Reference self}, Path=BarHeight}"
+          Padding="{Binding Source={x:Reference self}, Path=BarPadding}"
+          VerticalOptions="Start"
+          BackgroundColor="{Binding Source={x:Reference self}, Path=BarBackground}">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ◀️ Geri -->
+        <Grid x:Name="BackHost"
+              Grid.Column="0"
+              WidthRequest="{Binding Source={x:Reference self}, Path=IconTouchSize}"
+              HeightRequest="{Binding Source={x:Reference self}, Path=IconTouchSize}"
+              VerticalOptions="Center"
+              IsVisible="{Binding Source={x:Reference self}, Path=ShowBack}">
+            <ImageButton Source="geri.png"
+                         BackgroundColor="Transparent"
+                         Padding="0"
+                         Aspect="AspectFit"
+                         WidthRequest="{Binding Source={x:Reference self}, Path=IconSize}"
+                         HeightRequest="{Binding Source={x:Reference self}, Path=IconSize}"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         Clicked="BackButton_Clicked"/>
+        </Grid>
+
+        <!-- Başlık -->
+        <Label Grid.Column="1"
+               x:Name="TitleLabel"
+               Text="{Binding Source={x:Reference self}, Path=Title}"
+               FontSize="{Binding Source={x:Reference self}, Path=TitleFontSize}"
+               FontAttributes="Bold"
+               TextColor="White"
+               HorizontalTextAlignment="Center"
+               VerticalTextAlignment="Center"
+               LineBreakMode="TailTruncation"
+               MaxLines="1"
+               IsVisible="{Binding Source={x:Reference self}, Path=IsTitleVisible}"/>
+
+        <!-- Sağ slot (opsiyonel) -->
+        <Grid Grid.Column="2"
+              x:Name="RightHost"
+              WidthRequest="{Binding Source={x:Reference self}, Path=IconTouchSize}"
+              HeightRequest="{Binding Source={x:Reference self}, Path=IconTouchSize}"
+              IsVisible="{Binding Source={x:Reference self}, Path=RightContentVisible}"
+              HorizontalOptions="End"
+              VerticalOptions="Center"/>
+    </Grid>
+</ContentView>

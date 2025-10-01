@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Name="__page"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:LessArcApppp.Controls"
+    x:Class="LessArcApppp.AdminBildirimlerPage"
+    Title=""
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- 🔹 ÜST BAR -->
+        <controls:CustomTitleBar 
+            Grid.Row="0"
+            ShowBack="True"/>
+
+        <!-- 🔹 GÖVDE -->
+        <Grid Grid.Row="1">
+            <Image Source="arkaplann.png"
+                   Aspect="AspectFill"
+                   IsEnabled="False"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill" />
+
+            <ScrollView>
+                <VerticalStackLayout
+                    Padding="{Binding ScaledPadding}"
+                    Spacing="{Binding ScaledSpacing}">
+
+                    <Label Text="📬 Bugünkü Bildirimler"
+                           FontSize="{Binding ScaledFontSize}"
+                           FontAttributes="Bold"
+                           TextColor="#D6C9C1" />
+
+                    <!-- Bugünkü bildirimler -->
+                    <CollectionView x:Name="lstBugunBildirimler" BackgroundColor="Transparent">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame BackgroundColor="#66000000"
+                                       CornerRadius="16"
+                                       Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
+                                       Margin="{Binding Source={x:Reference __page}, Path=BindingContext.M_ItemBetween}"
+                                       HasShadow="True"
+                                       BorderColor="#00000000">
+                                    <Grid ColumnDefinitions="*,Auto"
+                                          ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
+                                        <VerticalStackLayout
+                                            Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
+                                            <Label Text="{Binding GonderenKullanici}"
+                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize2}"
+                                                   FontAttributes="Bold"
+                                                   TextColor="White" />
+                                            <Label Text="{Binding Mesaj}"
+                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
+                                                   TextColor="White" />
+                                        </VerticalStackLayout>
+                                        <HorizontalStackLayout Grid.Column="1"
+                                                               Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}"
+                                                               VerticalOptions="Center">
+                                            <Label Text="📅"
+                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                   TextColor="White" />
+                                            <Label Text="{Binding GonderimTarihi, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"
+                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                   TextColor="White" />
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <Button Text="📂 Geçmiş Bildirimler"
+                            Clicked="BtnGecmisToggle_Clicked"
+                            BackgroundColor="#D6C9C1"
+                            TextColor="Black"
+                            CornerRadius="10"
+                            FontSize="{Binding ScaledFontSize3}"
+                            HeightRequest="{Binding ScaledButtonHeight}"
+                            WidthRequest="{Binding ScaledButtonWidth}"
+                            HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Geçmiş Pop-up -->
+            <Grid x:Name="popupOverlay"
+                  IsVisible="False"
+                  BackgroundColor="#80000000"
+                  Padding="{Binding ScaledPadding}"
+                  HorizontalOptions="Fill"
+                  VerticalOptions="Fill">
+
+                <Frame x:Name="popupContent"
+                       BackgroundColor="#e7e6e4"
+                       CornerRadius="20"
+                       Padding="{Binding ScaledSmallPadding}"
+                       WidthRequest="{Binding ScaledPopupWidth}"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center"
+                       HasShadow="True"
+                       BorderColor="#00000000">
+                    <!-- ↓↓↓ sadece mobilde küçültme -->
+                    <Frame.HeightRequest>
+                        <OnIdiom x:TypeArguments="x:Double" Phone="520" Tablet="-1" Desktop="-1" />
+                    </Frame.HeightRequest>
+                    <Frame.Scale>
+                        <OnIdiom x:TypeArguments="x:Double" Phone="0.88" Tablet="1" Desktop="1" />
+                    </Frame.Scale>
+                    <!-- ↑↑↑ -->
+
+                    <Grid RowDefinitions="Auto,*">
+                        <Grid Grid.Row="0">
+                            <Grid ColumnDefinitions="*,Auto"
+                                  Padding="{Binding P_BottomSmall}">
+                                <Label Text="📜 Geçmiş Bildirimler"
+                                       FontAttributes="Bold"
+                                       FontSize="{Binding ScaledFontSize2}"
+                                       TextColor="Black"
+                                       VerticalOptions="Center" />
+                                <ImageButton Source="close.png"
+                                             Grid.Column="1"
+                                             WidthRequest="{Binding ScaledButtonIcon}"
+                                             HeightRequest="{Binding ScaledButtonIcon}"
+                                             BackgroundColor="Transparent"
+                                             HorizontalOptions="End"
+                                             VerticalOptions="Center"
+                                             Clicked="BtnGecmisKapat_Clicked" />
+                            </Grid>
+                        </Grid>
+
+                        <ScrollView Grid.Row="1">
+                            <VerticalStackLayout
+                                Spacing="{Binding ScaledSpacing}"
+                                Margin="{Binding M_TopSmall}">
+
+                                <Frame BackgroundColor="#FFFFFF"
+                                       CornerRadius="10"
+                                       Padding="{Binding ScaledSmallPadding}"
+                                       HasShadow="True"
+                                       BorderColor="#E5E5E5">
+                                    <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                        <DatePicker x:Name="dpGecmisTarih"
+                                                    Format="dd.MM.yyyy"
+                                                    DateSelected="DpGecmisTarih_DateSelected"
+                                                    BackgroundColor="Transparent"
+                                                    TextColor="#222"
+                                                    FontSize="{Binding ScaledFontSize3}"
+                                                    HorizontalOptions="Fill" />
+                                    </Grid>
+                                </Frame>
+
+                                <Frame BackgroundColor="#FFFFFF"
+                                       CornerRadius="10"
+                                       Padding="{Binding ScaledSmallPadding}"
+                                       HasShadow="True"
+                                       BorderColor="#E5E5E5">
+                                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
+                                        <Label Grid.Row="0" Grid.Column="0"
+                                               Text="🔎"
+                                               Margin="0"
+                                               VerticalTextAlignment="Center"
+                                               FontSize="{Binding ScaledFontSize2}" />
+                                        <Entry Grid.Row="0" Grid.Column="1"
+                                               x:Name="entryAra"
+                                               Placeholder="Anahtar kelime ara..."
+                                               PlaceholderColor="#888888"
+                                               TextChanged="EntryAra_TextChanged"
+                                               BackgroundColor="Transparent"
+                                               TextColor="#222"
+                                               FontSize="{Binding ScaledFontSize3}" />
+                                        <BoxView Grid.Row="1" Grid.ColumnSpan="2"
+                                                 HeightRequest="1"
+                                                 Color="#222"
+                                                 Margin="{Binding M_TopSmall}" />
+                                    </Grid>
+                                </Frame>
+
+                                <CollectionView x:Name="lstGecmisBildirimler" BackgroundColor="Transparent">
+                                    <CollectionView.ItemsLayout>
+                                        <LinearItemsLayout Orientation="Vertical" />
+                                    </CollectionView.ItemsLayout>
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Frame BackgroundColor="#66000000"
+                                                   CornerRadius="12"
+                                                   Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
+                                                   Margin="{Binding Source={x:Reference __page}, Path=BindingContext.M_ItemBetween}"
+                                                   HasShadow="True"
+                                                   BorderColor="#00000000">
+                                                <Grid ColumnDefinitions="*,Auto"
+                                                      ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
+                                                    <VerticalStackLayout
+                                                        Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
+                                                        <Label Text="{Binding GonderenKullanici}"
+                                                               FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
+                                                               FontAttributes="Bold"
+                                                               TextColor="White" />
+                                                        <Label Text="{Binding Mesaj}"
+                                                               FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
+                                                               TextColor="White" />
+                                                    </VerticalStackLayout>
+                                                    <HorizontalStackLayout Grid.Column="1"
+                                                                           Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}"
+                                                                           VerticalOptions="Center">
+                                                        <Label Text="{Binding GonderimTarihi, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"
+                                                               FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                               TextColor="White" />
+                                                    </HorizontalStackLayout>
+                                                </Grid>
+                                            </Frame>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+
+                            </VerticalStackLayout>
+                        </ScrollView>
+
+                    </Grid>
+                </Frame>
+            </Grid>
+
+        </Grid>
+    </Grid>
+</ContentPage>

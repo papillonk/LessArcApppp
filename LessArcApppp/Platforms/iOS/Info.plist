@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" 
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- iOS cihazlarda zorunlu -->
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+
+    <!-- Hedeflenen cihaz aileleri: 1=iPhone, 2=iPad -->
+    <key>UIDeviceFamily</key>
+    <array>
+        <integer>1</integer>
+        <integer>2</integer>
+    </array>
+
+    <!-- 64-bit cihaz şartı -->
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
+
+    <!-- Ekran yönleri -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <!-- MAUI’nin ikon seti -->
+    <key>XSAppIconAssets</key>
+    <string>Assets.xcassets/appicon.appiconset</string>
+
+    <!-- Görünen uygulama adı -->
+    <key>CFBundleDisplayName</key>
+    <string>LESS</string>
+
+    <!-- Şifreleme muafiyeti -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+
+    <!-- Kamera/galeri izinleri (kullanıyorsan) -->
+    <key>NSCameraUsageDescription</key>
+    <string>Kamera, fotoğraf çekmek için kullanılacaktır.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Fotoğraf galerisine erişim, görselleri seçmek için gereklidir.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Uygulama, çıktı görsellerini galerine kaydedebilir.</string>
+
+    <!-- Konum gerekiyorsa aç -->
+    <!--
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Konum, şantiye/iş yeri eşleştirmeleri için kullanılacaktır.</string>
+    -->
+
+    <!-- Arka plan modları (push bildirimi, fetch gerekiyorsa) -->
+    <!--
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>remote-notification</string>
+        <string>background-fetch</string>
+    </array>
+    -->
+
+    <!-- ATS: HTTPS API’ler için ekleme gerekmez. 
+         HTTP test için gerekiyorsa aç, ama App Store’a göndermeden kaldır -->
+    <!--
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+    -->
+</dict>
+</plist>

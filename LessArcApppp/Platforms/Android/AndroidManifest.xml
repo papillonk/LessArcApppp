@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!-- Minimum ve hedef SDK seviyeleri -->
+  <uses-sdk
+      android:minSdkVersion="21"
+      android:targetSdkVersion="35" />
+
+  <application
+      android:allowBackup="true"
+      android:icon="@mipmap/appicon"
+      android:supportsRtl="true"
+      android:usesCleartextTraffic="false">
+      <!-- Eğer HTTP zorunlu değilse usesCleartextTraffic=false kalsın -->
+  </application>
+
+  <!-- İnternet erişimi -->
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+  <!-- Eğer push bildirim kullanıyorsan Android 13+ için ekle -->
+  <!-- <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /> -->
+
+</manifest>

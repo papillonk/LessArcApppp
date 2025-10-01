@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:LessArcApppp.Controls"
+    x:Class="LessArcApppp.HesapAyarlarPage"
+    Title=""
+    BackgroundColor="Transparent"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False">
+
+    <!-- 🔧 SADECE Entry/Picker stilleri -->
+    <ContentPage.Resources>
+        <!-- Tüm Entry'ler -->
+        <Style TargetType="Entry">
+            <Setter Property="BackgroundColor" Value="#b1aca5"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="PlaceholderColor" Value="#696969"/>
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#b1aca5"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Disabled">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#b1aca5"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Focused">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#b1aca5"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+
+        <!-- Picker -->
+        <Style TargetType="Picker">
+            <Setter Property="BackgroundColor" Value="#b1aca5"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="TitleColor" Value="#696969"/>
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#b1aca5"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Disabled">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#b1aca5"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Focused">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#b1aca5"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+    </ContentPage.Resources>
+
+    <!-- ÜST BAR + GÖVDE -->
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- 🔹 ÜST: Custom Title Bar (geri ok açık) -->
+        <controls:CustomTitleBar
+            Grid.Row="0"
+            ShowBack="True" />
+
+        <!-- 🔹 ALT: Mevcut gövde (AYNEN KORUNDU) -->
+        <Grid Grid.Row="1">
+            <!-- Arka plan -->
+            <Image Source="arkaplann.png"
+                   Aspect="AspectFill"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill"
+                   IsEnabled="False" />
+
+            <!-- ===================== DESKTOP LAYOUT ===================== -->
+            <Grid x:Name="desktopLayout"
+                  ColumnDefinitions="*,*"
+                  Padding="20"
+                  ColumnSpacing="20"
+                  IsVisible="{OnIdiom Phone=false, Tablet=false, Desktop=true}">
+                <!-- Sol: Kullanıcı listesi -->
+                <Frame Grid.Column="0" BackgroundColor="#c4c1bb" CornerRadius="20" Padding="15">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                        <Label Text="KULLANICILAR"
+                               FontAttributes="Bold"
+                               FontSize="20"
+                               TextColor="Black"
+                               HorizontalOptions="Center"
+                               Margin="0,0,0,10"/>
+
+                        <CollectionView x:Name="cvKullanicilar"
+                                        Grid.Row="1"
+                                        VerticalOptions="FillAndExpand"
+                                        SelectionMode="None">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10"/>
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="#b1aca5"
+                                           CornerRadius="28"
+                                           Padding="16,10"
+                                           HasShadow="True">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                            <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                                <Label FontAttributes="Bold"
+                                                       TextColor="#1B1B1B"
+                                                       FontSize="16">
+                                                    <Label.FormattedText>
+                                                        <FormattedString>
+                                                            <Span Text="{Binding Ad}"/>
+                                                            <Span Text=" "/>
+                                                            <Span Text="{Binding Soyad}"/>
+                                                        </FormattedString>
+                                                    </Label.FormattedText>
+                                                </Label>
+                                                <Label Text="{Binding Role, StringFormat='ROL : {0}'}"
+                                                       FontSize="12"
+                                                       TextColor="#1B1B1B"
+                                                       Opacity="0.85"/>
+                                            </VerticalStackLayout>
+
+                                            <ImageButton Grid.Column="1"
+                                                         Source="sil.png"
+                                                         BackgroundColor="Transparent"
+                                                         Aspect="AspectFit"
+                                                         WidthRequest="28"
+                                                         HeightRequest="28"
+                                                         Padding="0"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Center"
+                                                         CommandParameter="{Binding Id}"
+                                                         Clicked="BtnSil_Clicked" />
+                                        </Grid>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Grid>
+                </Frame>
+
+                <!-- Sağ: Kullanıcı ekle -->
+                <Frame Grid.Column="1" BackgroundColor="#c4c1bb" CornerRadius="20" Padding="20">
+                    <ScrollView>
+                        <VerticalStackLayout Spacing="15">
+                            <Label Text="KULLANICI EKLE"
+                                   FontAttributes="Bold"
+                                   FontSize="20"
+                                   HorizontalOptions="Center"
+                                   TextColor="Black"/>
+
+                            <Entry x:Name="entryAd" Placeholder="Ad"/>
+                            <Entry x:Name="entrySoyad" Placeholder="Soyad"/>
+                            <Entry x:Name="entryEposta" Placeholder="Eposta" Keyboard="Email"/>
+                            <Entry x:Name="entryKullaniciAdi" Placeholder="Kullanıcı Adı"/>
+                            <Entry x:Name="entrySifre" Placeholder="Şifre" IsPassword="True"/>
+
+                            <Picker x:Name="pickerRol" Title="Rol Seçiniz">
+                                <Picker.Items>
+                                    <x:String>admin</x:String>
+                                    <x:String>calisan</x:String>
+                                </Picker.Items>
+                            </Picker>
+
+                            <Button Text="KAYDET"
+                                    BackgroundColor="#8cb388"
+                                    TextColor="Black"
+                                    CornerRadius="20"
+                                    WidthRequest="150"
+                                    Clicked="BtnKaydet_Clicked"/>
+                        </VerticalStackLayout>
+                    </ScrollView>
+                </Frame>
+            </Grid>
+
+            <!-- ===================== MOBİL LAYOUT ===================== -->
+            <!-- Not: Tüm sayfa ScrollView; üstteki liste kendi içinde scroll yapar -->
+            <ScrollView x:Name="mobileLayout"
+                        IsVisible="{OnIdiom Phone=true, Tablet=true, Desktop=false}">
+                <VerticalStackLayout Padding="18" Spacing="16">
+
+                    <!-- ÜST: Kullanıcılar listesi -->
+                    <Frame BackgroundColor="#c4c1bb" CornerRadius="20" Padding="15">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="KULLANICILAR"
+                                       FontAttributes="Bold"
+                                       FontSize="18"
+                                       TextColor="#4b4d44"
+                                       VerticalOptions="Center"/>
+                                <Label Grid.Column="1"
+                                       Text="▼"
+                                       FontSize="18"
+                                       TextColor="#4b4d44"
+                                       VerticalOptions="Center"
+                                       Opacity="0.6"/>
+                            </Grid>
+
+                            <!-- İç scroll: sabit yükseklik -->
+                            <CollectionView x:Name="cvKullanicilarMobile"
+                                            Grid.Row="1"
+                                            HeightRequest="360"
+                                            SelectionMode="None">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10"/>
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Frame BackgroundColor="#b1aca5"
+                                               CornerRadius="24"
+                                               Padding="14,10"
+                                               HasShadow="True">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                                    <Label FontAttributes="Bold"
+                                                           TextColor="#1B1B1B"
+                                                           FontSize="15">
+                                                        <Label.FormattedText>
+                                                            <FormattedString>
+                                                                <Span Text="{Binding Ad}"/>
+                                                                <Span Text=" "/>
+                                                                <Span Text="{Binding Soyad}"/>
+                                                            </FormattedString>
+                                                        </Label.FormattedText>
+                                                    </Label>
+                                                    <Label Text="{Binding Role, StringFormat='ROL : {0}'}"
+                                                           FontSize="12"
+                                                           TextColor="#1B1B1B"
+                                                           Opacity="0.85"/>
+                                                </VerticalStackLayout>
+
+                                                <ImageButton Grid.Column="1"
+                                                             Source="sil.png"
+                                                             BackgroundColor="Transparent"
+                                                             Aspect="AspectFit"
+                                                             WidthRequest="26"
+                                                             HeightRequest="26"
+                                                             Padding="0"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Center"
+                                                             CommandParameter="{Binding Id}"
+                                                             Clicked="BtnSil_Clicked" />
+                                            </Grid>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </Grid>
+                    </Frame>
+
+                    <!-- ALT: Kullanıcı ekle formu -->
+                    <Frame BackgroundColor="#c4c1bb" CornerRadius="20" Padding="18">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="KULLANICI EKLE"
+                                   FontAttributes="Bold"
+                                   FontSize="18"
+                                   HorizontalOptions="Center"
+                                   TextColor="#4b4d44"/>
+
+                            <Entry x:Name="entryAdMobile" Placeholder="Ad"/>
+                            <Entry x:Name="entrySoyadMobile" Placeholder="Soyad"/>
+                            <Entry x:Name="entryEpostaMobile" Placeholder="Eposta" Keyboard="Email"/>
+                            <Entry x:Name="entryKullaniciAdiMobile" Placeholder="Kullanıcı Adı"/>
+                            <Entry x:Name="entrySifreMobile" Placeholder="Şifre" IsPassword="True"/>
+
+                            <Picker x:Name="pickerRolMobile" Title="Rol Seçiniz">
+                                <Picker.Items>
+                                    <x:String>admin</x:String>
+                                    <x:String>calisan</x:String>
+                                </Picker.Items>
+                            </Picker>
+
+                            <Button Text="KAYDET"
+                                    BackgroundColor="#8cb388"
+                                    TextColor="Black"
+                                    CornerRadius="18"
+                                    HeightRequest="44"
+                                    Clicked="BtnKaydet_Clicked"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                </VerticalStackLayout>
+            </ScrollView>
+
+        </Grid>
+    </Grid>
+</ContentPage>

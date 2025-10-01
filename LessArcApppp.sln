@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36212.18
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LessArcApppp", "LessArcApppp\LessArcApppp.csproj", "{DD14A863-F374-466A-8B6A-529F940932C8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Android|Any CPU = Android|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DD14A863-F374-466A-8B6A-529F940932C8}.Android|Any CPU.ActiveCfg = Android|Any CPU
+		{DD14A863-F374-466A-8B6A-529F940932C8}.Android|Any CPU.Build.0 = Android|Any CPU
+		{DD14A863-F374-466A-8B6A-529F940932C8}.Android|Any CPU.Deploy.0 = Android|Any CPU
+		{DD14A863-F374-466A-8B6A-529F940932C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD14A863-F374-466A-8B6A-529F940932C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD14A863-F374-466A-8B6A-529F940932C8}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{DD14A863-F374-466A-8B6A-529F940932C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD14A863-F374-466A-8B6A-529F940932C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD14A863-F374-466A-8B6A-529F940932C8}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C2C6579A-D436-4BCF-8913-9DBA22E2A77A}
+	EndGlobalSection
+EndGlobal

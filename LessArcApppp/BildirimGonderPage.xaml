@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:LessArcApppp.Controls"
+    x:Class="LessArcApppp.BildirimGonderPage"
+    x:Name="__page"
+    BackgroundColor="Transparent"
+    Title=""
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False"
+    SizeChanged="ContentPage_SizeChanged">
+
+    <!-- ÜST BAR + GÖVDE düzeni -->
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- 🔹 ÜST: Custom Title Bar (geri ok açık) -->
+        <controls:CustomTitleBar
+            Grid.Row="0"
+            ShowBack="True" />
+
+        <!-- 🔹 ALT: Sayfanın mevcut içeriği -->
+        <Grid Grid.Row="1">
+
+            <!-- arkaplan -->
+            <Image Source="arkaplann.png" Aspect="AspectFill"
+                   HorizontalOptions="Fill" VerticalOptions="Fill" IsEnabled="False" />
+
+            <!-- ================= DESKTOP ================= -->
+            <Grid x:Name="desktopLayout"
+                  RowSpacing="{Binding ScaledSpacing}"
+                  ColumnSpacing="{Binding ScaledSpacing}"
+                  Padding="{Binding ScaledPadding}"
+                  IsVisible="{OnPlatform WinUI=True, MacCatalyst=True, Android=False, iOS=False}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="3*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- sol: admin list -->
+                <Frame Grid.Column="0" Margin="{Binding ScaledSmallPadding}"
+                       BackgroundColor="#f6f3f2" CornerRadius="16" HasShadow="True"
+                       Padding="{Binding ScaledSmallPadding}">
+                    <Grid RowSpacing="{Binding ScaledSmallSpacing}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Label Text="👤 Admin Listesi" FontAttributes="Bold"
+                               FontSize="{Binding ScaledFontSize2}" TextColor="#2c3e50" />
+
+                        <CollectionView x:Name="lstAdminler" Grid.Row="1"
+                                        SelectionMode="Multiple" BackgroundColor="#eae6e2"
+                                        VerticalScrollBarVisibility="Always">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" />
+                            </CollectionView.ItemsLayout>
+                        </CollectionView>
+                    </Grid>
+                </Frame>
+
+                <!-- sağ: gönder -->
+                <Grid Grid.Column="1" Margin="{Binding ScaledSmallPadding}"
+                      RowSpacing="{Binding ScaledSmallSpacing}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Label Text="📢 Bildirim Gönderin" FontAttributes="Bold"
+                           FontSize="{Binding ScaledFontSize}" TextColor="#D6C9C1" Grid.Row="0" />
+
+                    <Label Text="Mesajınızı Yazın"
+                           FontSize="{Binding ScaledFontSize4}" TextColor="#D6C9C1" Grid.Row="1" />
+
+                    <Frame BackgroundColor="#f6f3f2" CornerRadius="10"
+                           Padding="{Binding ScaledSmallPadding}" Grid.Row="2">
+                        <Editor x:Name="entryMesajDesktop"
+                                HeightRequest="{Binding ScaledEditorHeight}"
+                                BackgroundColor="Transparent" TextColor="#000"
+                                FontSize="{Binding ScaledFontSize3}"
+                                Placeholder="Mesajınızı yazın..." PlaceholderColor="#9AA4B2" />
+                    </Frame>
+
+                    <Button Text="📨 Gönder"
+                            WidthRequest="{Binding ScaledPrimaryButtonWidth}"
+                            HeightRequest="{Binding ScaledButtonHeight}"
+                            Clicked="BtnGonder_Clicked"
+                            BackgroundColor="#65868e" TextColor="White"
+                            FontSize="{Binding ScaledFontSize3}" Grid.Row="3" />
+
+                    <Button Text="📂 Geçmiş Bildirimleri Göster"
+                            WidthRequest="{Binding ScaledSecondaryButtonWidth}"
+                            HeightRequest="{Binding ScaledButtonHeight}"
+                            Clicked="BtnGecmisGoster_Clicked"
+                            BackgroundColor="#bdc3c7" TextColor="#2c3e50"
+                            FontSize="{Binding ScaledFontSize4}" Grid.Row="4" />
+
+                    <Grid Grid.Row="5" RowSpacing="{Binding ScaledSmallSpacing}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Label Text="📬 Bugün Gönderilen Bildirimler"
+                               FontAttributes="Bold" FontSize="{Binding ScaledFontSize2}"
+                               TextColor="#ecf0f1" />
+
+                        <CollectionView x:Name="lstGecmisBildirimlerDesktop" Grid.Row="1"
+                                        BackgroundColor="Transparent" VerticalScrollBarVisibility="Always">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="#f6f3f2" CornerRadius="14"
+                                           Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
+                                           Margin="0,6" HasShadow="True">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="44"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Label Text="{Binding GonderimTarihi, StringFormat='{}{0:dd MMM yyyy HH:mm}'}"
+                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                   TextColor="#7f8c8d" Grid.Column="0" Grid.Row="0" />
+
+                                            <Button Text="✖" BackgroundColor="Transparent" TextColor="#e74c3c"
+                                                    FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                    Clicked="BtnBildirimSil_Clicked"
+                                                    BindingContext="{Binding .}" Grid.Column="1" Grid.Row="0"
+                                                    HorizontalOptions="Center" VerticalOptions="Center"
+                                                    Padding="0" Margin="0"
+                                                    HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledIconTouch}"
+                                                    WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledIconTouch}" />
+
+                                            <Label Text="{Binding Mesaj}"
+                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
+                                                   TextColor="#2c3e50" Grid.ColumnSpan="2" Grid.Row="1"
+                                                   Margin="0,4,0,0" />
+                                        </Grid>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Grid>
+                </Grid>
+
+                <!-- Desktop: geçmiş popup -->
+                <Grid x:Name="frameGecmisDesktop" IsVisible="False" Grid.ColumnSpan="2"
+                      ZIndex="99" BackgroundColor="#B3000000"
+                      VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand"
+                      InputTransparent="False" Padding="0">
+                    <Frame BackgroundColor="#f6f3f2" Padding="{Binding ScaledPadding}"
+                           CornerRadius="20" WidthRequest="{Binding ScaledDialogWidth}"
+                           HeightRequest="{Binding ScaledDialogHeight}"
+                           VerticalOptions="Center" HorizontalOptions="Center" HasShadow="True">
+                        <Grid RowSpacing="{Binding ScaledSmallSpacing}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Label Text="📂 Geçmiş Bildirimler"
+                                       FontSize="{Binding ScaledFontSize2}"
+                                       FontAttributes="Bold" TextColor="#2c3e50"
+                                       VerticalOptions="Center" />
+
+                                <Button Text="❌" BackgroundColor="Transparent" TextColor="#e74c3c"
+                                        FontSize="{Binding ScaledFontSize3}"
+                                        Clicked="BtnGecmisGizle_Clicked" Padding="0"
+                                        WidthRequest="{Binding ScaledIconTouch}"
+                                        HeightRequest="{Binding ScaledIconTouch}"
+                                        HorizontalOptions="End" Margin="0,0,2,0"
+                                        VerticalOptions="Center" Grid.Column="1" />
+                            </Grid>
+
+                            <HorizontalStackLayout Grid.Row="1" Margin="0,10,0,6"
+                                                   Spacing="{Binding ScaledSmallSpacing}">
+                                <Frame CornerRadius="10" BackgroundColor="#ecf0f1" Padding="0">
+                                    <DatePicker x:Name="datePickerTarihDesktop" Format="dd MMM yyyy"
+                                                WidthRequest="{Binding ScaledDateWidth}" TextColor="Black"
+                                                BackgroundColor="Transparent"
+                                                DateSelected="DatePickerTarih_DateSelected" />
+                                </Frame>
+                                <Frame CornerRadius="10" BackgroundColor="#ecf0f1" Padding="0">
+                                    <Entry x:Name="entryAraDesktop" Placeholder="Anahtar kelime ara..."
+                                           WidthRequest="{Binding ScaledSearchWidth}"
+                                           FontSize="{Binding ScaledFontSize3}" TextColor="Black"
+                                           PlaceholderColor="#9AA4B2" BackgroundColor="Transparent"
+                                           TextChanged="EntryAra_TextChanged" />
+                                </Frame>
+                            </HorizontalStackLayout>
+
+                            <CollectionView x:Name="lstGecmisPopupDesktop" Grid.Row="2"
+                                            VerticalScrollBarVisibility="Always">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout Orientation="Vertical" />
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Frame BackgroundColor="#eae6e2"
+                                               Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
+                                               Margin="0,6" CornerRadius="14" HasShadow="True">
+                                            <VerticalStackLayout Spacing="4">
+                                                <Label Text="{Binding Mesaj}"
+                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
+                                                       FontAttributes="Bold" TextColor="#2c3e50" />
+                                                <Label Text="{Binding GonderimTarihi, StringFormat='{0:dd MMMM yyyy HH:mm}'}"
+                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                       TextColor="#7f8c8d" />
+                                            </VerticalStackLayout>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </Grid>
+                    </Frame>
+                </Grid>
+            </Grid>
+
+            <!-- ================= MOBILE ================= -->
+            <Grid x:Name="mobilLayout"
+                  IsVisible="{OnPlatform Android=True, iOS=True, WinUI=False, MacCatalyst=False}"
+                  Padding="{Binding ScaledPadding}" RowSpacing="{Binding ScaledSpacing}">
+
+                <Grid RowSpacing="{Binding ScaledSmallSpacing}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Label Text="📢 Bildirim Gönderme" FontAttributes="Bold"
+                           FontSize="{Binding ScaledFontSize}" TextColor="#D6C9C1" Grid.Row="0"/>
+
+                    <Frame Padding="{Binding ScaledSmallPadding}" BackgroundColor="#D6C9C1"
+                           CornerRadius="12" HasShadow="True" HorizontalOptions="Center"
+                           WidthRequest="{Binding ScaledPickAdminWidth}" Grid.Row="1">
+                        <Grid>
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="BtnAdminSec_Clicked" />
+                            </Grid.GestureRecognizers>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Image Source="admin.png" WidthRequest="{Binding ScaledIcon}"
+                                   HeightRequest="{Binding ScaledIcon}" Grid.Column="0"
+                                   VerticalOptions="Center" />
+                            <Label Text="Admin Seçin" Grid.Column="1"
+                                   FontSize="{Binding ScaledFontSize3}" TextColor="#324f53"
+                                   HorizontalOptions="Center" VerticalOptions="Center"
+                                   FontAttributes="Bold" />
+                        </Grid>
+                    </Frame>
+
+                    <Label x:Name="lblSecilenAdminler" Text="" FontSize="{Binding ScaledFontSize4}"
+                           TextColor="Black" IsVisible="False" Grid.Row="2" />
+
+                    <Frame BackgroundColor="White" CornerRadius="10"
+                           Padding="{Binding ScaledSmallPadding}" Grid.Row="3">
+                        <Editor x:Name="entryMesajMobile"
+                                HeightRequest="{Binding ScaledEditorHeight}" BackgroundColor="Transparent"
+                                Placeholder="Mesajınızı yazın..." PlaceholderColor="#9AA4B2"
+                                FontSize="{Binding ScaledFontSize3}" />
+                    </Frame>
+
+                    <VerticalStackLayout Grid.Row="4" Spacing="{Binding ScaledSmallSpacing}">
+                        <Button Text="📨 Gönder" Clicked="BtnGonder_Clicked"
+                                BackgroundColor="#2e462a" TextColor="White"
+                                HeightRequest="{Binding ScaledButtonHeight}"
+                                FontSize="{Binding ScaledFontSize3}" HorizontalOptions="Fill" />
+                        <Button Text="📂 Geçmiş Bildirimler" Clicked="BtnGecmisGoster_Clicked"
+                                BackgroundColor="#bdc3c7" TextColor="#393737"
+                                HeightRequest="{Binding ScaledButtonHeight}"
+                                FontSize="{Binding ScaledFontSize4}" HorizontalOptions="Fill" />
+                    </VerticalStackLayout>
+
+                    <CollectionView x:Name="lstGecmisBildirimlerMobile" Grid.Row="5"
+                                    VerticalScrollBarVisibility="Always">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame BackgroundColor="White" CornerRadius="14"
+                                       Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
+                                       Margin="0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="44"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <Label Text="{Binding GonderimTarihi, StringFormat='{}{0:dd MMM yyyy HH:mm}'}"
+                                               FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                               TextColor="#7f8c8d" Grid.Column="0" Grid.Row="0"
+                                               Grid.ColumnSpan="2" Margin="0,0,0,4" />
+
+                                        <Label Text="{Binding Mesaj}"
+                                               FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
+                                               TextColor="#2c3e50" Grid.Column="0" Grid.Row="1"
+                                               VerticalOptions="Center" />
+
+                                        <Button Text="✖" BackgroundColor="Transparent" TextColor="#e74c3c"
+                                                FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
+                                                Clicked="BtnBildirimSil_Clicked" BindingContext="{Binding .}"
+                                                Grid.Column="1" Grid.RowSpan="2" HorizontalOptions="Center"
+                                                VerticalOptions="Center" Padding="0" Margin="0"
+                                                WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledIconTouch}"
+                                                HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledIconTouch}"/>
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+
+                <!-- ======= Mobile: Admin selection popup (görsel 2) ======= -->
+                <Grid x:Name="frameAdminPopup" IsVisible="False" ZIndex="99"
+                      BackgroundColor="#B3000000" VerticalOptions="FillAndExpand"
+                      HorizontalOptions="FillAndExpand" InputTransparent="False" Padding="0">
+
+                    <Frame BackgroundColor="#E8DCC8" CornerRadius="18"
+                           WidthRequest="{Binding ScaledDialogWidthMobile}" Padding="16"
+                           HasShadow="True" VerticalOptions="Center" HorizontalOptions="Center">
+
+                        <Grid RowSpacing="12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Text="Kişi Seç" FontAttributes="Bold"
+                                   FontSize="{Binding ScaledFontSize2}" TextColor="#2c3e50"
+                                   Margin="4,0,4,4"/>
+
+                            <!-- Arama + Temizle -->
+                            <Grid Grid.Row="1" ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Frame Grid.Column="0" BackgroundColor="#FFFFFF"
+                                       CornerRadius="10" Padding="0">
+                                    <Entry x:Name="entryAdminAra" Placeholder="İsim ara..."
+                                           FontSize="{Binding ScaledFontSize4}" TextColor="#000"
+                                           PlaceholderColor="#9AA4B2" BackgroundColor="Transparent"/>
+                                </Frame>
+
+                                <Button Grid.Column="1" Text="Temizle"
+                                        BackgroundColor="#C49779" TextColor="White"
+                                        CornerRadius="10" Padding="14,10"
+                                        FontSize="{Binding ScaledFontSize4}"
+                                        Clicked="BtnAdminIptal_Clicked"/>
+                            </Grid>
+
+                            <!-- Liste -->
+                            <CollectionView x:Name="cvAdminSecim" Grid.Row="2"
+                                            SelectionMode="Multiple" VerticalScrollBarVisibility="Always">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout Orientation="Vertical"/>
+                                </CollectionView.ItemsLayout>
+
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Frame x:Name="itemRoot" Margin="6" Padding="10"
+                                               BackgroundColor="#FFF" CornerRadius="12" HasShadow="False">
+                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer
+                                                        Command="{Binding Source={x:Reference __page}, Path=BindingContext.ToggleSelectionCommand}"
+                                                        CommandParameter="{Binding .}"/>
+                                                </Grid.GestureRecognizers>
+
+                                                <CheckBox x:Name="chk"
+                                                          Grid.Column="0"
+                                                          HorizontalOptions="Start"
+                                                          VerticalOptions="Center"
+                                                          CheckedChanged="AdminCheckBox_CheckedChanged" />
+
+                                                <Label Grid.Column="1" Text="{Binding AdSoyad}"
+                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
+                                                       TextColor="#2c3e50" VerticalOptions="Center"/>
+                                            </Grid>
+
+                                            <VisualStateManager.VisualStateGroups>
+                                                <VisualStateGroup Name="CommonStates">
+                                                    <VisualState Name="Normal">
+                                                        <VisualState.Setters>
+                                                            <Setter TargetName="itemRoot" Property="BorderColor" Value="Transparent"/>
+                                                        </VisualState.Setters>
+                                                    </VisualState>
+                                                    <VisualState Name="Selected">
+                                                        <VisualState.Setters>
+                                                            <Setter TargetName="itemRoot" Property="BorderColor" Value="#9BA3AE"/>
+                                                        </VisualState.Setters>
+                                                    </VisualState>
+                                                </VisualStateGroup>
+                                            </VisualStateManager.VisualStateGroups>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+
+                            <!-- Alt butonlar -->
+                            <Grid Grid.Row="3" ColumnSpacing="12" Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0" Text="Vazgeç"
+                                        BackgroundColor="#BFBFBF" TextColor="#2c3e50"
+                                        FontSize="{Binding ScaledFontSize4}"
+                                        HeightRequest="{Binding ScaledButtonHeight}"
+                                        Clicked="BtnAdminIptal_Clicked"/>
+
+                                <Button Grid.Column="1" Text="Tamam"
+                                        BackgroundColor="#9FA0A3" TextColor="White"
+                                        FontSize="{Binding ScaledFontSize4}"
+                                        HeightRequest="{Binding ScaledButtonHeight}"
+                                        Clicked="BtnAdminOnayla_Clicked"/>
+                            </Grid>
+                        </Grid>
+                    </Frame>
+                </Grid>
+
+                <!-- ======= Mobile: history popup ======= -->
+                <Grid x:Name="frameGecmisMobile" IsVisible="False" ZIndex="99"
+                      BackgroundColor="#B3000000" VerticalOptions="FillAndExpand"
+                      HorizontalOptions="FillAndExpand" InputTransparent="False" Padding="0">
+                    <Frame BackgroundColor="#f4f3ec" Padding="{Binding ScaledSmallPadding}"
+                           WidthRequest="{Binding ScaledDialogWidthMobile}"
+                           HeightRequest="{Binding ScaledDialogHeightMobile}"
+                           VerticalOptions="Center" HorizontalOptions="Center">
+                        <Grid RowSpacing="{Binding ScaledSmallSpacing}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Label Text="📂 Geçmiş Bildirimler" FontAttributes="Bold"
+                                       FontSize="{Binding ScaledFontSize2}" TextColor="#2c3e50"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                                <Button Text="❌" BackgroundColor="Transparent" TextColor="#e74c3c"
+                                        FontSize="{Binding ScaledFontSize3}" Clicked="BtnGecmisGizle_Clicked"
+                                        WidthRequest="{Binding ScaledIconTouch}" HeightRequest="{Binding ScaledIconTouch}"
+                                        Padding="0" HorizontalOptions="End" Margin="0,0,2,0"
+                                        VerticalOptions="Center" Grid.Column="1" />
+                            </Grid>
+
+                            <HorizontalStackLayout Grid.Row="1" Spacing="{Binding ScaledSmallSpacing}">
+                                <DatePicker x:Name="datePickerTarihMobile" Format="dd MMM yyyy"
+                                            WidthRequest="{Binding ScaledDateWidthMobile}"
+                                            DateSelected="DatePickerTarih_DateSelected" />
+                                <Entry x:Name="entryAraMobile" Placeholder="Anahtar kelime"
+                                       PlaceholderColor="#9AA4B2"
+                                       WidthRequest="{Binding ScaledSearchWidthMobile}"
+                                       FontSize="{Binding ScaledFontSize4}"
+                                       TextChanged="EntryAra_TextChanged" />
+                            </HorizontalStackLayout>
+
+                            <CollectionView x:Name="lstGecmisPopupMobile" Grid.Row="2"
+                                            VerticalScrollBarVisibility="Always">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout Orientation="Vertical" />
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Frame Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
+                                               Margin="5" BackgroundColor="#ecf0f1" CornerRadius="10">
+                                            <StackLayout Spacing="4">
+                                                <Label Text="{Binding Mesaj}" FontAttributes="Bold"
+                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}" />
+                                                <Label Text="{Binding GonderimTarihi, StringFormat='{0:dd MMMM yyyy HH:mm}'}"
+                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                       TextColor="Gray" />
+                                            </StackLayout>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </Grid>
+                    </Frame>
+                </Grid>
+
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

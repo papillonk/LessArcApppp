@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:LessArcApppp.Converters"
+    xmlns:controls="clr-namespace:LessArcApppp.Controls"
+    x:Class="LessArcApppp.AdminProjelerPage"
+    x:Name="__page"
+    BackgroundColor="Transparent"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:TamamlandiGorunurConverter x:Key="TamamlandiGorunurConverter" />
+            <Style TargetType="Label" ApplyToDerivedTypes="True">
+                <Setter Property="TextColor" Value="Black" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Image Grid.RowSpan="2" Source="arkaplann.png" Aspect="AspectFill" InputTransparent="True" />
+
+        <controls:CustomTitleBar Grid.Row="0" ShowBack="True" />
+
+        <Grid Grid.Row="1">
+
+            <!-- ==================== MOBİL ==================== -->
+            <Grid x:Name="MobilGrid" IsVisible="False" RowSpacing="10" Padding="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Label Grid.Row="0" Text="📁 Projelerim" FontAttributes="Bold" FontSize="22"
+                       TextColor="#ebe9e5" HorizontalOptions="Center" Margin="12,12,12,10" />
+
+                <Frame Grid.Row="1" Padding="8" CornerRadius="12" BackgroundColor="#ebe9e5"
+                       HasShadow="False" BorderColor="#F5F5DC" Margin="12,0,12,10">
+                    <Grid>
+                        <Frame BackgroundColor="White" CornerRadius="14" HasShadow="False" Padding="12,10">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                <Image Source="filter.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                                <Label x:Name="lblMobilSecimMetni" Grid.Column="1" Text="🔽 Proje Seç" TextColor="#2d2e32" />
+                            </Grid>
+                        </Frame>
+                        <Button x:Name="btnOpenPopupOverlay" BackgroundColor="#01000000" Opacity="0.01"
+                                BorderWidth="0" CornerRadius="0" HorizontalOptions="Fill" VerticalOptions="Fill"
+                                Clicked="BtnOpenProjePopup_Clicked"/>
+                    </Grid>
+                </Frame>
+
+                <!-- ======= PROJE DETAY (MOBİL) ======= -->
+                <ScrollView Grid.Row="2" Margin="12,0,12,12">
+                    <VerticalStackLayout Spacing="16">
+
+                        <Frame BackgroundColor="#ebe9e5" CornerRadius="16" HasShadow="True" Padding="14">
+                            <VerticalStackLayout x:Name="MobilProjeDetaylariPanel" Spacing="14">
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label x:Name="lblSeciliProjeBaslikMobile" Grid.Column="0" Text="" FontAttributes="Bold" FontSize="18" TextColor="#2d2e32" />
+                                    <Image x:Name="imgCheckMobile" Grid.Column="1" Source="checkmark.png" WidthRequest="20" HeightRequest="20" Margin="8,0,0,0" VerticalOptions="Center" IsVisible="False"/>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                                    <Label Grid.Row="0" Grid.Column="0" Text="Başlangıç:" FontAttributes="Bold" VerticalTextAlignment="Center" />
+                                    <Frame Grid.Row="0" Grid.Column="1" BackgroundColor="#dfd5c9" CornerRadius="18" HasShadow="False" Padding="14,12" HeightRequest="52" HorizontalOptions="Start" WidthRequest="220">
+                                        <Grid>
+                                            <Label VerticalOptions="Center" TextColor="#3a3a3a" FontSize="14"
+                                                   Text="{Binding Source={x:Reference dpBaslangicMobile}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
+                                            <DatePicker x:Name="dpBaslangicMobile" Opacity="0" BackgroundColor="Transparent" VerticalOptions="FillAndExpand" />
+                                        </Grid>
+                                    </Frame>
+
+                                    <Label Grid.Row="1" Grid.Column="0" Text="Bitiş:" FontAttributes="Bold" VerticalTextAlignment="Center" />
+                                    <Frame Grid.Row="1" Grid.Column="1" BackgroundColor="#dfd5c9" CornerRadius="18" HasShadow="False" Padding="14,12" HeightRequest="52" HorizontalOptions="Start" WidthRequest="220">
+                                        <Grid>
+                                            <Label VerticalOptions="Center" TextColor="#3a3a3a" FontSize="14"
+                                                   Text="{Binding Source={x:Reference dpBitisMobile}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
+                                            <DatePicker x:Name="dpBitisMobile" Opacity="0" BackgroundColor="Transparent" VerticalOptions="FillAndExpand" />
+                                        </Grid>
+                                    </Frame>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12" Margin="0,4,0,0">
+                                    <Label Grid.Row="0" Grid.Column="0" Text="Durum :" FontAttributes="Bold" VerticalTextAlignment="Center"/>
+                                    <Frame Grid.Row="0" Grid.Column="1" BackgroundColor="#dfd5c9" CornerRadius="18" HasShadow="False" Padding="10,8" HeightRequest="52" HorizontalOptions="Start" WidthRequest="220">
+                                        <Picker x:Name="pickerDurumMobile" Title="Durum Seçin" BackgroundColor="Transparent" TextColor="#3a3a3a"/>
+                                    </Frame>
+                                    <Button Grid.Row="1" Grid.ColumnSpan="2" x:Name="btnBilgileriGuncelleMobile" Text="Bilgileri Güncelle"
+                                            BackgroundColor="#dfd5c9" TextColor="#3a3a3a" CornerRadius="18" HeightRequest="42"/>
+                                </Grid>
+
+                                <Label x:Name="lblGenelTamamMobile" Text="" FontSize="13" TextColor="#2d2e32"/>
+                                <VerticalStackLayout x:Name="MobilAdimlarPanel" Spacing="10" />
+
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <!-- ======= YORUMLAR (MOBİL) ======= -->
+                        <Frame BackgroundColor="#d8d0ca" CornerRadius="18" HasShadow="False" Padding="14">
+                            <VerticalStackLayout Spacing="12">
+                                <Label Text="Projeye Yorumlar" FontSize="16" FontAttributes="Bold" TextColor="Black"/>
+
+                                <CollectionView x:Name="MobilYorumCollection"
+                                                ItemsSource="{Binding MobilYorumlar}"
+                                                HeightRequest="320"
+                                                ItemSizingStrategy="MeasureFirstItem">
+                                    <CollectionView.ItemsLayout>
+                                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="8"/>
+                                    </CollectionView.ItemsLayout>
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Frame CornerRadius="14"
+                                                   BackgroundColor="#f6f4f3"
+                                                   HasShadow="False"
+                                                   Padding="12,10"
+                                                   Margin="0,2,0,2"
+                                                   MaximumHeightRequest="140">
+                                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                                    <Grid Grid.Column="0" Grid.Row="0" ColumnDefinitions="*,Auto">
+                                                        <Label Grid.Column="0" Text="{Binding KullaniciAdSoyad}"
+                                                               FontAttributes="Bold"
+                                                               FontSize="14" TextColor="Black" />
+                                                        <Label Grid.Column="1"
+                                                               Text="{Binding OlusturmaTarihi, StringFormat='{}{0:dd.MM.yyyy HH\\:mm}'}"
+                                                               FontSize="11" TextColor="#666" VerticalTextAlignment="Center" />
+                                                    </Grid>
+
+                                                    <Label Grid.Column="0" Grid.Row="1" Text="{Binding YorumMetni}"
+                                                           FontSize="13"
+                                                           TextColor="Black"
+                                                           Margin="0,4,12,0"
+                                                           LineBreakMode="WordWrap"
+                                                           MaxLines="4"/>
+
+                                                    <HorizontalStackLayout Grid.Column="1" Grid.RowSpan="2"
+                                                                           Spacing="8"
+                                                                           HorizontalOptions="End"
+                                                                           VerticalOptions="Center">
+                                                        <ImageButton Source="pencil.png"
+                                                                     BackgroundColor="Transparent" Padding="0"
+                                                                     WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                                                     HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                                                     CommandParameter="{Binding .}"
+                                                                     IsVisible="{Binding IsEditable}"
+                                                                     Clicked="EditYorum_Clicked"/>
+
+                                                        <ImageButton Source="sil.png"
+                                                                     BackgroundColor="Transparent" Padding="0"
+                                                                     WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                                                     HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                                                     CommandParameter="{Binding .}"
+                                                                     IsVisible="{Binding IsDeletable}"
+                                                                     Clicked="SilYorum_Clicked"/>
+                                                    </HorizontalStackLayout>
+                                                </Grid>
+                                            </Frame>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,6,0,0">
+                                    <Frame Grid.Column="0" BackgroundColor="White" CornerRadius="12" HasShadow="False" Padding="8"
+                                           HorizontalOptions="FillAndExpand" MinimumHeightRequest="44">
+                                        <Editor x:Name="MobilYorumEditor"
+                                                Placeholder="Yorum yaz..."
+                                                PlaceholderColor="Gray"
+                                                AutoSize="Disabled"
+                                                HeightRequest="44"
+                                                BackgroundColor="Transparent"
+                                                TextColor="Black"
+                                                FontSize="14"/>
+                                    </Frame>
+                                    <Button Grid.Column="1" Text="Gönder" x:Name="BtnYorumGonderMobile"
+                                            Clicked="BtnYorumGonderMobile_Clicked"
+                                            BackgroundColor="#4CAF50" TextColor="White" CornerRadius="10"
+                                            WidthRequest="96" HeightRequest="44"
+                                            Padding="10,6" HorizontalOptions="End" VerticalOptions="Center"/>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Frame>
+
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <Picker x:Name="cmbProjeSecimi" IsVisible="False" SelectedIndexChanged="cmbProjeSecimi_SelectedIndexChanged"/>
+
+                <!-- === Proje Seçim Popup === -->
+                <Grid x:Name="popupMask" Grid.Row="0" Grid.RowSpan="3" IsVisible="False" InputTransparent="False" BackgroundColor="#80000000" ZIndex="999" Opacity="1">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="TapCloseProjePopup_Tapped" />
+                    </Grid.GestureRecognizers>
+                    <Grid VerticalOptions="Center" HorizontalOptions="Center">
+                        <Frame x:Name="ProjePopup" Padding="0" HasShadow="True" CornerRadius="26" BorderColor="#E8E2DA" BackgroundColor="#FDFCFB"
+                               WidthRequest="360" MaximumHeightRequest="600">
+                            <Grid RowDefinitions="Auto,Auto,*,Auto">
+                                <Grid Grid.Row="0" Padding="18,14" BackgroundColor="#F2EEE8" ColumnDefinitions="*,Auto">
+                                    <Label Text="Proje Seç" FontSize="20" FontAttributes="Bold" TextColor="#2B2B2B" VerticalTextAlignment="Center"/>
+                                    <ImageButton Grid.Column="1" Source="close.png" BackgroundColor="Transparent"
+                                                 Padding="6" WidthRequest="50" HeightRequest="50"
+                                                 Clicked="TapCloseProjePopup_Clicked"/>
+                                </Grid>
+                                <Frame Grid.Row="1" Margin="18,14,18,10" Padding="12" CornerRadius="18" BackgroundColor="#ECE6DF" HasShadow="False">
+                                    <Grid>
+                                        <Entry x:Name="entryMobilAra" Placeholder="aramak istediğiniz proje ismi"
+                                               PlaceholderColor="#7B7B7B" TextColor="#2D2E32"
+                                               BackgroundColor="Transparent" FontSize="15"/>
+                                        <BoxView HeightRequest="2" BackgroundColor="#7D5CFF" VerticalOptions="End" Margin="2,-2,2,-6"/>
+                                    </Grid>
+                                </Frame>
+                                <CollectionView x:Name="cvProjeSecim" Grid.Row="2" Margin="12,0,12,8" SelectionMode="None">
+                                    <CollectionView.ItemsLayout>
+                                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="10"/>
+                                    </CollectionView.ItemsLayout>
+                                    <CollectionView.EmptyView>
+                                        <Grid Padding="24" RowDefinitions="Auto,Auto">
+                                            <Image Source="search.png" WidthRequest="22" HeightRequest="22" Opacity="0.6" HorizontalOptions="Center"/>
+                                            <Label Grid.Row="1" Text="Eşleşen proje bulunamadı" TextColor="#7B7B7B" HorizontalOptions="Center" Margin="0,8,0,0"/>
+                                        </Grid>
+                                    </CollectionView.EmptyView>
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Frame CornerRadius="18" Padding="14" HasShadow="False" BackgroundColor="White" BorderColor="#EAE5DD" Margin="6,0">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                    <Label Text="{Binding Baslik}" FontSize="18" FontAttributes="Bold" TextColor="#2B2B2B" LineBreakMode="TailTruncation"/>
+                                                    <Label Grid.Column="1" Text="{Binding KullaniciAdSoyad}" FontSize="14" TextColor="#3F3F3F" VerticalTextAlignment="Center"/>
+                                                </Grid>
+                                                <Frame.GestureRecognizers>
+                                                    <TapGestureRecognizer Tapped="PopupKart_Tapped"/>
+                                                </Frame.GestureRecognizers>
+                                            </Frame>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                                <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Padding="16,8,16,14">
+                                    <BoxView Grid.ColumnSpan="2" HeightRequest="1" BackgroundColor="#E9E4DE" VerticalOptions="Start"/>
+                                </Grid>
+                            </Grid>
+                        </Frame>
+                    </Grid>
+                </Grid>
+            </Grid>
+
+            <!-- ============= MASAÜSTÜ ============= -->
+            <Grid x:Name="MasaustuGrid" IsVisible="True"
+                  RowSpacing="{Binding ScaledSpacing}"
+                  ColumnSpacing="{Binding ScaledSmallSpacing}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.8*" />
+                    <ColumnDefinition Width="3.2*" />
+                </Grid.ColumnDefinitions>
+
+                <Label Text="📁 Tüm Projeler"
+                       FontSize="{Binding ScaledFontSize2}"
+                       FontAttributes="Bold"
+                       TextColor="#D6C9C1"
+                       Margin="{Binding ScaledSmallPadding}"
+                       Grid.Row="0" Grid.ColumnSpan="2"/>
+
+                <Frame Grid.Row="1" Grid.Column="0"
+                       Margin="{Binding ScaledSmallPadding}"
+                       Padding="{Binding ScaledSmallPadding}"
+                       BackgroundColor="#ebe9e5" BorderColor="#D0D5DD"
+                       CornerRadius="16" HasShadow="True">
+                    <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center" ColumnSpacing="{Binding ScaledSmallSpacing}">
+                        <Entry x:Name="entryAraDesktop"
+                               Placeholder="Aramak istediğiniz proje ismi"
+                               PlaceholderColor="#7A7A7A"
+                               BackgroundColor="Transparent"
+                               TextColor="Black"
+                               FontSize="{Binding ScaledFontSize3}"
+                               TextChanged="entryAraDesktop_TextChanged"/>
+                        <Image Grid.Column="1" Source="search.png"
+                               WidthRequest="{Binding ScaledButtonIcon}"
+                               HeightRequest="{Binding ScaledButtonIcon}"
+                               VerticalOptions="Center" Margin="{Binding M_ItemBetween}"/>
+                    </Grid>
+                </Frame>
+
+                <CollectionView x:Name="ProjelerListesi"
+                                Grid.Row="2" Grid.Column="0"
+                                SelectionMode="None"
+                                Margin="{Binding ScaledSmallPadding}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="{Binding Source={x:Reference __page}, Path=BindingContext.M_ItemBetween}"
+                                   Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledPadding}"
+                                   CornerRadius="16"
+                                   BackgroundColor="#ebe9e5" BorderColor="#D0D5DD" HasShadow="True">
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto"
+                                      ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}"
+                                      RowSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
+                                    <Label Grid.Row="0" Grid.Column="0"
+                                           Text="{Binding Baslik}"
+                                           FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}" />
+                                    <Label Grid.Row="1" Grid.Column="0"
+                                           Text="{Binding KullaniciAdSoyad}"
+                                           FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}" />
+                                    <Image Grid.RowSpan="2" Grid.Column="1" Source="checkmark.png"
+                                           WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                           HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                           Margin="{Binding Source={x:Reference __page}, Path=BindingContext.M_ItemBetween}"
+                                           VerticalOptions="Center"
+                                           IsVisible="{Binding Durum, Converter={StaticResource TamamlandiGorunurConverter}}"/>
+                                </Grid>
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="ProjeKart_Tapped"/>
+                                </Frame.GestureRecognizers>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Frame Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"
+                       BackgroundColor="#ebe9e5"
+                       CornerRadius="16"
+                       BorderColor="#D0D5DD"
+                       HasShadow="True"
+                       Padding="0"
+                       Margin="{Binding ScaledSmallPadding}">
+                    <ScrollView Padding="{Binding ScaledSmallPadding}">
+                        <VerticalStackLayout Spacing="{Binding ScaledSpacing}">
+                            <Frame BackgroundColor="#f1ede9" CornerRadius="16" HasShadow="False" Padding="{Binding ScaledSmallPadding}">
+                                <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto"
+                                      ColumnSpacing="{Binding ScaledSpacing}" RowSpacing="{Binding ScaledSmallSpacing}">
+
+                                    <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="{Binding ScaledSmallSpacing}">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{Binding ScaledSmallSpacing}">
+                                            <Label x:Name="lblSeciliProjeBaslik" Grid.Column="0" Text=""
+                                                   FontAttributes="Bold" FontSize="{Binding ScaledFontSize2}" TextColor="#2d2e32" />
+                                            <Image x:Name="imgCheckDesktop" Grid.Column="1" Source="checkmark.png"
+                                                   WidthRequest="{Binding ScaledButtonIcon}" HeightRequest="{Binding ScaledButtonIcon}"
+                                                   Margin="{Binding M_ItemBetween}" VerticalOptions="Center" IsVisible="False"/>
+                                        </Grid>
+
+                                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto"
+                                              ColumnSpacing="{Binding ScaledSmallSpacing}" RowSpacing="{Binding ScaledSmallSpacing}">
+                                            <Label Grid.Row="0" Grid.Column="0" Text="Başlangıç:" FontAttributes="Bold"
+                                                   VerticalTextAlignment="Center" FontSize="{Binding ScaledFontSize4}"/>
+                                            <Frame Grid.Row="0" Grid.Column="1" BackgroundColor="#dfd5c9" CornerRadius="18"
+                                                   HasShadow="False" Padding="{Binding ScaledSmallPadding}" HeightRequest="52"
+                                                   HorizontalOptions="Start" WidthRequest="220">
+                                                <Grid>
+                                                    <Label VerticalOptions="Center" TextColor="#3a3a3a" FontSize="{Binding ScaledFontSize3}"
+                                                           Text="{Binding Source={x:Reference dpBaslangicDesktop}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
+                                                    <DatePicker x:Name="dpBaslangicDesktop" Opacity="0" BackgroundColor="Transparent" VerticalOptions="FillAndExpand" />
+                                                </Grid>
+                                            </Frame>
+
+                                            <Label Grid.Row="1" Grid.Column="0" Text="Bitiş:" FontAttributes="Bold"
+                                                   VerticalTextAlignment="Center" FontSize="{Binding ScaledFontSize4}"/>
+                                            <Frame Grid.Row="1" Grid.Column="1" BackgroundColor="#dfd5c9" CornerRadius="18"
+                                                   HasShadow="False" Padding="{Binding ScaledSmallPadding}" HeightRequest="52"
+                                                   HorizontalOptions="Start" WidthRequest="220">
+                                                <Grid>
+                                                    <Label VerticalOptions="Center" TextColor="#3a3a3a" FontSize="{Binding ScaledFontSize3}"
+                                                           Text="{Binding Source={x:Reference dpBitisDesktop}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
+                                                    <DatePicker x:Name="dpBitisDesktop" Opacity="0" BackgroundColor="Transparent" VerticalOptions="FillAndExpand" />
+                                                </Grid>
+                                            </Frame>
+                                        </Grid>
+                                    </VerticalStackLayout>
+
+                                    <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="{Binding ScaledSmallSpacing}"
+                                                         HorizontalOptions="Start" WidthRequest="360">
+                                        <Label Text="Durum :" FontAttributes="Bold" HorizontalOptions="Start" FontSize="{Binding ScaledFontSize4}"/>
+                                        <Frame BackgroundColor="#dfd5c9" CornerRadius="18" HasShadow="False"
+                                               Padding="{Binding ScaledSmallPadding}" HeightRequest="98"
+                                               HorizontalOptions="Start" WidthRequest="220">
+                                            <Picker x:Name="pickerDurumDesktop" Title="Durum Seçin"
+                                                    BackgroundColor="Transparent" HeightRequest="90" TextColor="#3a3a3a" FontSize="{Binding ScaledFontSize3}"/>
+                                        </Frame>
+                                        <Button x:Name="btnBilgileriGuncelleDesktop" Text="Bilgileri Güncelle"
+                                                BackgroundColor="#dfd5c9" TextColor="#3a3a3a" CornerRadius="18"
+                                                HeightRequest="{Binding ScaledButtonHeight}" HorizontalOptions="Fill"
+                                                FontSize="{Binding ScaledFontSize3}"/>
+                                    </VerticalStackLayout>
+
+                                    <Label Grid.Row="2" Grid.ColumnSpan="2" x:Name="lblGenelTamamDesktop"
+                                           Text="" FontSize="{Binding ScaledFontSize4}" TextColor="#2d2e32"/>
+                                </Grid>
+                            </Frame>
+
+                            <VerticalStackLayout x:Name="ProjeDetaylariPanel" Spacing="{Binding ScaledSpacing}" />
+
+                            <!-- ======= YORUMLAR (DESKTOP) ======= -->
+                            <Frame BackgroundColor="#d8d0ca" CornerRadius="18" HasShadow="False" Padding="{Binding ScaledSmallPadding}">
+                                <VerticalStackLayout Spacing="{Binding ScaledSmallSpacing}">
+                                    <Label Text="Projeye Yorumlar" FontSize="{Binding ScaledFontSize3}" FontAttributes="Bold" TextColor="Grey"/>
+
+                                    <CollectionView x:Name="DesktopYorumCollection"
+                                                    ItemsSource="{Binding DesktopYorumlar}"
+                                                    HeightRequest="350"
+                                                    ItemSizingStrategy="MeasureFirstItem">
+                                        <CollectionView.ItemsLayout>
+                                            <LinearItemsLayout Orientation="Vertical"
+                                                               ItemSpacing="{Binding ScaledSmallSpacing}"/>
+                                        </CollectionView.ItemsLayout>
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Frame CornerRadius="14" BackgroundColor="#f6f4f3" HasShadow="False"
+                                                       Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
+                                                       Margin="{Binding Source={x:Reference __page}, Path=BindingContext.M_ItemBetween}"
+                                                       MaximumHeightRequest="150">
+                                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto"
+                                                          ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
+                                                        <Grid Grid.Column="0" Grid.Row="0" ColumnDefinitions="*,Auto"
+                                                              ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
+                                                            <Label Grid.Column="0" Text="{Binding KullaniciAdSoyad}"
+                                                                   FontAttributes="Bold"
+                                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                                   TextColor="Black" />
+                                                            <Label Grid.Column="1" Text="{Binding OlusturmaTarihi, StringFormat='{}{0:dd.MM.yyyy HH\\:mm}'}"
+                                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                                   TextColor="#666" VerticalTextAlignment="Center" />
+                                                        </Grid>
+
+                                                        <Label Grid.Column="0" Grid.Row="1" Text="{Binding YorumMetni}"
+                                                               FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
+                                                               TextColor="Black"
+                                                               Margin="0,4,12,0"
+                                                               LineBreakMode="WordWrap"
+                                                               MaxLines="4"/>
+
+                                                        <HorizontalStackLayout Grid.Column="1" Grid.RowSpan="2"
+                                                                               Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}"
+                                                                               HorizontalOptions="End" VerticalOptions="Center">
+                                                            <ImageButton Source="pencil.png"
+                                                                         BackgroundColor="Transparent" Padding="0"
+                                                                         WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                                                         HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                                                         CommandParameter="{Binding .}"
+                                                                         IsVisible="{Binding IsEditable}"
+                                                                         Clicked="EditYorum_Clicked"/>
+                                                            <ImageButton Source="sil.png"
+                                                                         BackgroundColor="Transparent" Padding="0"
+                                                                         WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                                                         HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
+                                                                         CommandParameter="{Binding .}"
+                                                                         IsVisible="{Binding IsDeletable}"
+                                                                         Clicked="SilYorum_Clicked"/>
+                                                        </HorizontalStackLayout>
+                                                    </Grid>
+                                                </Frame>
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
+
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{Binding ScaledSmallSpacing}"
+                                          Margin="0,6,0,0" HorizontalOptions="FillAndExpand">
+                                        <Frame Grid.Column="0" BackgroundColor="White" CornerRadius="14" HasShadow="False"
+                                               Padding="{Binding ScaledSmallPadding}" HorizontalOptions="FillAndExpand"
+                                               MinimumHeightRequest="50">
+                                            <Editor x:Name="DesktopYorumEditor"
+                                                    Placeholder="Yorumunuzu Yazınız..."
+                                                    PlaceholderColor="Grey"
+                                                    AutoSize="Disabled"
+                                                    HeightRequest="44"
+                                                    BackgroundColor="Transparent"
+                                                    TextColor="Black"
+                                                    FontSize="{Binding ScaledFontSize4}"/>
+                                        </Frame>
+                                        <Button Grid.Column="1" Text="Gönder" x:Name="BtnYorumGonderDesktop"
+                                                Clicked="BtnYorumGonderDesktop_Clicked"
+                                                BackgroundColor="#4CAF50" TextColor="White" CornerRadius="12"
+                                                WidthRequest="120" HeightRequest="{Binding ScaledButtonHeight}"
+                                                HorizontalOptions="Fill" VerticalOptions="Center"
+                                                FontSize="{Binding ScaledFontSize4}"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Frame>
+                        </VerticalStackLayout>
+                    </ScrollView>
+                </Frame>
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

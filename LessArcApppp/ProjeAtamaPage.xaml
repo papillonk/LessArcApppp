@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="LessArcApppp.ProjeAtamaPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:controls="clr-namespace:LessArcApppp.Controls" x:Name="__page" Title="Proje Atama" NavigationPage.HasNavigationBar="False" Shell.NavBarIsVisible="False" SizeChanged="ContentPage_SizeChanged">
+    <!-- ÜST BAR + GÖVDE -->
+    <Grid RowDefinitions="Auto,*">
+        <!-- 🔹 ÜST: Custom Title Bar (geri ok açık) -->
+        <controls:CustomTitleBar Grid.Row="0" ShowBack="True" />
+        <!-- 🔹 ALT: Mevcut gövde (AYNEN KORUNDU) -->
+        <Grid Grid.Row="1">
+            <!-- Arka plan -->
+            <Image Source="arkaplann.png" Aspect="AspectFill" HorizontalOptions="Fill" VerticalOptions="Fill" IsEnabled="False" />
+            <!-- GÖVDE -->
+            <Grid>
+                <!-- ================== DESKTOP ================== -->
+                <Grid x:Name="desktopLayout" IsVisible="{OnIdiom Phone=false, Tablet=false, Desktop=true}" Padding="{Binding P_Page}" RowDefinitions="Auto,*" RowSpacing="{Binding S_L}">
+                    <!-- ÜST FORM -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,*,Auto" ColumnSpacing="{Binding S_L}">
+                        <!-- Proje adı -->
+                        <Frame BackgroundColor="#e8e4df" CornerRadius="{Binding C_Radius}" HasShadow="False" Padding="{Binding P_FieldPad}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{Binding S_S}">
+                                <Label Text="Proje Adı" FontAttributes="Bold" VerticalOptions="Center" TextColor="#2d2e32" FontSize="{Binding F_Body}"/>
+                                <Entry x:Name="entryProjeAdi" Grid.Column="1" Placeholder="Proje Adı Yazın..." PlaceholderColor="#2d2e32" TextColor="#2d2e32" BackgroundColor="Transparent" FontSize="{Binding F_Body}" HeightRequest="{Binding H_Entry}"/>
+                            </Grid>
+                        </Frame>
+                        <!-- Kişi seç -->
+                        <Frame Grid.Column="1" BackgroundColor="#e8e4df" CornerRadius="{Binding C_Radius}" HasShadow="False" Padding="{Binding P_FieldPad}">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{Binding S_S}">
+                                <Entry x:Name="entrySecilenKisiler" IsReadOnly="True" Placeholder="Kişi seçin.." Text="{Binding SecilenKisilerMetni}" PlaceholderColor="#2d2e32" TextColor="#2d2e32" BackgroundColor="Transparent" FontSize="{Binding F_Body}" HeightRequest="{Binding H_Entry}" />
+                                <Button Grid.Column="1" Text="▼" Clicked="btnKisiSec_Clicked" BackgroundColor="Transparent" TextColor="#2d2e32" Padding="0" FontSize="{Binding F_Body}" WidthRequest="{Binding IconSquare}" HeightRequest="{Binding H_Entry}"/>
+                            </Grid>
+                        </Frame>
+                        <!-- Kaydet -->
+                        <Button Grid.Column="2" x:Name="btnKaydet" Text="KAYDET" Clicked="btnKaydet_Clicked" BackgroundColor="#f6b281" TextColor="#2d2e32" CornerRadius="{Binding C_Radius}" Padding="{Binding P_ButtonPad}" FontAttributes="Bold" FontSize="{Binding F_Body}" HeightRequest="{Binding H_Button}"/>
+                    </Grid>
+                    <!-- KARTLAR (DESKTOP) -->
+                    <Grid Grid.Row="1">
+                        <CollectionView x:Name="cvKartlar" ItemsSource="{Binding Kartlar}" SelectionMode="None" ItemSizingStrategy="MeasureAllItems">
+                            <CollectionView.ItemsLayout>
+                                <GridItemsLayout Orientation="Vertical" Span="4" HorizontalItemSpacing="{Binding S_L}" VerticalItemSpacing="{Binding S_L}"/>
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Frame BackgroundColor="#e8e4df" CornerRadius="{Binding Source={x:Reference __page}, Path=BindingContext.C_Radius}" HasShadow="False" Padding="{Binding Source={x:Reference __page}, Path=BindingContext.P_CardPad}" IsClippedToBounds="True">
+                                            <VerticalStackLayout Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.S_M}">
+                                                <!-- Proje adı -->
+                                                <Label Text="{Binding ProjeAdi}" FontAttributes="Bold" FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.F_Title}" TextColor="#2d2e32" HorizontalTextAlignment="Center"/>
+                                                <BoxView HeightRequest="1" BackgroundColor="#c6beb6"/>
+                                                <!-- TEK SÜTUN + SCROLL -->
+                                                <ScrollView HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.H_CardList}" VerticalScrollBarVisibility="Always" HorizontalScrollBarVisibility="Never">
+                                                    <CollectionView ItemsSource="{Binding Kisiler}" SelectionMode="None">
+                                                        <CollectionView.ItemsLayout>
+                                                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.S_M}"/>
+                                                        </CollectionView.ItemsLayout>
+                                                        <CollectionView.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Frame Padding="{Binding Source={x:Reference __page}, Path=BindingContext.P_ItemPad}" BackgroundColor="#f6f4f3" CornerRadius="{Binding Source={x:Reference __page}, Path=BindingContext.C_SmallRadius}" HasShadow="False">
+                                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.S_S}">
+                                                                        <Label Text="{Binding AdSoyad}" FontAttributes="Bold" TextColor="Black" VerticalTextAlignment="Center" FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.F_Body}"/>
+                                                                        <Button Grid.Column="1" Text="✕" Clicked="KisiSil_Clicked" CommandParameter="{Binding .}" ClassId="{Binding Source={RelativeSource AncestorType={x:Type CollectionView}}, Path=BindingContext.ProjeAdi}" BackgroundColor="Transparent" TextColor="#c44" Padding="0" WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.IconSquare}" HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.IconSquare}" FontAttributes="Bold" FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.F_Body}"/>
+                                                                    </Grid>
+                                                                </Frame>
+                                                            </DataTemplate>
+                                                        </CollectionView.ItemTemplate>
+                                                    </CollectionView>
+                                                </ScrollView>
+                                            </VerticalStackLayout>
+                                        </Frame>
+                                        <!-- KART SİL -->
+                                        <Button Text="✕" Clicked="KartSil_Clicked" CommandParameter="{Binding .}" BackgroundColor="#CC000000" TextColor="White" FontAttributes="Bold" WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.IconSquare}" HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.IconSquare}" Padding="0" CornerRadius="{Binding Source={x:Reference __page}, Path=BindingContext.IconCorner}" HorizontalOptions="End" VerticalOptions="Start" Margin="{Binding Source={x:Reference __page}, Path=BindingContext.S_S}" />
+                                        <!-- KİŞİ EKLE -->
+                                        <ImageButton Source="kullaniciarti.png" Clicked="KisiEkle_Clicked" CommandParameter="{Binding .}" BackgroundColor="Transparent" WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.IconSquare}" HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.IconSquare}" Padding="0" HorizontalOptions="Start" VerticalOptions="Start" Margin="{Binding Source={x:Reference __page}, Path=BindingContext.S_S}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Grid>
+                </Grid>
+                <!-- ================== MOBILE ================== -->
+                <Grid x:Name="mobileLayout" IsVisible="{OnIdiom Phone=true, Tablet=true, Desktop=false}">
+                    <Grid RowDefinitions="Auto,Auto,*" Padding="16,16,16,12" RowSpacing="10">
+                        <!-- ÜST FORM -->
+                        <Frame Grid.Row="0" BackgroundColor="#e8e4df" CornerRadius="24" HasShadow="False" Padding="14,10">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                <Label Text="Proje Adı" FontAttributes="Bold" VerticalOptions="Center" TextColor="#2d2e32"/>
+                                <Entry x:Name="entryProjeAdiMobile" Grid.Column="1" Placeholder="Proje Adı Yazın..." PlaceholderColor="#2d2e32" TextColor="#2d2e32"/>
+                            </Grid>
+                        </Frame>
+                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Frame BackgroundColor="#e8e4df" CornerRadius="24" HasShadow="False" Padding="12,6" VerticalOptions="Center" MinimumHeightRequest="48">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                    <Entry x:Name="entrySecilenKisilerMobile" IsReadOnly="True" Placeholder="Kişi seçin.." Text="{Binding SecilenKisilerMetni}" PlaceholderColor="#2d2e32" TextColor="#2d2e32" BackgroundColor="Transparent" FontSize="14" VerticalOptions="Center" HeightRequest="40" Margin="6,0,0,0" />
+                                    <Button Grid.Column="1" Text="▼" Clicked="btnKisiSec_Clicked" BackgroundColor="Transparent" TextColor="#2d2e32" Padding="0" WidthRequest="32" HeightRequest="32" VerticalOptions="Center" HorizontalOptions="End"/>
+                                </Grid>
+                            </Frame>
+                            <Button Grid.Column="1" x:Name="btnKaydetMobile" Text="KAYDET" Clicked="btnKaydet_Clicked" BackgroundColor="#f6b281" TextColor="#2d2e32" CornerRadius="22" Padding="16,10" VerticalOptions="Center" MinimumHeightRequest="48"/>
+                        </Grid>
+                        <!-- KARTLAR (MOBİL) -->
+                        <ScrollView Grid.Row="2">
+                            <VerticalStackLayout Spacing="14" BindableLayout.ItemsSource="{Binding Kartlar}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Frame BackgroundColor="#e8e4df" CornerRadius="24" HasShadow="False" Padding="16" IsClippedToBounds="True">
+                                                <VerticalStackLayout Spacing="8">
+                                                    <Label Text="{Binding ProjeAdi}" FontAttributes="Bold" FontSize="16" TextColor="#2d2e32" HorizontalTextAlignment="Center"/>
+                                                    <BoxView HeightRequest="1" BackgroundColor="#c6beb6"/>
+                                                    <!-- KİŞİLER: 2 sütun + kart içi scroll -->
+                                                    <ScrollView HeightRequest="220" VerticalScrollBarVisibility="Always" HorizontalScrollBarVisibility="Never">
+                                                        <CollectionView ItemsSource="{Binding Kisiler}" SelectionMode="None">
+                                                            <CollectionView.ItemsLayout>
+                                                                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="8" VerticalItemSpacing="8"/>
+                                                            </CollectionView.ItemsLayout>
+                                                            <CollectionView.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Frame Padding="10,8" BackgroundColor="#f6f4f3" CornerRadius="12" HasShadow="False">
+                                                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                                                            <Label Text="{Binding AdSoyad}" FontAttributes="Bold" VerticalTextAlignment="Center"/>
+                                                                            <Button Grid.Column="1" Text="✕" Clicked="KisiSil_Clicked" CommandParameter="{Binding .}" ClassId="{Binding Source={RelativeSource AncestorType={x:Type CollectionView}}, Path=BindingContext.ProjeAdi}" BackgroundColor="Transparent" TextColor="#c44" Padding="0" WidthRequest="26" HeightRequest="26" FontAttributes="Bold"/>
+                                                                        </Grid>
+                                                                    </Frame>
+                                                                </DataTemplate>
+                                                            </CollectionView.ItemTemplate>
+                                                        </CollectionView>
+                                                    </ScrollView>
+                                                </VerticalStackLayout>
+                                            </Frame>
+                                            <!-- KART SİL -->
+                                            <Button Text="✕" Clicked="KartSil_Clicked" CommandParameter="{Binding .}" BackgroundColor="#CC000000" TextColor="White" FontAttributes="Bold" WidthRequest="28" HeightRequest="28" Padding="0" CornerRadius="14" HorizontalOptions="End" VerticalOptions="Start" Margin="8"/>
+                                            <!-- KİŞİ EKLE (ikon ile) -->
+                                            <ImageButton Source="kullaniciarti.png" Clicked="KisiEkle_Clicked" CommandParameter="{Binding .}" BackgroundColor="Transparent" WidthRequest="28" HeightRequest="28" Padding="0" HorizontalOptions="Start" VerticalOptions="Start" Margin="8"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </ScrollView>
+                    </Grid>
+                </Grid>
+                <!-- ================== OVERLAYS ================== -->
+                <!-- DESKTOP popup -->
+                <Grid x:Name="popupOverlay" IsVisible="False" BackgroundColor="#99000000" InputTransparent="False" HorizontalOptions="Fill" VerticalOptions="Fill">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="Overlay_Tapped"/>
+                    </Grid.GestureRecognizers>
+                    <Frame x:Name="frameKisiPopup" WidthRequest="{Binding W_PopupDesktop}" Padding="{Binding P_CardPad}" CornerRadius="{Binding C_Radius}" BackgroundColor="#ece4d4" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="{Binding S_M}">
+                            <Label Text="Kişi Seç" FontSize="{Binding F_Title}" FontAttributes="Bold" TextColor="#2d2e32"/>
+                            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="{Binding S_S}">
+                                <Entry x:Name="entryAra" Placeholder="İsim ara..." TextChanged="entryAra_TextChanged" TextColor="#2d2e32" PlaceholderColor="#2d2e32" BackgroundColor="White" FontSize="{Binding F_Body}" HeightRequest="{Binding H_Entry}"/>
+                                <Button Grid.Column="1" Text="Temizle" Clicked="btnAraTemizle_Clicked" TextColor="#2d2e32" BackgroundColor="#d1a98c" FontSize="{Binding F_Body}" HeightRequest="{Binding H_Button}"/>
+                            </Grid>
+                            <CollectionView x:Name="cvKisiler" Grid.Row="2" ItemsSource="{Binding FiltreliKisiler}">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="Auto,*" Padding="{Binding Source={x:Reference __page}, Path=BindingContext.P_RowPad}">
+                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" CheckedChanged="KisiCheck_Changed" Color="#ababab"/>
+                                            <Label Grid.Column="1" Text="{Binding AdSoyad}" VerticalTextAlignment="Center" TextColor="#2d2e32" FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.F_Body}">
+                                                <Label.GestureRecognizers>
+                                                    <TapGestureRecognizer Tapped="KisiSatir_Tapped"/>
+                                                </Label.GestureRecognizers>
+                                            </Label>
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                            <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="{Binding S_S}">
+                                <Button Text="Vazgeç" Clicked="PopupKapat_Clicked" BackgroundColor="#ababab" TextColor="#2d2e32" FontSize="{Binding F_Body}" HeightRequest="{Binding H_Button}"/>
+                                <Button Grid.Column="1" Text="Tamam" Clicked="PopupTamam_Clicked" BackgroundColor="#ababab" TextColor="#2d2e32" FontSize="{Binding F_Body}" HeightRequest="{Binding H_Button}"/>
+                            </Grid>
+                        </Grid>
+                    </Frame>
+                </Grid>
+                <!-- MOBİL popup -->
+                <Grid x:Name="popupOverlayMobile" IsVisible="False" BackgroundColor="#99000000" InputTransparent="False" HorizontalOptions="Fill" VerticalOptions="Fill">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="Overlay_Tapped"/>
+                    </Grid.GestureRecognizers>
+                    <Frame x:Name="frameKisiPopupMobile" WidthRequest="360" Padding="14" CornerRadius="20" BackgroundColor="#ece4d4" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
+                            <Label Text="Kişi Seç" FontSize="18" FontAttributes="Bold" TextColor="#2d2e32"/>
+                            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <Entry x:Name="entryAraMobile" Placeholder="İsim ara..." TextChanged="entryAra_TextChanged" TextColor="#2d2e32" PlaceholderColor="#2d2e32" BackgroundColor="White"/>
+                                <Button Grid.Column="1" Text="Temizle" Clicked="btnAraTemizle_Clicked" TextColor="#2d2e32" BackgroundColor="#d1a98c"/>
+                            </Grid>
+                            <CollectionView x:Name="cvKisilerMobile" Grid.Row="2" ItemsSource="{Binding FiltreliKisiler}">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="Auto,*" Padding="4">
+                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" CheckedChanged="KisiCheck_Changed" Color="#ababab"/>
+                                            <Label Grid.Column="1" Text="{Binding AdSoyad}" VerticalTextAlignment="Center" TextColor="#2d2e32">
+                                                <Label.GestureRecognizers>
+                                                    <TapGestureRecognizer Tapped="KisiSatir_Tapped"/>
+                                                </Label.GestureRecognizers>
+                                            </Label>
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                            <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Button Text="Vazgeç" Clicked="PopupKapat_Clicked" BackgroundColor="#ababab" TextColor="#2d2e32"/>
+                                <Button Grid.Column="1" Text="Tamam" Clicked="PopupTamam_Clicked" BackgroundColor="#ababab" TextColor="#2d2e32"/>
+                            </Grid>
+                        </Grid>
+                    </Frame>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

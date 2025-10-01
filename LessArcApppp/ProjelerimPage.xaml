@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:conv="clr-namespace:LessArcApppp.Converters"
+             xmlns:controls="clr-namespace:LessArcApppp.Controls"
+             x:Class="LessArcApppp.ProjelerimPage"
+             x:Name="__page"
+             BackgroundColor="Transparent"
+             NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="False"
+             SizeChanged="ContentPage_SizeChanged"
+             Title="">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:DotColorConverter x:Key="DotColorConverter" />
+            <conv:TamamlandiGorunurConverter x:Key="TamamlandiGorunurConverter" />
+
+            <Color x:Key="YorumKapsulRenk">#D6C9C1</Color>
+            <Color x:Key="YorumKartRenk">#FFFFFF</Color>
+
+            <Style TargetType="Label" x:Key="YorumBaslikStil">
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="TextColor" Value="#3A3A3A" />
+                <Setter Property="FontSize" Value="{Binding F_Title}" />
+            </Style>
+            <Style TargetType="Label" x:Key="YorumAdStil">
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="TextColor" Value="#1E1E1E" />
+                <Setter Property="FontSize" Value="{Binding F_Body}" />
+            </Style>
+            <Style TargetType="Label" x:Key="YorumTarihStil">
+                <Setter Property="TextColor" Value="#6E6E6E" />
+                <Setter Property="FontSize" Value="{Binding F_Small}" />
+                <Setter Property="HorizontalTextAlignment" Value="End" />
+            </Style>
+            <Style TargetType="Label" x:Key="YorumMetinStil">
+                <Setter Property="TextColor" Value="#1E1E1E" />
+                <Setter Property="FontSize" Value="{Binding F_Body}" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Title Bar -->
+        <controls:CustomTitleBar Grid.Row="0"
+                                 ShowBack="True" />
+
+        <!-- Gövde -->
+        <Grid Grid.Row="1">
+            <Image Source="arkaplann.png"
+                   Aspect="AspectFill"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill"
+                   InputTransparent="True" />
+
+            <!-- ✨ ScrollView ve mobileLayout padding = 0 -->
+            <ScrollView Padding="0">
+                <Grid Padding="{Binding P_Page}">
+
+                    <!-- 🖥 Desktop -->
+                    <Grid x:Name="desktopLayout"
+                          ColumnDefinitions="*,2*"
+                          RowDefinitions="Auto,*"
+                          IsVisible="False"
+                          ColumnSpacing="{Binding S_L}"
+                          RowSpacing="{Binding S_L}">
+                        <!-- SOL sütun -->
+                        <StackLayout Grid.Column="0"
+                                     Padding="20,10,10,10"
+                                     Spacing="{Binding S_M}">
+                            <Label Text="Projeler"
+                                   FontSize="{Binding F_Title}"
+                                   FontAttributes="Bold"
+                                   TextColor="#D6C9C1" />
+                            <CollectionView x:Name="lstProjeler"
+                                            SelectionMode="Single"
+                                            SelectionChanged="lstProjeler_SelectionChanged"
+                                            Margin="0,10,0,0">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Frame BorderColor="LightGray"
+                                               Margin="0,6"
+                                               Padding="{Binding Source={x:Reference __page}, Path=BindingContext.P_ItemPad}"
+                                               BackgroundColor="White"
+                                               CornerRadius="{Binding Source={x:Reference __page}, Path=BindingContext.C_SmallRadius}"
+                                               HasShadow="False">
+                                            <Grid ColumnDefinitions="*,Auto"
+                                                  ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.S_S}"
+                                                  VerticalOptions="Center"
+                                                  HorizontalOptions="FillAndExpand">
+                                                <Label Text="{Binding Baslik}"
+                                                       TextColor="#393737"
+                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.F_Body}"
+                                                       VerticalOptions="Center"
+                                                       Margin="0,0,10,0" />
+                                                <Image Source="checkmark.png"
+                                                       WidthRequest="22"
+                                                       HeightRequest="22"
+                                                       VerticalOptions="Center"
+                                                       IsVisible="{Binding Aciklama, Converter={StaticResource TamamlandiGorunurConverter}}" />
+                                            </Grid>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </StackLayout>
+
+                        <!-- SAĞ sütun -->
+                        <StackLayout Grid.Column="1"
+                                     Padding="20,10"
+                                     Spacing="{Binding S_L}">
+                            <Label x:Name="lblProjeBaslikDesktop"
+                                   FontSize="{Binding F_Title}"
+                                   FontAttributes="Bold"
+                                   TextColor="#D6C9C1"
+                                   Margin="0,0,0,10" />
+
+                            <StackLayout Spacing="{Binding S_M}">
+                                <Label Text="Başlangıç Tarihi" FontSize="{Binding F_Body}" TextColor="#d4d1c4" />
+                                <Label x:Name="lblBaslangicDesktop" FontSize="{Binding F_Body}" TextColor="black" />
+                                <Label Text="Bitiş Tarihi" FontSize="{Binding F_Body}" TextColor="#d4d1c4" Margin="0,6,0,0"/>
+                                <Label x:Name="lblBitisDesktop" FontSize="{Binding F_Body}" TextColor="black" />
+                                <Label Text="Proje Durumu" FontSize="{Binding F_Body}" TextColor="#d4d1c4" Margin="0,6,0,0"/>
+                                <Label x:Name="lblDurumDesktop" FontSize="{Binding F_Body}" TextColor="black" />
+                            </StackLayout>
+
+                            <Frame Padding="{Binding P_FieldPad}"
+                                   CornerRadius="{Binding C_SmallRadius}"
+                                   BackgroundColor="White"
+                                   BorderColor="#555555">
+                                <Entry x:Name="entryAdimDesktop"
+                                       Placeholder="Yeni adım başlığı"
+                                       PlaceholderColor="#CCCCCC"
+                                       FontSize="{Binding F_Body}"
+                                       TextColor="Black"
+                                       BackgroundColor="Transparent" />
+                            </Frame>
+
+                            <Button Text="Adım Ekle"
+                                    Clicked="BtnAdimEkle_Clicked"
+                                    BackgroundColor="#aca8a1"
+                                    TextColor="Black"
+                                    HeightRequest="{Binding H_Button}"
+                                    FontSize="{Binding F_Body}"
+                                    CornerRadius="{Binding C_SmallRadius}"
+                                    HorizontalOptions="Center"
+                                    Margin="0,10,0,0" />
+
+                            <CollectionView x:Name="lstAdimlarDesktop" Margin="0,10,0,0">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="{Binding S_M}" />
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Frame BorderColor="LightGray"
+                                               Padding="{Binding Source={x:Reference __page}, Path=BindingContext.P_ItemPad}"
+                                               Margin="6"
+                                               BackgroundColor="White"
+                                               CornerRadius="{Binding Source={x:Reference __page}, Path=BindingContext.C_Radius}"
+                                               HasShadow="True">
+                                            <Grid ColumnDefinitions="*,Auto,Auto"
+                                                  ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.S_M}"
+                                                  VerticalOptions="Center">
+                                                <Label Grid.Column="0"
+                                                       Text="{Binding AdimBasligi}"
+                                                       TextColor="Black"
+                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.F_Body}"
+                                                       LineBreakMode="WordWrap"
+                                                       HorizontalOptions="FillAndExpand"
+                                                       VerticalOptions="Center" />
+                                                <StackLayout Grid.Column="1"
+                                                             Orientation="Horizontal"
+                                                             HorizontalOptions="End"
+                                                             Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.S_S}"
+                                                             VerticalOptions="Center">
+                                                    <Border WidthRequest="30" HeightRequest="30" BackgroundColor="#E0E0E0"
+                                                            Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=0}"
+                                                            StrokeThickness="1">
+                                                        <Border.StrokeShape>
+                                                            <EllipseGeometry Center="15,15" RadiusX="15" RadiusY="15" />
+                                                        </Border.StrokeShape>
+                                                        <Border.GestureRecognizers>
+                                                            <TapGestureRecognizer CommandParameter="0" Tapped="Dot_Tapped" />
+                                                        </Border.GestureRecognizers>
+                                                    </Border>
+                                                    <Border WidthRequest="30" HeightRequest="30" BackgroundColor="#E0E0E0"
+                                                            Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=1}"
+                                                            StrokeThickness="1">
+                                                        <Border.StrokeShape>
+                                                            <EllipseGeometry Center="15,15" RadiusX="15" RadiusY="15" />
+                                                        </Border.StrokeShape>
+                                                        <Border.GestureRecognizers>
+                                                            <TapGestureRecognizer CommandParameter="1" Tapped="Dot_Tapped" />
+                                                        </Border.GestureRecognizers>
+                                                    </Border>
+                                                    <Border WidthRequest="30" HeightRequest="30" BackgroundColor="#E0E0E0"
+                                                            Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=2}"
+                                                            StrokeThickness="1">
+                                                        <Border.StrokeShape>
+                                                            <EllipseGeometry Center="15,15" RadiusX="15" RadiusY="15" />
+                                                        </Border.StrokeShape>
+                                                        <Border.GestureRecognizers>
+                                                            <TapGestureRecognizer CommandParameter="2" Tapped="Dot_Tapped" />
+                                                        </Border.GestureRecognizers>
+                                                    </Border>
+                                                    <Border WidthRequest="30" HeightRequest="30" BackgroundColor="#E0E0E0"
+                                                            Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=3}"
+                                                            StrokeThickness="1">
+                                                        <Border.StrokeShape>
+                                                            <EllipseGeometry Center="15,15" RadiusX="15" RadiusY="15" />
+                                                        </Border.StrokeShape>
+                                                        <Border.GestureRecognizers>
+                                                            <TapGestureRecognizer CommandParameter="3" Tapped="Dot_Tapped" />
+                                                        </Border.GestureRecognizers>
+                                                    </Border>
+                                                    <Border WidthRequest="30" HeightRequest="30" BackgroundColor="#E0E0E0"
+                                                            Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=4}"
+                                                            StrokeThickness="1">
+                                                        <Border.StrokeShape>
+                                                            <EllipseGeometry Center="15,15" RadiusX="15" RadiusY="15" />
+                                                        </Border.StrokeShape>
+                                                        <Border.GestureRecognizers>
+                                                            <TapGestureRecognizer CommandParameter="4" Tapped="Dot_Tapped" />
+                                                        </Border.GestureRecognizers>
+                                                    </Border>
+
+                                                    <Label Text="{Binding TamamlanmaYuzdesi, StringFormat='{}{0}%'}"
+                                                           VerticalOptions="Center"
+                                                           TextColor="Black"
+                                                           FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.F_Body}"
+                                                           Margin="8,0,0,0" />
+                                                </StackLayout>
+
+                                                <ImageButton Grid.Column="2"
+                                                             Source="sil.png"
+                                                             WidthRequest="26"
+                                                             HeightRequest="26"
+                                                             BackgroundColor="Transparent"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Center"
+                                                             Clicked="BtnAdimSil_Clicked"
+                                                             CommandParameter="{Binding Id}" />
+                                            </Grid>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+
+                            <Frame Margin="0,16,0,24"
+                                   Padding="{Binding P_CardPad}"
+                                   CornerRadius="{Binding C_Radius}"
+                                   BackgroundColor="{StaticResource YorumKapsulRenk}"
+                                   HasShadow="True">
+                                <Grid RowDefinitions="Auto,*" RowSpacing="{Binding S_M}">
+                                    <Label Text="Projeye Yorumlar" Style="{StaticResource YorumBaslikStil}" />
+                                    <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Always" HeightRequest="520">
+                                        <CollectionView x:Name="lstYorumlarDesktop" SelectionMode="None" Margin="0,8,0,0">
+                                            <CollectionView.ItemsLayout>
+                                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="{Binding S_M}"/>
+                                            </CollectionView.ItemsLayout>
+                                            <CollectionView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Frame BackgroundColor="{StaticResource YorumKartRenk}"
+                                                           CornerRadius="{Binding Source={x:Reference __page}, Path=BindingContext.C_Radius}"
+                                                           Padding="{Binding Source={x:Reference __page}, Path=BindingContext.P_ItemPad}"
+                                                           HasShadow="False"
+                                                           Margin="0,6,0,6">
+                                                        <Grid ColumnDefinitions="*,Auto"
+                                                              RowDefinitions="Auto,Auto"
+                                                              ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.S_M}">
+                                                            <Label Text="{Binding KullaniciAdSoyad}"
+                                                                   Grid.Column="0" Grid.Row="0"
+                                                                   Style="{StaticResource YorumAdStil}" />
+                                                            <Label Text="{Binding OlusturmaTarihi, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"
+                                                                   Grid.Column="1" Grid.Row="0"
+                                                                   Style="{StaticResource YorumTarihStil}" />
+                                                            <Label Text="{Binding YorumMetni}"
+                                                                   Grid.ColumnSpan="2" Grid.Row="1"
+                                                                   Style="{StaticResource YorumMetinStil}" />
+                                                        </Grid>
+                                                    </Frame>
+                                                </DataTemplate>
+                                            </CollectionView.ItemTemplate>
+                                        </CollectionView>
+                                    </ScrollView>
+                                </Grid>
+                            </Frame>
+                        </StackLayout>
+                    </Grid>
+
+                    <!-- 📱 Mobile -->
+                    <StackLayout x:Name="mobileLayout"
+                                 IsVisible="False"
+                                 Padding="0"
+                                 Spacing="{Binding S_M}"
+                                 BackgroundColor="Transparent">
+
+                        <Label Text="Bir proje seçin"
+                               FontAttributes="Bold"
+                               FontSize="{Binding F_Body}"
+                               TextColor="#D6C9C1" />
+
+                        <Frame BackgroundColor="White"
+                               CornerRadius="{Binding C_SmallRadius}"
+                               Padding="{Binding P_FieldPad}"
+                               HasShadow="True">
+                            <Picker x:Name="pickerProjeler"
+                                    Title="Projeler"
+                                    SelectedIndexChanged="pickerProjeler_SelectedIndexChanged"
+                                    ItemDisplayBinding="{Binding Baslik}"
+                                    TextColor="#D6C9C1"
+                                    FontSize="{Binding F_Body}"
+                                    BackgroundColor="Transparent"/>
+                        </Frame>
+
+                        <Label x:Name="lblProjeBaslik"
+                               FontSize="{Binding F_Title}"
+                               FontAttributes="Bold"
+                               TextColor="#D6C9C1"
+                               Margin="0,8,0,0" />
+
+                        <Label Text="Başlangıç Tarihi" TextColor="#D6C9C1" FontSize="{Binding F_Body}" />
+                        <Label x:Name="lblBaslangic" FontSize="{Binding F_Body}" FontAttributes="Bold" TextColor="White" />
+                        <Label Text="Bitiş Tarihi" TextColor="#D6C9C1" FontSize="{Binding F_Body}" />
+                        <Label x:Name="lblBitis" FontSize="{Binding F_Body}" FontAttributes="Bold" TextColor="White" />
+                        <Label Text="Proje Durumu" FontSize="{Binding F_Body}" FontAttributes="Bold" TextColor="#D6C9C1" />
+                        <Label x:Name="lblDurumMobile" FontSize="{Binding F_Body}" FontAttributes="Bold" TextColor="White" />
+
+                        <Frame BackgroundColor="White"
+                               CornerRadius="{Binding C_SmallRadius}"
+                               Padding="{Binding P_FieldPad}"
+                               HasShadow="True">
+                            <Entry x:Name="entryAdim"
+                                   Placeholder="Yeni adım başlığı"
+                                   FontSize="{Binding F_Body}"
+                                   TextColor="Black"
+                                   BackgroundColor="Transparent" />
+                        </Frame>
+
+                        <Button Text="📌 Adım Ekle"
+                                Clicked="BtnAdimEkle_Clicked"
+                                BackgroundColor="#f3f3f1"
+                                TextColor="black"
+                                WidthRequest="200"
+                                HeightRequest="{Binding H_Button}"
+                                CornerRadius="{Binding C_SmallRadius}"
+                                FontSize="{Binding F_Body}" />
+
+                        <CollectionView x:Name="lstAdimlar" Margin="0,10,0,0">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="{Binding S_S}" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BorderColor="LightGray"
+                                           Padding="{Binding Source={x:Reference __page}, Path=BindingContext.P_ItemPad}"
+                                           Margin="6"
+                                           BackgroundColor="White"
+                                           CornerRadius="{Binding Source={x:Reference __page}, Path=BindingContext.C_SmallRadius}">
+                                        <Grid ColumnDefinitions="*,Auto,Auto"
+                                              ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.S_S}"
+                                              VerticalOptions="Center">
+                                            <Label Grid.Column="0"
+                                                   Text="{Binding AdimBasligi}"
+                                                   TextColor="Black"
+                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.F_Body}"
+                                                   LineBreakMode="WordWrap"
+                                                   HorizontalOptions="FillAndExpand"
+                                                   VerticalOptions="Center" />
+
+                                            <!-- 🔵 Noktalar: boyut M_Dot -->
+                                            <StackLayout Grid.Column="1"
+                                                         Orientation="Horizontal"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Center"
+                                                         Spacing="3">
+                                                <Border WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        BackgroundColor="#E0E0E0"
+                                                        Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=0}"
+                                                        StrokeThickness="1">
+                                                    <Border.StrokeShape>
+                                                        <EllipseGeometry Center="10,10" RadiusX="10" RadiusY="10" />
+                                                    </Border.StrokeShape>
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer CommandParameter="0" Tapped="Dot_Tapped" />
+                                                    </Border.GestureRecognizers>
+                                                </Border>
+
+                                                <Border WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        BackgroundColor="#E0E0E0"
+                                                        Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=1}"
+                                                        StrokeThickness="1">
+                                                    <Border.StrokeShape>
+                                                        <EllipseGeometry Center="10,10" RadiusX="10" RadiusY="10" />
+                                                    </Border.StrokeShape>
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer CommandParameter="1" Tapped="Dot_Tapped" />
+                                                    </Border.GestureRecognizers>
+                                                </Border>
+
+                                                <Border WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        BackgroundColor="#E0E0E0"
+                                                        Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=2}"
+                                                        StrokeThickness="1">
+                                                    <Border.StrokeShape>
+                                                        <EllipseGeometry Center="10,10" RadiusX="10" RadiusY="10" />
+                                                    </Border.StrokeShape>
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer CommandParameter="2" Tapped="Dot_Tapped" />
+                                                    </Border.GestureRecognizers>
+                                                </Border>
+
+                                                <Border WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        BackgroundColor="#E0E0E0"
+                                                        Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=3}"
+                                                        StrokeThickness="1">
+                                                    <Border.StrokeShape>
+                                                        <EllipseGeometry Center="10,10" RadiusX="10" RadiusY="10" />
+                                                    </Border.StrokeShape>
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer CommandParameter="3" Tapped="Dot_Tapped" />
+                                                    </Border.GestureRecognizers>
+                                                </Border>
+
+                                                <Border WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Dot}"
+                                                        BackgroundColor="#E0E0E0"
+                                                        Stroke="{Binding TamamlanmaYuzdesi, Converter={StaticResource DotColorConverter}, ConverterParameter=4}"
+                                                        StrokeThickness="1">
+                                                    <Border.StrokeShape>
+                                                        <EllipseGeometry Center="10,10" RadiusX="10" RadiusY="10" />
+                                                    </Border.StrokeShape>
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer CommandParameter="4" Tapped="Dot_Tapped" />
+                                                    </Border.GestureRecognizers>
+                                                </Border>
+
+                                                <Label Text="{Binding TamamlanmaYuzdesi, StringFormat='{}{0}%'}"
+                                                       VerticalOptions="Center"
+                                                       TextColor="Black"
+                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.F_Body}"
+                                                       Margin="6,0,0,0" />
+                                            </StackLayout>
+
+                                            <!-- ❌ Sil ikonu: boyut M_Delete -->
+                                            <ImageButton Grid.Column="2"
+                                                         Source="sil.png"
+                                                         WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Delete}"
+                                                         HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.M_Delete}"
+                                                         BackgroundColor="Transparent"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Center"
+                                                         Clicked="BtnAdimSil_Clicked"
+                                                         CommandParameter="{Binding Id}" />
+                                        </Grid>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+
+                        <Frame Margin="0,16,0,24"
+                               Padding="{Binding P_CardPad}"
+                               CornerRadius="{Binding C_Radius}"
+                               BackgroundColor="{StaticResource YorumKapsulRenk}"
+                               HasShadow="True">
+                            <Grid RowDefinitions="Auto,*" RowSpacing="{Binding S_M}">
+                                <Label Text="Projeye Yorumlar" Style="{StaticResource YorumBaslikStil}" FontSize="{Binding F_Body}" />
+                                <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Always" HeightRequest="360">
+                                    <CollectionView x:Name="lstYorumlarMobile" SelectionMode="None" Margin="0,8,0,0">
+                                        <CollectionView.ItemsLayout>
+                                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="{Binding S_M}"/>
+                                        </CollectionView.ItemsLayout>
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Frame BackgroundColor="{StaticResource YorumKartRenk}"
+                                                       CornerRadius="{Binding Source={x:Reference __page}, Path=BindingContext.C_Radius}"
+                                                       Padding="{Binding Source={x:Reference __page}, Path=BindingContext.P_ItemPad}"
+                                                       HasShadow="False"
+                                                       Margin="0,6,0,6">
+                                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto"
+                                                          ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.S_S}">
+                                                        <Label Text="{Binding KullaniciAdSoyad}" Grid.Column="0" Grid.Row="0" Style="{StaticResource YorumAdStil}" />
+                                                        <Label Text="{Binding OlusturmaTarihi, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"
+                                                               Grid.Column="1" Grid.Row="0" Style="{StaticResource YorumTarihStil}" />
+                                                        <Label Text="{Binding YorumMetni}" Grid.ColumnSpan="2" Grid.Row="1" Style="{StaticResource YorumMetinStil}" />
+                                                    </Grid>
+                                                </Frame>
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
+                                </ScrollView>
+                            </Grid>
+                        </Frame>
+                    </StackLayout>
+                </Grid>
+            </ScrollView>
+        </Grid>
+    </Grid>
+</ContentPage>

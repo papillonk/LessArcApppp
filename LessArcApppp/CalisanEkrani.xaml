@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="LessArcApppp.CalisanEkrani"
+    x:Name="__page"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False"
+    SizeChanged="ContentPage_SizeChanged">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="Bej">#D6C9C1</Color>
+            <RoundRectangle x:Key="RR18" CornerRadius="18" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <!-- SADE GÖVDE (CustomTitleBar KALDIRILDI) -->
+    <Grid>
+        <!-- Arka plan -->
+        <Image Source="arkaplann.png"
+               Aspect="AspectFill"
+               HorizontalOptions="Fill"
+               VerticalOptions="Fill"
+               InputTransparent="True" />
+
+        <VerticalStackLayout
+            Spacing="{Binding S_L}"
+            Padding="0"
+            HorizontalOptions="Center"
+            VerticalOptions="Center">
+
+            <!-- Hoşgeldin -->
+            <Label x:Name="lblHosgeldin"
+                   Text="Hoşgeldin 👋"
+                   FontSize="{Binding F_Title}"
+                   FontAttributes="Italic"
+                   FontFamily="ArchitectFont"
+                   TextColor="White"
+                   HorizontalOptions="Center"
+                   Margin="{Binding M_Welcome}">
+                <Label.Shadow>
+                    <Shadow Brush="Black" Offset="1,1" Radius="2" Opacity="0.4" />
+                </Label.Shadow>
+            </Label>
+
+            <!-- 📣 Bildirim Gönder -->
+            <Border WidthRequest="{Binding W_Button}" HeightRequest="{Binding H_Button}"
+                    BackgroundColor="#66000000"
+                    Stroke="{StaticResource Bej}" StrokeThickness="{Binding T_Border}"
+                    StrokeShape="{StaticResource RR18}"
+                    Padding="{Binding P_Button}">
+                <Grid>
+                    <Label Text="📣  Bildirim Gönder"
+                           FontSize="{Binding F_Body}"
+                           FontFamily="ArchitectFont"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </Grid>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="BtnBildirimGonder_Clicked" />
+                </Border.GestureRecognizers>
+            </Border>
+
+            <!-- 📁 Projelerim -->
+            <Border WidthRequest="{Binding W_Button}" HeightRequest="{Binding H_Button}"
+                    BackgroundColor="#66000000"
+                    Stroke="{StaticResource Bej}" StrokeThickness="{Binding T_Border}"
+                    StrokeShape="{StaticResource RR18}"
+                    Padding="{Binding P_Button}">
+                <Grid>
+                    <Label Text="📁  Projelerim"
+                           FontSize="{Binding F_Body}"
+                           FontFamily="ArchitectFont"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </Grid>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="BtnProjelerim_Clicked" />
+                </Border.GestureRecognizers>
+            </Border>
+
+            <!-- 🗓️ Planlarım -->
+            <Border WidthRequest="{Binding W_Button}" HeightRequest="{Binding H_Button}"
+                    BackgroundColor="#66000000"
+                    Stroke="{StaticResource Bej}" StrokeThickness="{Binding T_Border}"
+                    StrokeShape="{StaticResource RR18}"
+                    Padding="{Binding P_Button}">
+                <Grid>
+                    <Label Text="🗓️  Planlarım"
+                           FontSize="{Binding F_Body}"
+                           FontFamily="ArchitectFont"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </Grid>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="BtnPlanlarim_Clicked" />
+                </Border.GestureRecognizers>
+            </Border>
+
+            <!-- ⚙️ Ayarlar -->
+            <Border WidthRequest="{Binding W_Button}" HeightRequest="{Binding H_Button}"
+                    BackgroundColor="#66000000"
+                    Stroke="{StaticResource Bej}" StrokeThickness="{Binding T_Border}"
+                    StrokeShape="{StaticResource RR18}"
+                    Padding="{Binding P_Button}">
+                <Grid>
+                    <Label Text="⚙️  Ayarlar"
+                           FontSize="{Binding F_Body}"
+                           FontFamily="ArchitectFont"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </Grid>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="BtnAyarlar_Clicked" />
+                </Border.GestureRecognizers>
+            </Border>
+
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

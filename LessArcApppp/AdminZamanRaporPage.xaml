@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Name="__page"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:LessArcApppp.Controls"
+    x:Class="LessArcApppp.AdminZamanRaporPage"
+    BackgroundColor="Transparent"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False">
+
+    <!-- SAYFA DÜZENİ: ÜST BAR + GÖVDE -->
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- 🔹 ÜST BAR -->
+        <controls:CustomTitleBar 
+            Grid.Row="0"
+            ShowBack="True"/>
+
+        <!-- 🔹 GÖVDE -->
+        <Grid Grid.Row="1" Padding="0">
+
+            <!-- Arka plan -->
+            <Image Source="arkaplann.png"
+                   Aspect="AspectFill"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill"
+                   IsEnabled="False" />
+
+            <!-- İçerik -->
+            <Grid Padding="{Binding ScaledPadding}"
+                  RowDefinitions="Auto,*,Auto"
+                  RowSpacing="{Binding ScaledSpacing}">
+
+                <!-- Üst bilgi -->
+                <Label x:Name="lblSeciliProjeAdi"
+                       Text="📅 Renkli noktaya tıklayarak proje ismini görebilirsiniz"
+                       FontSize="{Binding TitleFontSize}"
+                       FontAttributes="Italic"
+                       TextColor="#e3ddd8"
+                       HorizontalOptions="Center"
+                       Margin="{Binding M_BottomSmall}"
+                       Grid.Row="0" />
+
+                <!-- Takvim listesi -->
+                <Frame x:Name="frameTakvim"
+                       Grid.Row="1"
+                       BackgroundColor="White"
+                       CornerRadius="20"
+                       Padding="0"
+                       HasShadow="True"
+                       HorizontalOptions="Fill"
+                       VerticalOptions="FillAndExpand">
+
+                    <CollectionView x:Name="collectionView"
+                                    ItemsSource="{Binding TakvimGunleri}"
+                                    ItemsLayout="VerticalList"
+                                    SelectionMode="None"
+                                    VerticalOptions="FillAndExpand">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame BackgroundColor="#FAFAFA"
+                                       CornerRadius="16"
+                                       Padding="{Binding Source={x:Reference collectionView}, Path=BindingContext.ItemPadding}"
+                                       HasShadow="True"
+                                       BorderColor="#DDDDDD"
+                                       Margin="{Binding Source={x:Reference collectionView}, Path=BindingContext.ItemMargin}">
+                                    <StackLayout Spacing="{Binding Source={x:Reference collectionView}, Path=BindingContext.SmallSpacing}">
+                                        <Grid ColumnDefinitions="Auto,*,Auto"
+                                              VerticalOptions="Center"
+                                              HorizontalOptions="FillAndExpand">
+                                            <!-- İkon -->
+                                            <Image Source="calendar.png"
+                                                   WidthRequest="{Binding Source={x:Reference collectionView}, Path=BindingContext.IconSize}"
+                                                   HeightRequest="{Binding Source={x:Reference collectionView}, Path=BindingContext.IconSize}"
+                                                   VerticalOptions="Center" />
+
+                                            <!-- Tarih -->
+                                            <Label Grid.Column="1"
+                                                   Text="{Binding Tarih, StringFormat='{0:dd MMMM yyyy}'}"
+                                                   FontSize="{Binding Source={x:Reference collectionView}, Path=BindingContext.RowTitleFontSize}"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#333333"
+                                                   VerticalOptions="Center"
+                                                   HorizontalOptions="StartAndExpand"
+                                                   Margin="{Binding Source={x:Reference collectionView}, Path=BindingContext.M_LeftSmall}" />
+                                        </Grid>
+
+                                        <!-- Noktalar -->
+                                        <FlexLayout Wrap="Wrap"
+                                                    Direction="Row"
+                                                    AlignItems="Center"
+                                                    JustifyContent="Start"
+                                                    BindableLayout.ItemsSource="{Binding Projeler}"
+                                                    Margin="{Binding Source={x:Reference collectionView}, Path=BindingContext.M_LeftTiny}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Frame WidthRequest="{Binding Source={x:Reference collectionView}, Path=BindingContext.DotSize}"
+                                                           HeightRequest="{Binding Source={x:Reference collectionView}, Path=BindingContext.DotSize}"
+                                                           CornerRadius="{Binding Source={x:Reference collectionView}, Path=BindingContext.DotCorner}"
+                                                           Padding="0"
+                                                           Margin="{Binding Source={x:Reference collectionView}, Path=BindingContext.DotMargin}"
+                                                           BackgroundColor="{Binding RenkKodu}"
+                                                           BorderColor="#888888"
+                                                           HasShadow="False">
+                                                        <Frame.GestureRecognizers>
+                                                            <TapGestureRecognizer
+                                                                Command="{Binding Source={x:Reference collectionView}, Path=BindingContext.DotTiklandiCommand}"
+                                                                CommandParameter="{Binding .}" />
+                                                        </Frame.GestureRecognizers>
+                                                    </Frame>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </FlexLayout>
+                                    </StackLayout>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Frame>
+
+                <!-- Alt butonlar -->
+                <Grid Grid.Row="2"
+                      ColumnDefinitions="*,*"
+                      ColumnSpacing="{Binding ScaledSpacing}">
+
+                    <Button Text="✓ TAMAMLANMIŞ"
+                            BackgroundColor="#e3ddd8"
+                            TextColor="#2b302e"
+                            CornerRadius="14"
+                            FontAttributes="Bold"
+                            HeightRequest="{Binding ButtonHeight}"
+                            Padding="{Binding ButtonPadding}"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Center"
+                            LineBreakMode="WordWrap"
+                            FontSize="{Binding ButtonFontSize}"
+                            Clicked="OnTamamlanmisClicked" />
+
+                    <Button Grid.Column="1"
+                            Text="⏳ Başlamamış ve Devam eden Projeler"
+                            BackgroundColor="#e3ddd8"
+                            TextColor="#2b302e"
+                            CornerRadius="14"
+                            FontAttributes="Bold"
+                            HeightRequest="{Binding TallButtonHeight}"
+                            Padding="{Binding ButtonPadding}"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Center"
+                            LineBreakMode="WordWrap"
+                            FontSize="{Binding ButtonFontSize}"
+                            Clicked="OnDevamEdenClicked" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

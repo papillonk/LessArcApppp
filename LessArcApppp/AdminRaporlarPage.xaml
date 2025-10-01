@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Name="__page"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:LessArcApppp.Controls"
+    x:Class="LessArcApppp.AdminRaporlarPage"
+    Title=""
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="Fume">#2B302E</Color>
+            <Color x:Key="Bej">#D6C9C1</Color>
+            <Color x:Key="KirikBeyaz">#F3F1EE</Color>
+            <Color x:Key="Beyaz">#FFFFFF</Color>
+
+            <Style x:Key="SectionHeaderFrame" TargetType="Frame">
+                <Setter Property="CornerRadius" Value="16" />
+                <Setter Property="BackgroundColor" Value="{StaticResource Bej}" />
+                <Setter Property="BorderColor" Value="{StaticResource Bej}" />
+                <Setter Property="Padding" Value="16,12" />
+                <Setter Property="HasShadow" Value="True" />
+                <Setter Property="HorizontalOptions" Value="Center" />
+                <Setter Property="Margin" Value="0,0,0,16" />
+            </Style>
+
+            <Style x:Key="SectionHeaderLabel" TargetType="Label">
+                <Setter Property="TextColor" Value="{StaticResource Fume}" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="HorizontalTextAlignment" Value="Center" />
+                <Setter Property="HorizontalOptions" Value="Center" />
+                <Setter Property="LineBreakMode" Value="NoWrap" />
+                <Setter Property="CharacterSpacing" Value="0.5" />
+            </Style>
+
+            <Style x:Key="FumePrimaryButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#66000000" />
+                <Setter Property="TextColor" Value="{StaticResource Beyaz}" />
+                <Setter Property="BorderColor" Value="{StaticResource Bej}" />
+                <Setter Property="BorderWidth" Value="3" />
+                <Setter Property="CornerRadius" Value="14" />
+                <Setter Property="HorizontalOptions" Value="Fill" />
+                <Setter Property="Shadow" Value="Medium" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <!-- ÜST BAR + GÖVDE düzeni -->
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- 🔹 ÜST: Custom Title Bar (geri ok açık) -->
+        <controls:CustomTitleBar
+            Grid.Row="0"
+            ShowBack="True" />
+
+        <!-- 🔹 ALT: Sayfanın mevcut içeriği -->
+        <Grid Grid.Row="1">
+
+            <!-- Arka plan -->
+            <Image Source="arkaplann.png"
+                   Aspect="AspectFill"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill"
+                   IsEnabled="False" />
+
+            <!-- 💻 MASAÜSTÜ -->
+            <Grid x:Name="DesktopLayoutView"
+                  IsVisible="False"
+                  Padding="{Binding P_Page}">
+                <ScrollView>
+                    <VerticalStackLayout
+                        Spacing="{Binding S_L}"
+                        Padding="0"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center">
+
+                        <Frame Style="{StaticResource SectionHeaderFrame}"
+                               CornerRadius="{Binding C_Radius}"
+                               Padding="{Binding P_CardPad}">
+                            <Label Text="RAPORLAMA SEÇİNİZ"
+                                   Style="{StaticResource SectionHeaderLabel}"
+                                   FontSize="{Binding F_Title}" />
+                        </Frame>
+
+                        <VerticalStackLayout
+                            Spacing="{Binding S_M}"
+                            HorizontalOptions="Center"
+                            WidthRequest="560">
+                            <Button
+                                Text="👷 Çalışan Bazlı Raporlama"
+                                Clicked="BtnCalisanRapor_Clicked"
+                                Style="{StaticResource FumePrimaryButton}"
+                                FontSize="{Binding F_Body}"
+                                HeightRequest="{Binding H_Button}"
+                                CornerRadius="{Binding C_SmallRadius}"
+                                Padding="{Binding P_ItemPad}" />
+
+                            <Button
+                                Text="📅 Zaman Bazlı Raporlama"
+                                Clicked="BtnZamanRapor_Clicked"
+                                Style="{StaticResource FumePrimaryButton}"
+                                FontSize="{Binding F_Body}"
+                                HeightRequest="{Binding H_Button}"
+                                CornerRadius="{Binding C_SmallRadius}"
+                                Padding="{Binding P_ItemPad}" />
+                        </VerticalStackLayout>
+
+                        <Grid HeightRequest="{Binding S_L}" />
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Grid>
+
+            <!-- 📱 MOBİL -->
+            <ScrollView x:Name="MobileLayoutView" IsVisible="False">
+                <!-- ScrollView içinde dikey ortalama için 3 satırlı grid -->
+                <Grid RowDefinitions="*,Auto,*"
+                      Padding="{Binding P_Page}">
+                    <VerticalStackLayout Grid.Row="1"
+                                         Spacing="{Binding S_M}"
+                                         HorizontalOptions="Center"
+                                         VerticalOptions="Center">
+
+                        <!-- Başlık ortada -->
+                        <Frame Style="{StaticResource SectionHeaderFrame}"
+                               CornerRadius="{Binding C_Radius}"
+                               Padding="{Binding P_CardPad}"
+                               HorizontalOptions="Center">
+                            <Label Text="RAPORLAMA SEÇİNİZ"
+                                   Style="{StaticResource SectionHeaderLabel}"
+                                   FontSize="{Binding F_Title}" />
+                        </Frame>
+
+                        <!-- Butonlar ortada -->
+                        <VerticalStackLayout Spacing="{Binding S_M}"
+                                             HorizontalOptions="Center"
+                                             WidthRequest="320">
+                            <Button Text="👷 Çalışan Bazlı Raporlama"
+                                    Clicked="BtnCalisanRapor_Clicked"
+                                    Style="{StaticResource FumePrimaryButton}"
+                                    FontSize="{Binding F_Body}"
+                                    HeightRequest="{Binding H_Button}"
+                                    CornerRadius="{Binding C_SmallRadius}"
+                                    Padding="{Binding P_ItemPad}"
+                                    HorizontalOptions="Center" />
+
+                            <Button Text="📅 Zaman Bazlı Raporlama"
+                                    Clicked="BtnZamanRapor_Clicked"
+                                    Style="{StaticResource FumePrimaryButton}"
+                                    FontSize="{Binding F_Body}"
+                                    HeightRequest="{Binding H_Button}"
+                                    CornerRadius="{Binding C_SmallRadius}"
+                                    Padding="{Binding P_ItemPad}"
+                                    HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+
+                    </VerticalStackLayout>
+                </Grid>
+            </ScrollView>
+
+        </Grid>
+    </Grid>
+</ContentPage>

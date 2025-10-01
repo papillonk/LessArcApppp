@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Name="__page"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:LessArcApppp.Controls"
+    x:Class="LessArcApppp.AdminPlanlarPage"
+    BackgroundColor="Transparent"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False">
+
+    <!-- ÜST BAR + GÖVDE -->
+    <Grid RowSpacing="0" RowDefinitions="Auto,*">
+
+        <!-- Arka plan (üst bar + gövdeyi kaplasın) -->
+        <Image
+            Grid.RowSpan="2"
+            Source="arkaplann.png"
+            Aspect="AspectFill"
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            InputTransparent="True"
+            ZIndex="0" />
+
+        <!-- ÜST BAR (başlık yok; sadece geri ok) -->
+        <controls:CustomTitleBar
+            Grid.Row="0"
+            Title=""
+            ShowBack="True" />
+
+        <!-- ====== GÖVDE ====== -->
+        <Grid Grid.Row="1">
+
+            <!-- ================= DESKTOP ================= -->
+            <Grid x:Name="desktopLayout"
+                  Padding="{Binding ScaledPadding}"
+                  ColumnSpacing="{Binding ScaledSpacing}"
+                  IsVisible="{OnIdiom Phone=false, Tablet=false, Desktop=true}">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- ========== SOL: TAKVİM ========== -->
+                <Grid Grid.Column="0" RowSpacing="{Binding ScaledSmallSpacing}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Ay gezgini -->
+                    <Grid Grid.Row="0" Padding="{Binding P_BottomSmall}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="btnOncekiAy"
+                                Text="‹"
+                                FontSize="{Binding ScaledFontSize2}"
+                                TextColor="#222"
+                                BackgroundColor="#F1EFEA"
+                                CornerRadius="12"
+                                HeightRequest="{Binding ScaledButtonHeight}"
+                                WidthRequest="{Binding ScaledButtonHeight}"
+                                Clicked="BtnOncekiAy_Clicked" />
+
+                        <Label x:Name="lblAyYili"
+                               Grid.Column="1"
+                               FontSize="{Binding ScaledFontSize2}"
+                               FontAttributes="Bold"
+                               TextColor="#F9F9F9"
+                               HorizontalOptions="Center" />
+
+                        <Button x:Name="btnSonrakiAy"
+                                Grid.Column="2"
+                                Text="›"
+                                FontSize="{Binding ScaledFontSize2}"
+                                TextColor="#222"
+                                BackgroundColor="#F1EFEA"
+                                CornerRadius="12"
+                                HeightRequest="{Binding ScaledButtonHeight}"
+                                WidthRequest="{Binding ScaledButtonHeight}"
+                                Clicked="BtnSonrakiAy_Clicked" />
+                    </Grid>
+
+                    <!-- Takvim gövdesi -->
+                    <Frame Grid.Row="1"
+                           BackgroundColor="#D6C9C1"
+                           CornerRadius="20"
+                           Padding="{Binding ScaledSmallPadding}"
+                           HasShadow="True"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill"
+                           Scale="0.90">
+                        <Grid RowSpacing="{Binding ScaledSmallSpacing}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Gün başlıkları -->
+                            <Grid Grid.Row="0" Padding="{Binding P_BottomSmall}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Label Text="P" Grid.Column="0" HorizontalOptions="Center"
+                                       FontSize="{Binding ScaledFontSize3}" FontAttributes="Bold" TextColor="#333" />
+                                <Label Text="S" Grid.Column="1" HorizontalOptions="Center"
+                                       FontSize="{Binding ScaledFontSize3}" FontAttributes="Bold" TextColor="#333" />
+                                <Label Text="Ç" Grid.Column="2" HorizontalOptions="Center"
+                                       FontSize="{Binding ScaledFontSize3}" FontAttributes="Bold" TextColor="#333" />
+                                <Label Text="P" Grid.Column="3" HorizontalOptions="Center"
+                                       FontSize="{Binding ScaledFontSize3}" FontAttributes="Bold" TextColor="#333" />
+                                <Label Text="C" Grid.Column="4" HorizontalOptions="Center"
+                                       FontSize="{Binding ScaledFontSize3}" FontAttributes="Bold" TextColor="#333" />
+                                <Label Text="C" Grid.Column="5" HorizontalOptions="Center"
+                                       FontSize="{Binding ScaledFontSize3}" FontAttributes="Bold" TextColor="#333" />
+                                <Label Text="P" Grid.Column="6" HorizontalOptions="Center"
+                                       FontSize="{Binding ScaledFontSize3}" FontAttributes="Bold" TextColor="#333" />
+                            </Grid>
+
+                            <!-- Gün hücreleri -->
+                            <ScrollView Grid.Row="1">
+                                <Grid x:Name="TakvimGrid"
+                                      Margin="{Binding M_TopSmall}"
+                                      RowSpacing="{Binding CalendarGridSpacing}"
+                                      ColumnSpacing="{Binding CalendarGridSpacing}">
+                                    <Grid.Resources>
+                                        <Style TargetType="Button">
+                                            <Setter Property="WidthRequest"  Value="{Binding DayCellSize}" />
+                                            <Setter Property="HeightRequest" Value="{Binding DayCellSize}" />
+                                            <Setter Property="CornerRadius"  Value="16" />
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="BackgroundColor" Value="#FFFFFF" />
+                                            <Setter Property="TextColor" Value="#000000" />
+                                            <Setter Property="FontAttributes" Value="Bold" />
+                                            <Setter Property="FontSize" Value="{Binding ScaledFontSize3}" />
+                                        </Style>
+                                        <Style TargetType="Frame">
+                                            <Setter Property="WidthRequest"  Value="{Binding DayCellSize}" />
+                                            <Setter Property="HeightRequest" Value="{Binding DayCellSize}" />
+                                            <Setter Property="CornerRadius" Value="16" />
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="HasShadow" Value="False" />
+                                            <Setter Property="BackgroundColor" Value="#FFFFFF" />
+                                        </Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="WidthRequest"  Value="{Binding DayCellSize}" />
+                                            <Setter Property="HeightRequest" Value="{Binding DayCellSize}" />
+                                            <Setter Property="StrokeShape">
+                                                <Setter.Value>
+                                                    <RoundRectangle CornerRadius="16" />
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Grid.Resources>
+                                </Grid>
+                            </ScrollView>
+                        </Grid>
+                    </Frame>
+                </Grid>
+
+                <!-- ========== SAĞ: PLAN PANELİ ========== -->
+                <Grid Grid.Column="1"
+                      RowSpacing="{Binding ScaledSmallSpacing}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Başlıklar -->
+                    <VerticalStackLayout Grid.Row="0" Spacing="{Binding ScaledSmallSpacing}">
+                        <Label Text="Seçilen Tarih:" FontAttributes="Bold"
+                               TextColor="#F9F9F9" FontSize="{Binding ScaledFontSize3}" />
+                        <Label x:Name="lblSecilenTarih" TextColor="#FFFFFF"
+                               FontSize="{Binding ScaledFontSize3}" />
+                        <Label Text="Planlar:" FontAttributes="Bold" TextColor="#F9F9F9"
+                               FontSize="{Binding ScaledFontSize3}" Margin="{Binding M_TopSmall}" />
+                    </VerticalStackLayout>
+
+                    <!-- Liste kartı -->
+                    <Frame Grid.Row="1"
+                           BackgroundColor="#FFFFFF"
+                           CornerRadius="16"
+                           Padding="{Binding ScaledSmallPadding}"
+                           HasShadow="True">
+                        <CollectionView x:Name="planListesi"
+                                        ItemSizingStrategy="MeasureAllItems"
+                                        BackgroundColor="Transparent"
+                                        SelectionMode="None">
+                            <!-- Aralara boşluk TEK tanım -->
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical"
+                                                   ItemSpacing="{Binding ScaledSmallSpacing}" />
+                            </CollectionView.ItemsLayout>
+
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="#F5F5F5"
+                                           CornerRadius="12"
+                                           Padding="{Binding ScaledSmallPadding}"
+                                           Margin="{Binding M_VertSmall}"
+                                           HasShadow="False">
+                                        <Grid ColumnSpacing="{Binding ScaledSmallSpacing}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Label Text="{Binding Baslik}" TextColor="#000"
+                                                   FontAttributes="Bold" VerticalOptions="Center"
+                                                   FontSize="{Binding ScaledFontSize3}" />
+
+                                            <ImageButton Grid.Column="1"
+                                                         Source="pencil.png"
+                                                         BackgroundColor="Transparent"
+                                                         WidthRequest="24" HeightRequest="24"
+                                                         Padding="0"
+                                                         Clicked="PlanDuzenle_Clicked" />
+                                            <ImageButton Grid.Column="2"
+                                                         Source="sil.png"
+                                                         BackgroundColor="Transparent"
+                                                         WidthRequest="24" HeightRequest="24"
+                                                         Padding="0"
+                                                         Clicked="PlanSil_Clicked" />
+                                        </Grid>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Frame>
+
+                    <!-- Alt giriş + ekle -->
+                    <Grid Grid.Row="2"
+                          ColumnSpacing="{Binding ScaledSpacing}"
+                          Padding="{Binding P_TopSmall}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Frame Grid.Column="0"
+                               BackgroundColor="#FFFFFF"
+                               CornerRadius="12"
+                               Padding="{Binding ScaledSmallPadding}"
+                               HasShadow="True">
+                            <Entry x:Name="entryPlan"
+                                   Placeholder="Yeni plan girin..."
+                                   PlaceholderColor="#9A9A9A"
+                                   FontSize="{Binding ScaledFontSize3}"
+                                   TextColor="#000"
+                                   BackgroundColor="Transparent" />
+                        </Frame>
+
+                        <Button Grid.Column="1"
+                                Text="➕ Plan Ekle"
+                                Clicked="PlanEkle_Clicked"
+                                BackgroundColor="#B0B0B0"
+                                TextColor="#FFFFFF"
+                                CornerRadius="10"
+                                HeightRequest="{Binding ScaledButtonHeight}"
+                                WidthRequest="{Binding ScaledButtonWidth}"
+                                FontSize="{Binding ScaledFontSize4}"
+                                FontAttributes="Bold"
+                                HorizontalOptions="End"
+                                VerticalOptions="Center" />
+                    </Grid>
+                </Grid>
+            </Grid>
+
+            <!-- ================= MOBILE/TABLET ================= -->
+            <ScrollView x:Name="mobileLayout"
+                        IsVisible="{OnIdiom Phone=true, Tablet=true, Desktop=false}">
+                <VerticalStackLayout Padding="{Binding ScaledPadding}"
+                                     Spacing="{Binding ScaledSpacing}">
+
+                    <Frame BackgroundColor="#D6C9C1"
+                           CornerRadius="18"
+                           Padding="{Binding ScaledSmallPadding}"
+                           HasShadow="True">
+                        <VerticalStackLayout Spacing="{Binding ScaledSmallSpacing}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button x:Name="btnOncekiAyMobile"
+                                        Text="‹"
+                                        FontSize="{Binding ScaledFontSize}"
+                                        TextColor="#333"
+                                        BackgroundColor="Transparent"
+                                        FontAttributes="Bold"
+                                        Clicked="BtnOncekiAy_Clicked" />
+
+                                <Label x:Name="lblAyYiliMobile"
+                                       FontSize="{Binding ScaledFontSize3}"
+                                       FontAttributes="Bold" TextColor="#333"
+                                       HorizontalOptions="Center" Grid.Column="1" />
+
+                                <Button x:Name="btnSonrakiAyMobile"
+                                        Text="›" FontAttributes="Bold"
+                                        FontSize="{Binding ScaledFontSize}"
+                                        TextColor="#333" BackgroundColor="Transparent"
+                                        Clicked="BtnSonrakiAy_Clicked" Grid.Column="2" />
+                            </Grid>
+
+                            <Grid Padding="{Binding P_BottomSmall}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Label Text="P" Grid.Column="0" HorizontalOptions="Center" FontAttributes="Bold" TextColor="#333"
+                                       FontSize="{Binding ScaledFontSize4}" />
+                                <Label Text="S" Grid.Column="1" HorizontalOptions="Center" FontAttributes="Bold" TextColor="#333"
+                                       FontSize="{Binding ScaledFontSize4}" />
+                                <Label Text="Ç" Grid.Column="2" HorizontalOptions="Center" FontAttributes="Bold" TextColor="#333"
+                                       FontSize="{Binding ScaledFontSize4}" />
+                                <Label Text="P" Grid.Column="3" HorizontalOptions="Center" FontAttributes="Bold" TextColor="#333"
+                                       FontSize="{Binding ScaledFontSize4}" />
+                                <Label Text="C" Grid.Column="4" HorizontalOptions="Center" FontAttributes="Bold" TextColor="#333"
+                                       FontSize="{Binding ScaledFontSize4}" />
+                                <Label Text="C" Grid.Column="5" HorizontalOptions="Center" FontAttributes="Bold" TextColor="#333"
+                                       FontSize="{Binding ScaledFontSize4}" />
+                                <Label Text="P" Grid.Column="6" HorizontalOptions="Center" FontAttributes="Bold" TextColor="#333"
+                                       FontSize="{Binding ScaledFontSize4}" />
+                            </Grid>
+
+                            <ScrollView>
+                                <Grid x:Name="TakvimGridMobile"
+                                      ColumnSpacing="{Binding CalendarGridSpacing}"
+                                      RowSpacing="{Binding CalendarGridSpacing}" />
+                            </ScrollView>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <Label x:Name="lblSecilenTarihMobile"
+                           FontSize="{Binding ScaledFontSize3}"
+                           TextColor="#FFFFFF"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           Margin="{Binding M_VertSmall}" />
+
+                    <Label Text="Yeni Plan:" FontAttributes="Bold" TextColor="#F9F9F9"
+                           FontSize="{Binding ScaledFontSize3}" />
+
+                    <Frame BackgroundColor="#FFFFFF"
+                           CornerRadius="10"
+                           Padding="{Binding ScaledSmallPadding}"
+                           HasShadow="True">
+                        <Entry x:Name="entryPlanMobile"
+                               Placeholder="Yeni plan girin..."
+                               PlaceholderColor="#9A9A9A"
+                               FontSize="{Binding ScaledFontSize3}"
+                               TextColor="#000"
+                               BackgroundColor="Transparent" />
+                    </Frame>
+
+                    <Button Text="➕ Plan Ekle"
+                            Clicked="PlanEkle_Clicked"
+                            BackgroundColor="#B0B0B0"
+                            TextColor="#FFFFFF"
+                            CornerRadius="8"
+                            HeightRequest="{Binding ScaledButtonHeight}"
+                            WidthRequest="{Binding ScaledButtonWidth}"
+                            HorizontalOptions="End"
+                            FontSize="{Binding ScaledFontSize4}"
+                            FontAttributes="Bold" />
+
+                    <Label Text="GÜNÜN PLANLARI"
+                           FontAttributes="Bold"
+                           TextColor="#F9F9F9"
+                           FontSize="{Binding ScaledFontSize3}" />
+
+                    <!-- MOBİL: aralara boşluk -->
+                    <CollectionView x:Name="planListesiMobile"
+                                    ItemSizingStrategy="MeasureAllItems"
+                                    BackgroundColor="Transparent"
+                                    SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical"
+                                               ItemSpacing="{Binding ScaledSmallSpacing}" />
+                        </CollectionView.ItemsLayout>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame BackgroundColor="#F5F5F5"
+                                       CornerRadius="12"
+                                       Padding="{Binding ScaledSmallPadding}"
+                                       Margin="{Binding M_VertSmall}"
+                                       HasShadow="False">
+                                    <Grid ColumnSpacing="{Binding ScaledSmallSpacing}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Label Text="{Binding Baslik}" TextColor="#000"
+                                               FontAttributes="Bold" VerticalOptions="Center"
+                                               FontSize="{Binding ScaledFontSize3}" />
+
+                                        <ImageButton Source="pencil.png" Grid.Column="1"
+                                                     BackgroundColor="Transparent"
+                                                     WidthRequest="24" HeightRequest="24"
+                                                     Padding="0"
+                                                     Clicked="PlanDuzenle_Clicked" />
+                                        <ImageButton Source="sil.png" Grid.Column="2"
+                                                     BackgroundColor="Transparent"
+                                                     WidthRequest="24" HeightRequest="24"
+                                                     Padding="0"
+                                                     Clicked="PlanSil_Clicked" />
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+    </Grid>
+</ContentPage>

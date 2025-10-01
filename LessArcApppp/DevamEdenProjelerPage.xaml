@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:LessArcApppp.Controls"
+    x:Class="LessArcApppp.DevamEdenProjelerPage"
+    BackgroundColor="Transparent"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False"
+    SizeChanged="ContentPage_SizeChanged">
+
+    <!-- ÜST BAR + GÖVDE -->
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- 🔹 ÜST: Custom Title Bar (geri ok açık) -->
+        <controls:CustomTitleBar
+            Grid.Row="0"
+            ShowBack="True" />
+
+        <!-- 🔹 ALT: Mevcut gövde (AYNEN KORUNDU) -->
+        <Grid Grid.Row="1">
+            <!-- Arka plan -->
+            <Image Source="arkaplann.png"
+                   Aspect="AspectFill"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill"
+                   IsEnabled="False" />
+
+            <Grid>
+                <!-- ================= DESKTOP ================= -->
+                <ScrollView x:Name="desktopLayout" IsVisible="False">
+                    <VerticalStackLayout Padding="20" Spacing="20" HorizontalOptions="Center">
+
+                        <Label Text="⏳ DEVAM EDEN ve BAŞLAMAYAN PROJELER"
+                               FontSize="28" FontAttributes="Bold"
+                               TextColor="#D0CFCF" HorizontalOptions="Center" />
+
+                        <Frame WidthRequest="520" BackgroundColor="#FFFFFFEE" BorderColor="#D0CFCF"
+                               CornerRadius="18" HasShadow="True" Padding="16" Margin="0,6,0,12">
+                            <VerticalStackLayout Spacing="14">
+                                <Grid HeightRequest="46" BackgroundColor="#EEEEEE" Padding="12,0"
+                                      ColumnDefinitions="Auto,*" Margin="0,2" VerticalOptions="Center" HorizontalOptions="Fill">
+                                    <Image Source="search.png" WidthRequest="18" HeightRequest="18"
+                                           VerticalOptions="Center" Margin="2,0,10,0"/>
+                                    <Entry x:Name="entryAra" Grid.Column="1" Placeholder="Proje ara"
+                                           PlaceholderColor="#8A8A8A" TextChanged="entryAra_TextChanged"
+                                           FontSize="15" TextColor="#1E1E1E" BackgroundColor="Transparent" />
+                                </Grid>
+
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <Label Text="📅 Yıl Filtresi:" FontSize="15" TextColor="#1E1E1E" VerticalOptions="Center" />
+                                    <Frame Grid.Column="1" BackgroundColor="#EEEEEE" BorderColor="#D0CFCF"
+                                           CornerRadius="12" Padding="8,0" HasShadow="False" HeightRequest="46">
+                                        <Picker x:Name="pickerYil" SelectedIndexChanged="pickerYil_SelectedIndexChanged"
+                                                TextColor="#1E1E1E" BackgroundColor="Transparent" FontSize="15" />
+                                    </Frame>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <Label Text="📌 Durum Filtresi:" FontSize="15" TextColor="#1E1E1E" VerticalOptions="Center" />
+                                    <Frame Grid.Column="1" BackgroundColor="#EEEEEE" BorderColor="#D0CFCF"
+                                           CornerRadius="12" Padding="8,0" HasShadow="False" HeightRequest="46">
+                                        <Picker x:Name="pickerDurum" SelectedIndexChanged="pickerDurum_SelectedIndexChanged"
+                                                TextColor="#1E1E1E" BackgroundColor="Transparent" FontSize="15">
+                                            <Picker.Items>
+                                                <x:String>Tüm Durumlar</x:String>
+                                                <x:String>Devam Eden</x:String>
+                                                <x:String>Başlamamış</x:String>
+                                            </Picker.Items>
+                                        </Picker>
+                                    </Frame>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <!-- Proje Kartları (DESKTOP) -->
+                        <CollectionView x:Name="cvProjeler"
+                                        WidthRequest="700"
+                                        ItemsSource="{Binding FiltreliProjeler}">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="24" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="White" CornerRadius="16" Padding="20"
+                                           Margin="0" HasShadow="True" BorderColor="#E0E0E0">
+                                        <VerticalStackLayout Spacing="10">
+                                            <Label Text="PROJE ADI :" FontAttributes="Bold" FontSize="13" TextColor="#555"/>
+                                            <Label Text="{Binding Baslik}" FontSize="15" TextColor="Black"/>
+
+                                            <Label Text="PROJEYİ ÇİZEN KİŞİ :" FontAttributes="Bold" FontSize="13" TextColor="#555"/>
+                                            <Label Text="{Binding KullaniciAdSoyad}" FontSize="15" TextColor="Black"/>
+
+                                            <Label Text="BAŞLANGIÇ TARİHİ :" FontAttributes="Bold" FontSize="13" TextColor="#555">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding DurumKategori}" Value="baslamamis">
+                                                        <Setter Property="IsVisible" Value="False"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                            <Label Text="{Binding BaslangicTarihi, StringFormat='{}{0:dd MMMM yyyy}'}"
+                                                   FontSize="15" TextColor="Black">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding DurumKategori}" Value="baslamamis">
+                                                        <Setter Property="IsVisible" Value="False"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+
+                                            <BoxView HeightRequest="1" BackgroundColor="#DDD" Margin="0,6,0,6" />
+
+                                            <Label FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding DurumKategori}" Value="devam">
+                                                        <Setter Property="Text" Value="DEVAM EDEN PROJE"/>
+                                                        <Setter Property="TextColor" Value="#2E7D32"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding DurumKategori}" Value="baslamamis">
+                                                        <Setter Property="Text" Value="PROJE HENÜZ BAŞLAMADI"/>
+                                                        <Setter Property="TextColor" Value="#B71C1C"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                        </VerticalStackLayout>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                            <CollectionView.Footer>
+                                <Grid HeightRequest="24"/>
+                            </CollectionView.Footer>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- ================= MOBİL ================= -->
+                <ScrollView x:Name="mobileLayout" IsVisible="False">
+                    <VerticalStackLayout Padding="20" Spacing="16">
+                        <Label Text="⏳ DEVAM EDEN ve BAŞLAMAYAN PROJELER"
+                               FontSize="22" FontAttributes="Bold"
+                               TextColor="#D0CFCF" HorizontalOptions="Center" />
+
+                        <Grid HeightRequest="44" BackgroundColor="#EEEEEE" Padding="12,0"
+                              ColumnDefinitions="Auto,*" Margin="0,2,0,6">
+                            <Image Source="search.png" WidthRequest="18" HeightRequest="18"
+                                   VerticalOptions="Center" Margin="2,0,10,0"/>
+                            <Entry x:Name="entryAraMobile" Grid.Column="1" Placeholder="Proje ara"
+                                   PlaceholderColor="#8A8A8A" TextChanged="entryAra_TextChanged"
+                                   FontSize="14" TextColor="#1E1E1E" BackgroundColor="Transparent"/>
+                        </Grid>
+
+                        <Label Text="📅 Yıl Filtresi:" FontSize="14" TextColor="#1E1E1E" />
+                        <Frame BackgroundColor="#EEEEEE" BorderColor="#D0CFCF" CornerRadius="12"
+                               Padding="8,0" HasShadow="False" HeightRequest="44" Margin="0,0,0,6">
+                            <Picker x:Name="pickerYilMobile" SelectedIndexChanged="pickerYil_SelectedIndexChanged"
+                                    TextColor="#1E1E1E" BackgroundColor="Transparent" FontSize="14"/>
+                        </Frame>
+
+                        <Label Text="📌 Durum Filtresi:" FontSize="14" TextColor="#1E1E1E" />
+                        <Frame BackgroundColor="#EEEEEE" BorderColor="#D0CFCF" CornerRadius="12"
+                               Padding="8,0" HasShadow="False" HeightRequest="44" Margin="0,0,0,8">
+                            <Picker x:Name="pickerDurumMobile" SelectedIndexChanged="pickerDurum_SelectedIndexChanged"
+                                    TextColor="#1E1E1E" BackgroundColor="Transparent" FontSize="14">
+                                <Picker.Items>
+                                    <x:String>Tüm Durumlar</x:String>
+                                    <x:String>Devam Eden</x:String>
+                                    <x:String>Başlamamış</x:String>
+                                </Picker.Items>
+                            </Picker>
+                        </Frame>
+
+                        <!-- Proje Kartları (MOBİL) -->
+                        <CollectionView x:Name="cvProjelerMobile"
+                                        ItemsSource="{Binding FiltreliProjeler}">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="24" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="White" CornerRadius="16" Padding="20"
+                                           Margin="0" HasShadow="True" BorderColor="#E0E0E0">
+                                        <VerticalStackLayout Spacing="10">
+                                            <Label Text="PROJE ADI :" FontAttributes="Bold" FontSize="13" TextColor="#555"/>
+                                            <Label Text="{Binding Baslik}" FontSize="15" TextColor="Black"/>
+
+                                            <Label Text="PROJEYİ ÇİZEN KİŞİ :" FontAttributes="Bold" FontSize="13" TextColor="#555"/>
+                                            <Label Text="{Binding KullaniciAdSoyad}" FontSize="15" TextColor="Black"/>
+
+                                            <Label Text="BAŞLANGIÇ TARİHİ :" FontAttributes="Bold" FontSize="13" TextColor="#555">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding DurumKategori}" Value="baslamamis">
+                                                        <Setter Property="IsVisible" Value="False"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                            <Label Text="{Binding BaslangicTarihi, StringFormat='{}{0:dd MMMM yyyy}'}"
+                                                   FontSize="15" TextColor="Black">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding DurumKategori}" Value="baslamamis">
+                                                        <Setter Property="IsVisible" Value="False"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+
+                                            <BoxView HeightRequest="1" BackgroundColor="#DDD" Margin="0,6,0,6" />
+
+                                            <Label FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding DurumKategori}" Value="devam">
+                                                        <Setter Property="Text" Value="DEVAM EDEN PROJE"/>
+                                                        <Setter Property="TextColor" Value="#2E7D32"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding DurumKategori}" Value="baslamamis">
+                                                        <Setter Property="Text" Value="PROJE HENÜZ BAŞLAMADI"/>
+                                                        <Setter Property="TextColor" Value="#B71C1C"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                        </VerticalStackLayout>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                            <CollectionView.Footer>
+                                <Grid HeightRequest="24"/>
+                            </CollectionView.Footer>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>
