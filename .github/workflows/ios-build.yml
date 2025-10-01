@@ -1,0 +1,100 @@
+name: iOS Build (.NET MAUI)
+
+on:
+  workflow_dispatch:        # Actions sekmesinden elle tetiklemek için
+  push:
+    branches: [ main ]      # main'e push olduğunda otomatik çalışsın
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      # 1) Kaynak kodu çek
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2) .NET 8 kur
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # 3) MAUI workload kur
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      # 4) Dağıtım sertifikasını (.p12) keychain'e import et
+      - name: Import Signing Certificate (.p12)
+        env:
+          P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12 }}
+          P12_PWD:    ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+        run: |
+          set -e
+          CERT_PATH="$RUNNER_TEMP/dist.p12"
+          # macOS'ta decode => -D
+          echo "$P12_BASE64" | base64 -D > "$CERT_PATH"
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          security create-keychain -p "" "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "" "$KEYCHAIN_PATH"
+          security list-keychains -s "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$P12_PWD" \
+            -A -t cert -f pkcs12
+
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" "$KEYCHAIN_PATH"
+
+      # 5) Provisioning profile yükle
+      - name: Install Provisioning Profile
+        env:
+          PROFILE_BASE64: ${{ secrets.IOS_PROFILE_MOBILEPROVISION }}
+        run: |
+          set -e
+          PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PP_DIR"
+          echo "$PROFILE_BASE64" | base64 -D > "$PP_DIR/lessarc.mobileprovision"
+
+      # 6) Restore
+      - name: Restore
+        run: dotnet restore
+
+      # 7) Publish (Release) – IPA üret
+      - name: Publish iOS (Release)
+        env:
+          APPLE_ID:               ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PWD: ${{ secrets.APPLE_APP_SPECIFIC_PWD }}
+        run: |
+          set -e
+          dotnet publish LessArcApppp/LessArcApppp.csproj \
+            -f net8.0-ios \
+            -c Release \
+            -p:ArchiveOnBuild=true \
+            -p:BuildIpa=true \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:CodesignKey="${{ secrets.IOS_DIST_CERT_NAME }}" \
+            -p:CodesignProvision="*" \
+            -p:EnablePackageSigning=false
+
+      # 8) IPA dosyasını bul
+      - name: Find IPA
+        id: ipa
+        run: |
+          set -e
+          IPA_PATH=$(find . -type f -name "*.ipa" | head -n 1 || true)
+          if [ -z "$IPA_PATH" ]; then
+            echo "IPA bulunamadı!"
+            exit 1
+          fi
+          echo "ipa=$IPA_PATH" >> "$GITHUB_OUTPUT"
+          echo "Found IPA: $IPA_PATH"
+
+      # 9) IPA'yı indirilebilir artifact olarak yükle
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-IPA
+          path: ${{ steps.ipa.outputs.ipa }}
