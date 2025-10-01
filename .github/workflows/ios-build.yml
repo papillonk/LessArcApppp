@@ -1,0 +1,103 @@
+name: iOS Build (.NET MAUI)
+
+on:
+  workflow_dispatch:            # Elle tetiklemek için
+  push:
+    branches: [ main, ana ]     # Varsayılan dal "main" ya da (TR arayüzünde) "ana" olabilir
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      # 1) Kaynağı çek
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2) .NET 8 kurulumu
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # 3) MAUI workload
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      # 4) .p12 sertifikayı import et
+      - name: Import Signing Certificate (.p12)
+        env:
+          P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12 }}
+          P12_PWD:    ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+        run: |
+          set -e
+          CERT_PATH="$RUNNER_TEMP/dist.p12"
+          echo "$P12_BASE64" | base64 --decode > "$CERT_PATH"
+
+          # Keychain hazırla ve sertifikayı içeri al
+          security create-keychain -p "" build.keychain
+          security import "$CERT_PATH" -k build.keychain -P "$P12_PWD" -T /usr/bin/codesign
+          security list-keychains -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      # 5) Provisioning Profile yükle (UUID ile isimlendir)
+      - name: Install Provisioning Profile
+        env:
+          PROFILE_BASE64: ${{ secrets.IOS_PROFILE_MOBILEPROVISION }}
+        run: |
+          set -e
+          PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PP_DIR"
+
+          PP_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          echo "$PROFILE_BASE64" | base64 --decode > "$PP_PATH"
+
+          # UUID'i çıkar ve ismine yaz
+          UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< "$(security cms -D -i "$PP_PATH")")
+          cp "$PP_PATH" "$PP_DIR/$UUID.mobileprovision"
+
+          echo "PP_UUID=$UUID" >> $GITHUB_ENV
+          echo "Provisioning Profile UUID: $UUID"
+
+      # 6) Restore
+      - name: Restore
+        run: dotnet restore
+
+      # 7) Publish (Release) — IPA üret
+      - name: Publish iOS (Release)
+        env:
+          APPLE_ID:               ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PWD: ${{ secrets.APPLE_APP_SPECIFIC_PWD }}
+        run: |
+          set -e
+          dotnet publish LessArcApppp/LessArcApppp.csproj \
+            -f net8.0-ios \
+            -c Release \
+            -p:ArchiveOnBuild=true \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:BuildIpa=true \
+            -p:EnablePackageSigning=false \
+            -p:CodesignKey="${{ secrets.IOS_DIST_CERT_NAME }}" \
+            -p:CodesignProvision="$PP_UUID"
+
+      # 8) IPA'yı bul
+      - name: Find IPA
+        id: ipa
+        run: |
+          set -e
+          IPA_PATH=$(find . -type f -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_PATH" ]; then
+            echo "IPA bulunamadı!"
+            exit 1
+          fi
+          echo "ipa=$IPA_PATH" >> $GITHUB_OUTPUT
+          echo "Found IPA: $IPA_PATH"
+
+      # 9) IPA'yı indirilebilir artifact olarak yükle
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-IPA
+          path: ${{ steps.ipa.outputs.ipa }}
