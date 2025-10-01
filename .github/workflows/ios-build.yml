@@ -1,0 +1,109 @@
+name: iOS Build (.NET MAUI)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Import Signing Certificate (.p12)
+        env:
+          P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12 }}
+          P12_PWD:    ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+        run: |
+          set -e
+          CERT_PATH="$RUNNER_TEMP/dist.p12"
+          echo "$P12_BASE64" | base64 -D > "$CERT_PATH"
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          security create-keychain -p "" "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "" "$KEYCHAIN_PATH"
+          security list-keychains -s "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$P12_PWD" \
+            -A -t cert -f pkcs12
+
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" "$KEYCHAIN_PATH"
+
+      - name: Install Provisioning Profile
+        env:
+          PROFILE_BASE64: ${{ secrets.IOS_PROFILE_MOBILEPROVISION }}
+        run: |
+          set -e
+          PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PP_DIR"
+          PROFILE_PATH="$PP_DIR/lessarc.mobileprovision"
+          echo "$PROFILE_BASE64" | base64 -D > "$PROFILE_PATH"
+
+          # Profil UUID'sini çıkar ve ortama yaz
+          security cms -D -i "$PROFILE_PATH" > "$RUNNER_TEMP/profile.plist"
+          PROV_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/profile.plist")
+          echo "PROV_UUID=$PROV_UUID" >> $GITHUB_ENV
+          echo "Provisioning UUID: $PROV_UUID"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Publish iOS (Release)
+        env:
+          APPLE_ID:               ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PWD: ${{ secrets.APPLE_APP_SPECIFIC_PWD }}
+        run: |
+          set -e
+          OUT_DIR="$RUNNER_TEMP/ios-publish"
+          mkdir -p "$OUT_DIR"
+
+          dotnet publish LessArcApppp/LessArcApppp.csproj \
+            -f net8.0-ios \
+            -c Release \
+            -p:ArchiveOnBuild=true \
+            -p:BuildIpa=true \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:CodesignKey="${{ secrets.IOS_DIST_CERT_NAME }}" \
+            -p:CodesignProvision="${PROV_UUID}" \
+            -p:EnablePackageSigning=false \
+            -o "$OUT_DIR"
+
+          echo "Publish output under $OUT_DIR:"
+          find "$OUT_DIR" -maxdepth 4 -print
+
+      - name: Find IPA
+        id: ipa
+        run: |
+          set -e
+          OUT_DIR="$RUNNER_TEMP/ios-publish"
+          echo "Searching IPA under: $OUT_DIR"
+          IPA_PATH=$(find "$OUT_DIR" -type f -name "*.ipa" | head -n 1 || true)
+          if [ -z "$IPA_PATH" ]; then
+            echo "IPA bulunamadı!"
+            echo "OUT_DIR içeriği:"
+            find "$OUT_DIR" -maxdepth 5 -print
+            exit 1
+          fi
+          echo "ipa=$IPA_PATH" >> "$GITHUB_OUTPUT"
+          echo "Found IPA: $IPA_PATH"
+
+      - name: Upload IPA artifact
+        if: steps.ipa.outputs.ipa != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-IPA
+          path: ${{ steps.ipa.outputs.ipa }}
