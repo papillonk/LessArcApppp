@@ -119,17 +119,23 @@ workflows:
 
       - name: IPA/xcarchive topla
         script: |
-          set -euo pipefail
-          mkdir -p "$CM_ARTIFACTS_DIR"
+          # -u yok; CM_ARTIFACTS_DIR yoksa fallback kullan
+          set -eo pipefail
+          ART_DIR="${CM_ARTIFACTS_DIR:-$PWD/artifacts}"
+          mkdir -p "$ART_DIR"
           # Olası tüm çıkış yollarını tara
-          find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.ipa" -print -exec cp {} "$CM_ARTIFACTS_DIR" \; || true
-          find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64/publish" -name "*.ipa" -print -exec cp {} "$CM_ARTIFACTS_DIR" \; || true
-          find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.xcarchive" -print -exec cp -R {} "$CM_ARTIFACTS_DIR" \; || true
-          ls -la "$CM_ARTIFACTS_DIR"
+          find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.ipa" -print -exec cp {} "$ART_DIR" \; || true
+          find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64/publish" -name "*.ipa" -print -exec cp {} "$ART_DIR" \; || true
+          find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.xcarchive" -print -exec cp -R {} "$ART_DIR" \; || true
+          ls -la "$ART_DIR"
+          # Sonraki aşamada artifacts desenleri çalışsın diye fallback'i export et
+          echo "export CM_ARTIFACTS_DIR=\"$ART_DIR\"" >> $CM_ENV
 
     artifacts:
       - $CM_ARTIFACTS_DIR/*.ipa
+      - artifacts/*.ipa
       - $CM_ARTIFACTS_DIR/*.xcarchive
+      - artifacts/*.xcarchive
 
     triggering:
       events:
