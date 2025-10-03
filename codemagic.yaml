@@ -5,15 +5,19 @@ workflows:
     max_build_duration: 60
 
     environment:
-      # (İstersen burada xcode sürümü de pinleyebilirsin: xcode: 16.0)
+      # İstersen pinleyebilirsin: xcode: 16.0
       vars:
         PROJECT_DIR: "LessArcApppp"            # csproj klasörü
-        CSPROJ_PATH: "LessArcApppp.csproj"     # csproj dosyası
-        IOS_BUNDLE_ID: "com.nisakara.lessarc"  # csproj ile aynı
-        # APPLE_TEAM_ID eklediysen env'de, fetch-signing-files'ta kullanıyoruz (opsiyonel)
+        CSPROJ_PATH: "LessArcApppp.csproj"     # csproj dosya adı
+        IOS_BUNDLE_ID: "com.nisakara.lessarc"  # csproj ile aynı olmalı
       groups:
-        - app_store_connect     # APP_STORE_CONNECT_PRIVATE_KEY / KEY_IDENTIFIER / ISSUER_ID / (APPLE_TEAM_ID)
-        - ios_signing           # CM_CERTIFICATE (p12 base64) / CM_CERTIFICATE_PASSWORD
+        # Bu grupta ŞUNLAR tanımlı olmalı:
+        # - APP_STORE_CONNECT_PRIVATE_KEY  (p8 içeriği)
+        # - APP_STORE_CONNECT_KEY_IDENTIFIER (ör: 7Q2TKG3479)
+        # - APP_STORE_CONNECT_ISSUER_ID      (ör: 575bd9c7-....-....)
+        # - CM_CERTIFICATE                   (p12 base64 içeriği)
+        # - CM_CERTIFICATE_PASSWORD          (p12 parolası)
+        - app_store_connect
 
     cache:
       cache_paths:
@@ -40,9 +44,9 @@ workflows:
       - name: Sertifikayı (p12) keychain’e import et
         script: |
           set -euo pipefail
-          # Base64 p12'yi dosyaya yaz
+          # p12 base64 içeriğini dosyaya yaz
           echo "$CM_CERTIFICATE" | base64 --decode > dist.p12
-          # p12'yi keychain'e ekle
+          # p12’yi keychain’e ekle
           keychain add-certificates \
             --certificate dist.p12 \
             --certificate-password "$CM_CERTIFICATE_PASSWORD"
@@ -50,13 +54,11 @@ workflows:
       - name: App Store Connect’ten provisioning profilleri çek
         script: |
           set -euo pipefail
-          # APPLE_TEAM_ID env'de tanımlıysa parametre olarak ver; yoksa atla
-          if [ -n "${APPLE_TEAM_ID:-}" ]; then
-            app-store-connect fetch-signing-files "$IOS_BUNDLE_ID" --type IOS_APP_STORE --team-id "$APPLE_TEAM_ID" --create
-          else
-            app-store-connect fetch-signing-files "$IOS_BUNDLE_ID" --type IOS_APP_STORE --create
-          fi
-          # Keychain'deki sertifikaları da ekle (provisioning profilleri okurken işimize yarıyor)
+          # APP_STORE_* değişkenlerini CLI otomatik alır
+          app-store-connect fetch-signing-files "$IOS_BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          # Anahtarlıktaki sertifikaları da ekleyelim
           keychain add-certificates
           ls -la "$HOME/Library/MobileDevice/Provisioning Profiles" || true
 
@@ -80,7 +82,7 @@ workflows:
         script: |
           set -euo pipefail
           mkdir -p "$CM_ARTIFACTS_DIR"
-          # .NET bazen farklı klasöre koyabiliyor; iki olası yolu da tara
+          # Olası tüm çıkış yollarını tara
           find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.ipa" -print -exec cp {} "$CM_ARTIFACTS_DIR" \; || true
           find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64/publish" -name "*.ipa" -print -exec cp {} "$CM_ARTIFACTS_DIR" \; || true
           find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.xcarchive" -print -exec cp -R {} "$CM_ARTIFACTS_DIR" \; || true
