@@ -1,95 +1,89 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<!-- GENEL AYARLAR (tüm hedefler için geçerli) -->
+	<!-- GENEL AYARLAR -->
 	<PropertyGroup>
+		<!-- Hedefler -->
 		<TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
 
-		<!-- MAUI temel ayarları -->
+		<!-- MAUI -->
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<NullabilityInfoContextSupport>true</NullabilityInfoContextSupport>
-		<InvariantGlobalization>false</InvariantGlobalization>
 
 		<!-- Uygulama bilgileri -->
 		<RootNamespace>LessArcApppp</RootNamespace>
 		<ApplicationTitle>LESS</ApplicationTitle>
 
-		<!-- Paket/kimlikler -->
-		<!-- Android için paket adı -->
+		<!-- !!! ÖNEMLİ: Tüm hedeflerde UYGULAMA derlensin -->
+		<OutputType>Exe</OutputType>
+
+		<!-- Paket kimlikleri -->
+		<!-- Android -->
 		<ApplicationId>com.nisakara.lessarc</ApplicationId>
-		<!-- iOS için BUNDLE ID (Android'le aynı tutuyoruz) -->
+		<!-- iOS -->
 		<CFBundleIdentifier>com.nisakara.lessarc</CFBundleIdentifier>
 
 		<!-- Sürümleme -->
 		<ApplicationDisplayVersion>1.0.3</ApplicationDisplayVersion>
 		<ApplicationVersion>8</ApplicationVersion>
 
-		<!-- Android hedefi / SDK -->
+		<!-- Android SDK hedefleri -->
 		<AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
 		<AndroidCompileSdkVersion>35</AndroidCompileSdkVersion>
 		<AndroidTargetSdkVersion>35</AndroidTargetSdkVersion>
 
-		<!-- Minimum desteklenen platform sürümleri -->
+		<!-- Minimum platform sürümleri -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">11.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">13.1</SupportedOSPlatformVersion>
 
-		<!-- Android keystore (iOS imzalama CI'da yapılacak) -->
+		<!-- (İsteğe bağlı) Android keystore yolun (CI'da kullanılmıyor, lokalde kalabilir) -->
 		<AndroidSigningKeyStore>C:\Users\Nisa\keystore\lessarc.keystore</AndroidSigningKeyStore>
 	</PropertyGroup>
 
-	<!-- iOS'a özel ek ayarlar -->
+	<!-- iOS ÖZEL -->
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-ios'">
-		<!-- Gerçek cihaz için derleme -->
+		<!-- Gerçek cihaz için arm64 -->
 		<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
 
-		<!-- Entitlements (push vs. ekleyeceksek burada) -->
-		<CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
+		<!-- IPA oluştur / arşivle -->
+		<BuildIpa>true</BuildIpa>
+		<ArchiveOnBuild>true</ArchiveOnBuild>
 
-		<!-- App Store gereksinimleri açısından güvenli seçim -->
-		<UseHardenedRuntime>true</UseHardenedRuntime>
-		<!-- Linker daha agresif istersen:
-    <MtouchLink>SdkOnly</MtouchLink> -->
+		<!-- Entitlements -->
+		<CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
 	</PropertyGroup>
 
-	<!-- Windows hedefi yüklüyse ekle -->
+	<!-- Windows hedefini istersen ekle (OutputType artık yukarıda genel) -->
 	<PropertyGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
 		<TargetFrameworks>$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>
-		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 
-	<!-- ANDROID İMZALAMA (değişmedi) -->
+	<!-- ANDROID İMZALAMA -->
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
-		<AndroidKeyStore>True</AndroidKeyStore>
+		<AndroidKeyStore>true</AndroidKeyStore>
 		<AndroidSigningStorePass>lessarc123</AndroidSigningStorePass>
 		<AndroidSigningKeyAlias>lessarc_key</AndroidSigningKeyAlias>
 		<AndroidSigningKeyPass>lessarc123</AndroidSigningKeyPass>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
-		<AndroidKeyStore>True</AndroidKeyStore>
+		<AndroidKeyStore>true</AndroidKeyStore>
 		<AndroidSigningStorePass>lessarc123</AndroidSigningStorePass>
 		<AndroidSigningKeyAlias>lessarc_key</AndroidSigningKeyAlias>
 		<AndroidSigningKeyPass>lessarc123</AndroidSigningKeyPass>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Android|net8.0-android|AnyCPU'">
-		<AndroidKeyStore>True</AndroidKeyStore>
-		<AndroidSigningStorePass>lessarc123</AndroidSigningStorePass>
-		<AndroidSigningKeyAlias>lessarc_key</AndroidSigningKeyAlias>
-		<AndroidSigningKeyPass>lessarc123</AndroidSigningKeyPass>
-	</PropertyGroup>
-
-	<!-- VARLIKLAR -->
+	<!-- KAYNAKLAR -->
 	<ItemGroup>
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" />
-		<MauiSplashScreen Include="Resources\Splash\less.png" Color="#4B4B4B" BaseSize="256,256" />
-		<MauiImage Include="Resources\Images\*" />
-		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
-		<MauiFont Include="Resources\Fonts\*" />
-		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		<MauiIcon Include="Resources/AppIcon/appicon.svg" />
+		<MauiSplashScreen Include="Resources/Splash/less.png" Color="#4B4B4B" BaseSize="256,256" />
+		<MauiImage Include="Resources/Images/*" />
+		<MauiImage Update="Resources/Images/dotnet_bot.png" Resize="True" BaseSize="300,185" />
+		<MauiFont Include="Resources/Fonts/*" />
+		<MauiAsset Include="Resources/Raw/**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<!-- NUGET -->
@@ -106,7 +100,7 @@
 		<PackageReference Include="System.Net.Http.Json" Version="9.0.8" />
 	</ItemGroup>
 
-	<!-- XAML -->
+	<!-- XAML BAĞLANTILARI -->
 	<ItemGroup>
 		<Compile Update="ProjeAtamaPage.xaml.cs">
 			<DependentUpon>ProjeAtamaPage.xaml</DependentUpon>
@@ -169,6 +163,13 @@
 
 	<ItemGroup>
 		<Folder Include="Controls\" />
+	</ItemGroup>
+
+	<!-- Entitlements dosyasını projeye ekle -->
+	<ItemGroup>
+		<None Update="Platforms\iOS\Entitlements.plist">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>
