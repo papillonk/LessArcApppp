@@ -1,6 +1,6 @@
 workflows:
   ios_maui_release:
-    name: "iOS MAUI Release (.NET 8, Auto Codesign)"
+    name: "iOS MAUI Release (.NET 8, Manual Codesign)"
     instance_type: mac_mini_m1
     max_build_duration: 60
 
@@ -11,13 +11,7 @@ workflows:
         CSPROJ_PATH: "LessArcApppp.csproj"     # csproj dosya adı
         IOS_BUNDLE_ID: "com.nisakara.lessarc"  # csproj ile aynı olmalı
       groups:
-        # Bu grupta ŞUNLAR tanımlı olmalı:
-        # - APP_STORE_CONNECT_PRIVATE_KEY  (p8 içeriği)
-        # - APP_STORE_CONNECT_KEY_IDENTIFIER (ör: 7Q2TKG3479)
-        # - APP_STORE_CONNECT_ISSUER_ID      (ör: 575bd9c7-....-....)
-        # - CM_CERTIFICATE                   (p12 base64 içeriği)
-        # - CM_CERTIFICATE_PASSWORD          (p12 parolası)
-        - app_store_connect
+        - ios_signing   # CM_CERTIFICATE / CM_CERTIFICATE_PASSWORD / CM_PROVISIONING_PROFILE
 
     cache:
       cache_paths:
@@ -34,33 +28,44 @@ workflows:
           dotnet --info
           dotnet workload install maui
 
-      - name: Codemagic CLI + keychain
+      - name: Keychain hazırla
         script: |
           set -euo pipefail
           pip3 install --user codemagic-cli-tools
           export PATH="$HOME/Library/Python/3.11/bin:$PATH"
           keychain initialize
 
-      - name: Sertifikayı (p12) keychain’e import et
+      - name: p12 sertifikayı import et
         script: |
           set -euo pipefail
-          # p12 base64 içeriğini dosyaya yaz
           echo "$CM_CERTIFICATE" | base64 --decode > dist.p12
-          # p12’yi keychain’e ekle
           keychain add-certificates \
             --certificate dist.p12 \
             --certificate-password "$CM_CERTIFICATE_PASSWORD"
+          security find-identity -v -p codesigning
 
-      - name: App Store Connect’ten provisioning profilleri çek
+      - name: Provisioning profile’ı yükle ve UUID/Identity çıkar
         script: |
           set -euo pipefail
-          # APP_STORE_* değişkenlerini CLI otomatik alır
-          app-store-connect fetch-signing-files "$IOS_BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
-          # Anahtarlıktaki sertifikaları da ekleyelim
-          keychain add-certificates
-          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles" || true
+          # Profile'ı yaz
+          echo "$CM_PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
+          # UUID al
+          UUID=$(/usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin <<< "$(security cms -D -i profile.mobileprovision)")
+          echo "PROFILE UUID: $UUID"
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
+
+          # İmza kimliğini bul (Apple Distribution ile başlayan)
+          CODESIGN_IDENTITY=$(security find-identity -v -p codesigning | grep 'Apple Distribution:' | head -n1 | sed -E 's/.*"(.+)"/\1/')
+          if [ -z "$CODESIGN_IDENTITY" ]; then
+            echo "Code signing identity bulunamadı!"
+            exit 1
+          fi
+          echo "CODESIGN_IDENTITY: $CODESIGN_IDENTITY"
+
+          # Sonraki adımlarda kullanmak için ENV'ye ver
+          echo "export PROV_UUID=$UUID" >> $CM_ENV
+          echo "export CODESIGN_IDENTITY=$CODESIGN_IDENTITY" >> $CM_ENV
 
       - name: NuGet restore
         script: |
@@ -72,11 +77,14 @@ workflows:
         script: |
           set -euo pipefail
           cd "$PROJECT_DIR"
+          # .NET MAUI için kimlik ve profil bilgilerini geçir
           dotnet publish "$CSPROJ_PATH" -f net8.0-ios -c Release \
             -p:RuntimeIdentifier=ios-arm64 \
             -p:ArchiveOnBuild=true \
+            -p:BuildIpa=true \
             -p:Codesign=true \
-            -p:BuildIpa=true
+            -p:CodesignKey="$CODESIGN_IDENTITY" \
+            -p:CodesignProvision="$PROV_UUID"
 
       - name: IPA/xcarchive topla
         script: |
@@ -86,6 +94,7 @@ workflows:
           find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.ipa" -print -exec cp {} "$CM_ARTIFACTS_DIR" \; || true
           find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64/publish" -name "*.ipa" -print -exec cp {} "$CM_ARTIFACTS_DIR" \; || true
           find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.xcarchive" -print -exec cp -R {} "$CM_ARTIFACTS_DIR" \; || true
+          ls -la "$CM_ARTIFACTS_DIR"
 
     artifacts:
       - $CM_ARTIFACTS_DIR/*.ipa
