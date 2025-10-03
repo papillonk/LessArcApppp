@@ -12,7 +12,7 @@ workflows:
         IOS_BUNDLE_ID: "com.nisakara.lessarc"
       groups:
         - ios_signing        # CM_CERTIFICATE / CM_CERTIFICATE_PASSWORD / CM_PROVISIONING_PROFILE
-        - app_store_connect  # APP_STORE_CONNECT_PRIVATE_KEY / KEY_IDENTIFIER / ISSUER_ID
+        - app_store_connect  # APP_STORE_CONNECT_PRIVATE_KEY / APP_STORE_CONNECT_KEY_IDENTIFIER / APP_STORE_CONNECT_ISSUER_ID
 
     cache:
       cache_paths:
@@ -106,7 +106,8 @@ workflows:
           echo "KEY_ID: $APP_STORE_CONNECT_KEY_IDENTIFIER"
           echo "ISSUER_ID: $APP_STORE_CONNECT_ISSUER_ID"
           echo "PRIVATE_KEY length: $(printf "%s" "$APP_STORE_CONNECT_PRIVATE_KEY" | wc -c)"
-          app-store-connect list-apps --max-results 1
+          # auth test
+          app-store-connect apps --limit 1
 
       - name: TestFlight’a yükle (App Store Connect)
         script: |
@@ -118,6 +119,9 @@ workflows:
             --path "$IPA" \
             --testflight \
             --bundle-id "$IOS_BUNDLE_ID" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --key-identifier "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
             --verbose
 
     artifacts:
