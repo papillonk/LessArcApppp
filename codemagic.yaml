@@ -23,8 +23,14 @@ workflows:
         script: |
           set -euo pipefail
           curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
-          bash dotnet-install.sh --channel 8.0
+          # .NET’i kullanıcı dizinine kur
+          bash dotnet-install.sh --channel 8.0 --install-dir "$HOME/.dotnet"
+          # Bu adımda kullanmak için PATH’e ekle
           export PATH="$HOME/.dotnet:$PATH"
+          # Sonraki tüm adımlar için kalıcı hale getir
+          echo 'export PATH="$HOME/.dotnet:$PATH"' >> $CM_ENV
+          echo 'export DOTNET_ROOT="$HOME/.dotnet"' >> $CM_ENV
+
           dotnet --info
           dotnet workload install maui
 
@@ -70,12 +76,15 @@ workflows:
       - name: NuGet restore
         script: |
           set -euo pipefail
+          # .NET PATH’ini garantiye al
+          export PATH="$HOME/.dotnet:$PATH"
           cd "$PROJECT_DIR"
           dotnet restore "$CSPROJ_PATH"
 
       - name: İmzalı IPA üret (Release, ios-arm64)
         script: |
           set -euo pipefail
+          export PATH="$HOME/.dotnet:$PATH"
           cd "$PROJECT_DIR"
           # .NET MAUI için kimlik ve profil bilgilerini geçir
           dotnet publish "$CSPROJ_PATH" -f net8.0-ios -c Release \
