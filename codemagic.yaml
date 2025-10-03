@@ -53,25 +53,26 @@ workflows:
       - name: Provisioning profile’ı yükle ve UUID/Identity çıkar
         script: |
           set -euo pipefail
-          # Profile'ı yaz
           echo "$CM_PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
-          # UUID al
+
+          # UUID
           UUID=$(/usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin <<< "$(security cms -D -i profile.mobileprovision)")
           echo "PROFILE UUID: $UUID"
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           cp profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
 
-          # İmza kimliğini bul (Apple Distribution ile başlayan)
+          # İmza kimliği (Apple Distribution:)
           CODESIGN_IDENTITY=$(security find-identity -v -p codesigning | grep 'Apple Distribution:' | head -n1 | sed -E 's/.*"(.+)"/\1/')
           if [ -z "$CODESIGN_IDENTITY" ]; then
             echo "Code signing identity bulunamadı!"
+            security find-identity -v -p codesigning || true
             exit 1
           fi
           echo "CODESIGN_IDENTITY: $CODESIGN_IDENTITY"
 
-          # Sonraki adımlarda kullanmak için ENV'ye ver
+          # Sonraki adımlar için ENV’ye kaydet
           echo "export PROV_UUID=$UUID" >> $CM_ENV
-          echo "export CODESIGN_IDENTITY=$CODESIGN_IDENTITY" >> $CM_ENV
+          echo "export CODESIGN_IDENTITY=\"$CODESIGN_IDENTITY\"" >> $CM_ENV
 
       - name: NuGet restore
         script: |
@@ -83,10 +84,31 @@ workflows:
 
       - name: İmzalı IPA üret (Release, ios-arm64)
         script: |
-          set -euo pipefail
+          # -u yok; env değişkenleri boşsa kendimiz bulacağız
+          set -eo pipefail
           export PATH="$HOME/.dotnet:$PATH"
+
+          # ENV dosyasını içeri al (varsa)
+          [ -f "$CM_ENV" ] && . "$CM_ENV" || true
+
+          # Boşsa tekrar tespit et
+          if [ -z "${CODESIGN_IDENTITY:-}" ]; then
+            CODESIGN_IDENTITY=$(security find-identity -v -p codesigning | grep 'Apple Distribution:' | head -n1 | sed -E 's/.*"(.+)"/\1/')
+          fi
+          if [ -z "${PROV_UUID:-}" ]; then
+            # Yüklediğimiz profillerden ilkini al
+            PROV_UUID=$(basename "$(ls -1 "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision | head -n1)" .mobileprovision)
+          fi
+
+          echo "Using CODESIGN_IDENTITY: ${CODESIGN_IDENTITY}"
+          echo "Using PROV_UUID: ${PROV_UUID}"
+
+          if [ -z "${CODESIGN_IDENTITY:-}" ] || [ -z "${PROV_UUID:-}" ]; then
+            echo "Code signing bilgileri eksik!"
+            exit 1
+          fi
+
           cd "$PROJECT_DIR"
-          # .NET MAUI için kimlik ve profil bilgilerini geçir
           dotnet publish "$CSPROJ_PATH" -f net8.0-ios -c Release \
             -p:RuntimeIdentifier=ios-arm64 \
             -p:ArchiveOnBuild=true \
