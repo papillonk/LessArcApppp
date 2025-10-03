@@ -1,49 +1,76 @@
 workflows:
   ios_maui_release:
-    name: iOS MAUI Release (MAUI .NET 8)
+    name: "iOS MAUI Release (.NET 8, Auto Codesign)"
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+
     environment:
-      xcode: latest
       vars:
-        # .csproj yolun repo köküne göre. Senin ekranına göre csproj kökte:
-        IOS_CSPROJ_PATH: "LessArcApppp.csproj"
+        PROJECT_DIR: "LessArcApppp"           # klasörün
+        CSPROJ_PATH: "LessArcApppp.csproj"    # csproj dosyan
+        IOS_BUNDLE_ID: "com.nisakara.lessarc" # csproj ile aynı
+      groups:
+        - app_store_connect                   # ISSUER_ID / KEY_IDENTIFIER / PRIVATE_KEY bu grupta
+
+    cache:
+      cache_paths:
+        - ~/.nuget/packages
+        - ~/.dotnet
+
     scripts:
-      - name: .NET ve Xcode hazırlığı
+      - name: .NET 8 ve MAUI yükle
         script: |
           set -euo pipefail
+          curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
+          bash dotnet-install.sh --channel 8.0
+          export PATH="$HOME/.dotnet:$PATH"
           dotnet --info
           dotnet workload install maui
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-          sudo xcodebuild -license accept || true
 
-      - name: NuGet Restore
+      - name: Codemagic CLI + keychain
         script: |
           set -euo pipefail
-          dotnet restore "$IOS_CSPROJ_PATH"
+          pip3 install --user codemagic-cli-tools
+          export PATH="$HOME/Library/Python/3.11/bin:$PATH"
+          keychain initialize
 
-      - name: IPA üret (Release, iOS arm64)
+      - name: App Store Connect’ten imza dosyalarını çek
         script: |
           set -euo pipefail
-          dotnet publish "$IOS_CSPROJ_PATH" \
-            -f net8.0-ios -c Release \
+          app-store-connect fetch-signing-files "$IOS_BUNDLE_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles" || true
+
+      - name: NuGet restore
+        script: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          dotnet restore "$CSPROJ_PATH"
+
+      - name: İmzalı IPA üret (Release, ios-arm64)
+        script: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          dotnet publish "$CSPROJ_PATH" -f net8.0-ios -c Release \
             -p:RuntimeIdentifier=ios-arm64 \
             -p:ArchiveOnBuild=true \
-            -p:BuildIpa=true
-          
-      - name: IPA’yı topla (Artifacts)
+            -p:Codesign=true
+
+      - name: IPA/xcarchive topla
         script: |
           set -euo pipefail
-          mkdir -p "$CM_EXPORT_DIR"
-          echo "IPA arıyorum..."
-          find . -type f -name "*.ipa" -print -exec cp {} "$CM_EXPORT_DIR" \;
+          mkdir -p "$CM_ARTIFACTS_DIR"
+          find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.ipa" -print -exec cp {} "$CM_ARTIFACTS_DIR" \; || true
+          find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.xcarchive" -print -exec cp -R {} "$CM_ARTIFACTS_DIR" \; || true
 
     artifacts:
-      - $CM_EXPORT_DIR/*.ipa
+      - $CM_ARTIFACTS_DIR/*.ipa
+      - $CM_ARTIFACTS_DIR/*.xcarchive
 
-    # İstersen sadece tag/push’ta tetiklensin:
     triggering:
       events:
         - push
       branch_patterns:
-        - pattern: "ana"   # ana dalın adı 'ana'
+        - pattern: "main"   # ana dal: main
           include: true
           source: true
