@@ -1,6 +1,6 @@
 workflows:
   ios_maui_release:
-    name: "iOS MAUI Release (.NET 8, Manual Codesign)"
+    name: "iOS MAUI Release (.NET 8, Manual Codesign + TestFlight Upload)"
     instance_type: mac_mini_m1
     max_build_duration: 60
 
@@ -9,9 +9,10 @@ workflows:
       vars:
         PROJECT_DIR: "LessArcApppp"            # csproj klasörü
         CSPROJ_PATH: "LessArcApppp.csproj"     # csproj dosya adı
-        IOS_BUNDLE_ID: "com.nisakara.lessarc"  # csproj ile aynı olmalı
+        IOS_BUNDLE_ID: "com.nisakara.lessarc"  # csproj ile aynı
       groups:
-        - ios_signing   # CM_CERTIFICATE / CM_CERTIFICATE_PASSWORD / CM_PROVISIONING_PROFILE
+        - ios_signing        # CM_CERTIFICATE / CM_CERTIFICATE_PASSWORD / CM_PROVISIONING_PROFILE
+        - app_store_connect  # APP_STORE_CONNECT_PRIVATE_KEY / KEY_IDENTIFIER / ISSUER_ID
 
     cache:
       cache_paths:
@@ -34,7 +35,7 @@ workflows:
           dotnet --info
           dotnet workload install maui
 
-      - name: Keychain hazırla
+      - name: Keychain hazırla (Codemagic CLI)
         script: |
           set -euo pipefail
           pip3 install --user codemagic-cli-tools
@@ -130,6 +131,15 @@ workflows:
           ls -la "$ART_DIR"
           # Sonraki aşamada artifacts desenleri çalışsın diye fallback'i export et
           echo "export CM_ARTIFACTS_DIR=\"$ART_DIR\"" >> $CM_ENV
+
+      - name: TestFlight’a yükle (App Store Connect)
+        script: |
+          set -euo pipefail
+          export PATH="$HOME/Library/Python/3.11/bin:$PATH"
+          IPA="$(ls -1 "${CM_ARTIFACTS_DIR:-$PWD/artifacts}"/*.ipa | head -n1)"
+          echo "Uploading IPA: $IPA"
+          # Codemagic CLI ile TestFlight yüklemesi
+          app-store-connect publish --path "$IPA" --testflight
 
     artifacts:
       - $CM_ARTIFACTS_DIR/*.ipa
