@@ -5,14 +5,13 @@ workflows:
     max_build_duration: 60
 
     environment:
-      # İstersen sabitle: xcode: 16.0
       vars:
-        PROJECT_DIR: "LessArcApppp"            # csproj klasörü
-        CSPROJ_PATH: "LessArcApppp.csproj"     # csproj dosya adı
-        IOS_BUNDLE_ID: "com.nisakara.lessarc"  # App Store Connect ile birebir aynı
+        PROJECT_DIR: "LessArcApppp"
+        CSPROJ_PATH: "LessArcApppp.csproj"
+        IOS_BUNDLE_ID: "com.nisakara.lessarc"
       groups:
-        - ios_signing        # CM_CERTIFICATE / CM_CERTIFICATE_PASSWORD / CM_PROVISIONING_PROFILE  (base64)
-        - app_store_connect  # APP_STORE_CONNECT_PRIVATE_KEY / APP_STORE_CONNECT_KEY_IDENTIFIER / APP_STORE_CONNECT_ISSUER_ID
+        - ios_signing
+        - app_store_connect
 
     cache:
       cache_paths:
@@ -105,7 +104,6 @@ workflows:
           echo "KEY_ID: $APP_STORE_CONNECT_KEY_IDENTIFIER"
           echo "ISSUER_ID: $APP_STORE_CONNECT_ISSUER_ID"
           echo "PRIVATE_KEY length: $(printf "%s" "$APP_STORE_CONNECT_PRIVATE_KEY" | wc -c)"
-          # Doğru alt komut: sadece listeyi çek
           app-store-connect apps list --log-stream stdout
 
       - name: TestFlight’a yükle (App Store Connect)
@@ -126,11 +124,7 @@ workflows:
           app-store-connect publish \
             --path "$IPA" \
             --testflight \
-            --bundle-id "$IOS_BUNDLE_ID" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --key-identifier "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
-            --verbose --log-stream stdout
+            --log-stream stdout
 
     artifacts:
       - $CM_ARTIFACTS_DIR/*.ipa
