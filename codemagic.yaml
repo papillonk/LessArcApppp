@@ -5,13 +5,13 @@ workflows:
     max_build_duration: 60
 
     environment:
-      # İstersen pinleyebilirsin: xcode: 16.0
+      # İstersen sabitle: xcode: 16.0
       vars:
-        PROJECT_DIR: "LessArcApppp"
-        CSPROJ_PATH: "LessArcApppp.csproj"
-        IOS_BUNDLE_ID: "com.nisakara.lessarc"
+        PROJECT_DIR: "LessArcApppp"            # csproj klasörü
+        CSPROJ_PATH: "LessArcApppp.csproj"     # csproj dosya adı
+        IOS_BUNDLE_ID: "com.nisakara.lessarc"  # App Store Connect ile birebir aynı
       groups:
-        - ios_signing        # CM_CERTIFICATE / CM_CERTIFICATE_PASSWORD / CM_PROVISIONING_PROFILE
+        - ios_signing        # CM_CERTIFICATE / CM_CERTIFICATE_PASSWORD / CM_PROVISIONING_PROFILE  (base64)
         - app_store_connect  # APP_STORE_CONNECT_PRIVATE_KEY / APP_STORE_CONNECT_KEY_IDENTIFIER / APP_STORE_CONNECT_ISSUER_ID
 
     cache:
@@ -25,12 +25,11 @@ workflows:
           set -euo pipefail
           curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
           bash dotnet-install.sh --channel 8.0 --install-dir "$HOME/.dotnet"
-          export PATH="$HOME/.dotnet:$PATH"
           echo 'export PATH="$HOME/.dotnet:$PATH"' >> $CM_ENV
           echo 'export DOTNET_ROOT="$HOME/.dotnet"' >> $CM_ENV
-
+          export PATH="$HOME/.dotnet:$PATH"
           dotnet --info
-          dotnet workload install maui
+          dotnet workload install maui ios
 
       - name: Keychain hazırla (Codemagic CLI)
         script: |
@@ -48,7 +47,7 @@ workflows:
             --certificate-password "$CM_CERTIFICATE_PASSWORD"
           security find-identity -v -p codesigning
 
-      - name: Provisioning profile’ı yükle ve UUID/Identity çıkar
+      - name: Provisioning profile’ı yükle + UUID/Identity çıkar
         script: |
           set -euo pipefail
           echo "$CM_PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
@@ -76,7 +75,7 @@ workflows:
 
       - name: İmzalı IPA üret (Release, ios-arm64)
         script: |
-          set -eo pipefail
+          set -euo pipefail
           export PATH="$HOME/.dotnet:$PATH"
           [ -f "$CM_ENV" ] && . "$CM_ENV" || true
           cd "$PROJECT_DIR"
@@ -90,7 +89,7 @@ workflows:
 
       - name: IPA/xcarchive topla
         script: |
-          set -eo pipefail
+          set -euo pipefail
           ART_DIR="${CM_ARTIFACTS_DIR:-$PWD/artifacts}"
           mkdir -p "$ART_DIR"
           find "$PROJECT_DIR/bin/Release/net8.0-ios/ios-arm64" -name "*.ipa" -print -exec cp {} "$ART_DIR" \; || true
@@ -106,15 +105,24 @@ workflows:
           echo "KEY_ID: $APP_STORE_CONNECT_KEY_IDENTIFIER"
           echo "ISSUER_ID: $APP_STORE_CONNECT_ISSUER_ID"
           echo "PRIVATE_KEY length: $(printf "%s" "$APP_STORE_CONNECT_PRIVATE_KEY" | wc -c)"
-          # auth test
-          app-store-connect apps --limit 1
+          # Doğru alt komut: list
+          app-store-connect apps list --limit 1 --log-stream stdout
 
       - name: TestFlight’a yükle (App Store Connect)
         script: |
           set -euo pipefail
           export PATH="$HOME/Library/Python/3.11/bin:$PATH"
-          IPA="$(ls -1 "${CM_ARTIFACTS_DIR:-$PWD/artifacts}"/*.ipa | head -n1)"
+          [ -f "$CM_ENV" ] && . "$CM_ENV" || true
+
+          ART_DIR="${CM_ARTIFACTS_DIR:-$PWD/artifacts}"
+          IPA="$(ls -1 "$ART_DIR"/*.ipa | head -n 1 || true)"
+          if [ -z "$IPA" ]; then
+            echo "IPA bulunamadı!"
+            ls -la "$ART_DIR" || true
+            exit 1
+          fi
           echo "Uploading IPA: $IPA"
+
           app-store-connect publish \
             --path "$IPA" \
             --testflight \
@@ -122,7 +130,7 @@ workflows:
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --key-identifier "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
-            --verbose
+            --verbose --log-stream stdout
 
     artifacts:
       - $CM_ARTIFACTS_DIR/*.ipa
