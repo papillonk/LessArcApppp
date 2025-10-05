@@ -105,8 +105,8 @@ workflows:
           echo "KEY_ID: $APP_STORE_CONNECT_KEY_IDENTIFIER"
           echo "ISSUER_ID: $APP_STORE_CONNECT_ISSUER_ID"
           echo "PRIVATE_KEY length: $(printf "%s" "$APP_STORE_CONNECT_PRIVATE_KEY" | wc -c)"
-          # Doğru alt komut: list
-          app-store-connect apps list --limit 1 --log-stream stdout
+          # Doğru alt komut: sadece listeyi çek
+          app-store-connect apps list --log-stream stdout
 
       - name: TestFlight’a yükle (App Store Connect)
         script: |
