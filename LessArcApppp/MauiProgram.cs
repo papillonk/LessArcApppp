@@ -1,14 +1,22 @@
-﻿using Microcharts.Maui;
+﻿using System;
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls.Handlers.Items;   // CollectionViewHandler
+using Microsoft.Maui.Handlers;                   // EntryHandler, EditorHandler, PickerHandler, ButtonHandler
+using Microcharts.Maui;
 using Microsoft.Maui.LifecycleEvents;
-using System.Net.Http;
 
 #if WINDOWS
 using Microsoft.Maui.Platform;           // MauiWinUIWindow
-using Microsoft.UI.Windowing;            // AppWindow, OverlappedPresenter, AppWindowTitleBar, DisplayArea
+using Microsoft.UI.Windowing;            // AppWindow, OverlappedPresenter, AppWindowTitleBar
 using WinRT.Interop;                     // WindowNative
 using WinColor = Windows.UI.Color;
+#endif
+
+#if IOS
+using UIKit;
+using CoreGraphics;
 #endif
 
 namespace LessArcApppp
@@ -44,6 +52,68 @@ namespace LessArcApppp
 
             builder.Services.AddSingleton<MainPage>();
 
+            // ---- iOS görünüm düzeltmeleri (Android/Windows etkilenmez) ----
+            builder.ConfigureMauiHandlers(handlers =>
+            {
+#if IOS
+                // ENTRY
+                EntryHandler.Mapper.AppendToMapping("iOSColors", (handler, view) =>
+                {
+                    if (handler.PlatformView is UITextField tf)
+                    {
+                        tf.BackgroundColor = UIColor.Clear;
+                        tf.BorderStyle = UITextBorderStyle.None;
+                        tf.TintColor = UIColor.FromRGB(0x2d, 0x2e, 0x32);     // cursor
+                        tf.TextColor = UIColor.FromRGB(0x2d, 0x2e, 0x32);
+                        tf.AttributedPlaceholder = new Foundation.NSAttributedString(
+                            view.Placeholder ?? string.Empty,
+                            foregroundColor: UIColor.FromRGB(0x2d, 0x2e, 0x32).ColorWithAlpha(0.65f)
+                        );
+                    }
+                });
+
+                // EDITOR
+                EditorHandler.Mapper.AppendToMapping("iOSColors", (handler, view) =>
+                {
+                    handler.PlatformView.BackgroundColor = UIColor.Clear;
+                    handler.PlatformView.TintColor = UIColor.FromRGB(0x2d, 0x2e, 0x32);
+                    handler.PlatformView.TextColor = UIColor.FromRGB(0x2d, 0x2e, 0x32);
+                });
+
+                // PICKER
+                PickerHandler.Mapper.AppendToMapping("iOSColors", (handler, view) =>
+                {
+                    handler.PlatformView.BackgroundColor = UIColor.Clear;
+                    handler.PlatformView.TintColor = UIColor.FromRGB(0x2d, 0x2e, 0x32);
+                    handler.PlatformView.TextColor = UIColor.FromRGB(0x2d, 0x2e, 0x32);
+                });
+
+                // BUTTON (native parlamayı azalt)
+                ButtonHandler.Mapper.AppendToMapping("iOSColors", (handler, view) =>
+                {
+                    handler.PlatformView.BackgroundColor = UIColor.Clear;
+                    handler.PlatformView.TintColor = UIColor.FromRGB(0x2d, 0x2e, 0x32);
+                });
+
+                // COLLECTIONVIEW arkaplanı şeffaf
+                CollectionViewHandler.Mapper.AppendToMapping("iOSBg", (handler, view) =>
+                {
+                    handler.PlatformView.BackgroundColor = UIColor.Clear;
+                });
+
+                // iOS CollectionView FlowLayout crash sigortası
+                CollectionViewHandler.Mapper.AppendToMapping("iOSFlowFix", (handler, view) =>
+                {
+                    if (handler.PlatformView is UICollectionView uiView &&
+                        uiView.CollectionViewLayout is UICollectionViewFlowLayout flow)
+                    {
+                        flow.EstimatedItemSize = CGSize.Empty; // 0x0 frame crash'ini engeller
+                    }
+                });
+#endif
+            });
+
+            // ---- OS lifecycle & Windows başlık çubuğu ----
             builder.ConfigureLifecycleEvents(events =>
             {
 #if WINDOWS
@@ -51,19 +121,16 @@ namespace LessArcApppp
                 {
                     w.OnWindowCreated(win =>
                     {
-                        // 1) TAMAMEN NATIVE TITLE BAR
-                        win.ExtendsContentIntoTitleBar = false;  // içerik başlığa uzamasın (custom bar YOK)
+                        win.ExtendsContentIntoTitleBar = false;
 
                         if (win.AppWindow?.Presenter is OverlappedPresenter p)
                         {
-                            // Sistem çerçevesi + sistem title bar AÇIK
                             p.SetBorderAndTitleBar(true, true);
-                            p.IsResizable   = true;   // tek boyut istersen false yap
-                            p.IsMaximizable = true;   // maximize kapatmak istersen false yap
+                            p.IsResizable = true;
+                            p.IsMaximizable = true;
                             p.IsMinimizable = true;
                         }
 
-                        // 2) TITLE BAR RENK/TEMA (opsiyonel ama güzel durur)
                         var mw = win as MauiWinUIWindow;
                         var appWindow = mw?.AppWindow;
                         if (appWindow is null) return;
@@ -72,33 +139,23 @@ namespace LessArcApppp
                         {
                             var tb = appWindow.TitleBar;
 
-                            // Senin paletin:
-                            var bg     = WinColor.FromArgb(255, 0x1C, 0x1C, 0x1C); // #1C1C1C
-                            var fg     = WinColor.FromArgb(255, 255, 255, 255);    // #FFFFFF
-                            var hover  = WinColor.FromArgb(255, 60, 60, 60);
-                            var press  = WinColor.FromArgb(255, 45, 45, 45);
+                            var bg = WinColor.FromArgb(255, 0x1C, 0x1C, 0x1C);
+                            var fg = WinColor.FromArgb(255, 255, 255, 255);
+                            var hover = WinColor.FromArgb(255, 60, 60, 60);
+                            var press = WinColor.FromArgb(255, 45, 45, 45);
 
-                            tb.ExtendsContentIntoTitleBar   = false;  // native bar
-                            tb.BackgroundColor              = bg;
-                            tb.InactiveBackgroundColor      = bg;
-
-                            tb.ForegroundColor              = fg;
-                            tb.InactiveForegroundColor      = fg;
-
-                            tb.ButtonBackgroundColor        = bg;
-                            tb.ButtonInactiveBackgroundColor= bg;
-                            tb.ButtonForegroundColor        = fg;
-                            tb.ButtonInactiveForegroundColor= fg;
-
-                            tb.ButtonHoverBackgroundColor   = hover;
+                            tb.ExtendsContentIntoTitleBar = false;
+                            tb.BackgroundColor = bg;
+                            tb.InactiveBackgroundColor = bg;
+                            tb.ForegroundColor = fg;
+                            tb.InactiveForegroundColor = fg;
+                            tb.ButtonBackgroundColor = bg;
+                            tb.ButtonInactiveBackgroundColor = bg;
+                            tb.ButtonForegroundColor = fg;
+                            tb.ButtonInactiveForegroundColor = fg;
+                            tb.ButtonHoverBackgroundColor = hover;
                             tb.ButtonPressedBackgroundColor = press;
                         }
-
-                        // (OPSİYONEL) AÇILIŞTA MERKEZE AL & BOYUT VER
-                        // var area = DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary).WorkArea;
-                        // int w0 = 1280, h0 = 800;
-                        // appWindow.Resize(new Windows.Graphics.SizeInt32(w0, h0));
-                        // appWindow.Move(new Windows.Graphics.PointInt32(area.X + (area.Width - w0)/2, area.Y + (area.Height - h0)/2));
                     });
                 });
 #endif
