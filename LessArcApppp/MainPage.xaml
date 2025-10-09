@@ -29,7 +29,6 @@
 
             <!-- 💻 MASAÜSTÜ -->
             <Grid x:Name="desktopLayout" IsVisible="False">
-
                 <!-- 🎯 Giriş Kartı: Android’deki gibi Start + 200px -->
                 <Grid HorizontalOptions="Center"
                       VerticalOptions="Start"
@@ -169,17 +168,17 @@
                 </Frame>
             </Grid>
 
-            <!-- 📱 MOBİL -->
+            <!-- 📱 MOBİL - DEĞİŞİKLİK BURADA -->
             <Grid x:Name="mobileLayout"
                   IsVisible="False"
                   RowDefinitions="*,Auto,*">
 
-                <!-- Orta satır: kart (Android’deki gibi alta yakın) -->
+                <!-- Orta satır: kart (EKRANIN TAM ORTASINDA) -->
                 <Grid Grid.Row="1"
                       HorizontalOptions="Center"
-                      VerticalOptions="End"
+                      VerticalOptions="Center"
                       Padding="0"
-                      Margin="0,0,0,28">
+                      Margin="0,0,0,0">
                     <Frame x:Name="mobileCard"
                            CornerRadius="16"
                            BackgroundColor="grey"

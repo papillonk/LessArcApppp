@@ -20,7 +20,6 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*">
-
         <!-- Arkaplan -->
         <Image Grid.RowSpan="2" Source="arkaplann.png" Aspect="AspectFill" InputTransparent="True" />
 
@@ -31,7 +30,10 @@
         <Grid Grid.Row="1">
 
             <!-- ========== MOBİL ========== -->
-            <Grid x:Name="MobilGrid" IsVisible="False" RowSpacing="10" Padding="0">
+            <Grid x:Name="MobilGrid"
+                  IsVisible="False"
+                  RowSpacing="10"
+                  Padding="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -39,8 +41,13 @@
                 </Grid.RowDefinitions>
 
                 <!-- Başlık -->
-                <Label Grid.Row="0" Text="📁 Projelerim" FontAttributes="Bold" FontSize="22"
-                       TextColor="#ebe9e5" HorizontalOptions="Center" Margin="12,12,12,10" />
+                <Label Grid.Row="0"
+                       Text="📁 Projelerim"
+                       FontAttributes="Bold"
+                       FontSize="22"
+                       TextColor="#ebe9e5"
+                       HorizontalOptions="Center"
+                       Margin="12,12,12,10" />
 
                 <!-- Proje Seçim Butonu -->
                 <Frame Grid.Row="1" Padding="8" CornerRadius="12" BackgroundColor="#ebe9e5"
@@ -63,33 +70,64 @@
                 <ScrollView Grid.Row="2" Margin="12,0,12,12">
                     <VerticalStackLayout Spacing="16">
                         <!-- Detay kartı -->
-                        <Frame BackgroundColor="#ebe9e5" CornerRadius="16" HasShadow="True" Padding="14">
-                            <VerticalStackLayout x:Name="MobilProjeDetaylariPanel" Spacing="14">
+                        <Frame BackgroundColor="#ebe9e5"
+                               CornerRadius="16"
+                               HasShadow="True"
+                               Padding="14">
+                            <VerticalStackLayout x:Name="MobilProjeDetaylariPanel"
+                                                 Spacing="14">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <Label x:Name="lblSeciliProjeBaslikMobile" Grid.Column="0"
-                                           FontAttributes="Bold" FontSize="18" TextColor="#2d2e32"/>
-                                    <Image x:Name="imgCheckMobile" Grid.Column="1" Source="checkmark.png"
-                                           WidthRequest="20" HeightRequest="20" IsVisible="False"
+                                    <Label x:Name="lblSeciliProjeBaslikMobile"
+                                           Grid.Column="0"
+                                           FontAttributes="Bold"
+                                           FontSize="18"
+                                           TextColor="#2d2e32"/>
+                                    <Image x:Name="imgCheckMobile"
+                                           Grid.Column="1"
+                                           Source="checkmark.png"
+                                           WidthRequest="20"
+                                           HeightRequest="20"
+                                           IsVisible="False"
                                            VerticalOptions="Center"/>
                                 </Grid>
 
                                 <!-- Tarihler -->
-                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
-                                    <Label Grid.Row="0" Grid.Column="0" Text="Başlangıç:" FontAttributes="Bold"/>
-                                    <Frame Grid.Row="0" Grid.Column="1" BackgroundColor="#dfd5c9" CornerRadius="18"
-                                           HasShadow="False" Padding="14,12" HeightRequest="52" WidthRequest="220">
+                                <Grid ColumnDefinitions="Auto,*"
+                                      RowDefinitions="Auto,Auto"
+                                      ColumnSpacing="10"
+                                      RowSpacing="10"
+                                      HorizontalOptions="Center">
+                                    <Label Grid.Row="0" Grid.Column="0"
+                                           Text="Başlangıç:"
+                                           FontAttributes="Bold"/>
+                                    <Frame Grid.Row="0" Grid.Column="1"
+                                           BackgroundColor="#dfd5c9"
+                                           CornerRadius="18"
+                                           HasShadow="False"
+                                           Padding="14,12"
+                                           HeightRequest="52"
+                                           WidthRequest="220">
                                         <Grid>
-                                            <Label VerticalOptions="Center" TextColor="#3a3a3a"
+                                            <Label VerticalOptions="Center"
+                                                   TextColor="#3a3a3a"
                                                    Text="{Binding Source={x:Reference dpBaslangicMobile}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
                                             <DatePicker x:Name="dpBaslangicMobile" Opacity="0"/>
                                         </Grid>
                                     </Frame>
 
-                                    <Label Grid.Row="1" Grid.Column="0" Text="Bitiş:" FontAttributes="Bold"/>
-                                    <Frame Grid.Row="1" Grid.Column="1" BackgroundColor="#dfd5c9" CornerRadius="18"
-                                           HasShadow="False" Padding="14,12" HeightRequest="52" WidthRequest="220">
+                                    <Label Grid.Row="1" Grid.Column="0"
+                                           Text="Bitiş:"
+                                           FontAttributes="Bold"/>
+                                    <Frame Grid.Row="1" Grid.Column="1"
+                                           BackgroundColor="#dfd5c9"
+                                           CornerRadius="18"
+                                           HasShadow="False"
+                                           Padding="14,12"
+                                           HeightRequest="52"
+                                           WidthRequest="220">
                                         <Grid>
-                                            <Label VerticalOptions="Center" TextColor="#3a3a3a"
+                                            <Label VerticalOptions="Center"
+                                                   TextColor="#3a3a3a"
                                                    Text="{Binding Source={x:Reference dpBitisMobile}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
                                             <DatePicker x:Name="dpBitisMobile" Opacity="0"/>
                                         </Grid>
@@ -97,38 +135,72 @@
                                 </Grid>
 
                                 <!-- Durum -->
-                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
-                                    <Label Grid.Row="0" Grid.Column="0" Text="Durum :" FontAttributes="Bold"/>
-                                    <Frame Grid.Row="0" Grid.Column="1" BackgroundColor="#dfd5c9" CornerRadius="18"
-                                           HasShadow="False" Padding="10,8" HeightRequest="52" WidthRequest="220">
-                                        <Picker x:Name="pickerDurumMobile" Title="Durum Seçin" BackgroundColor="Transparent"/>
+                                <Grid ColumnDefinitions="Auto,*"
+                                      RowDefinitions="Auto,Auto"
+                                      ColumnSpacing="12"
+                                      RowSpacing="12"
+                                      HorizontalOptions="Center">
+                                    <Label Grid.Row="0" Grid.Column="0"
+                                           Text="Durum :"
+                                           FontAttributes="Bold"/>
+                                    <Frame Grid.Row="0" Grid.Column="1"
+                                           BackgroundColor="#dfd5c9"
+                                           CornerRadius="18"
+                                           HasShadow="False"
+                                           Padding="10,8"
+                                           HeightRequest="52"
+                                           WidthRequest="220">
+                                        <Picker x:Name="pickerDurumMobile"
+                                                Title="Durum Seçin"
+                                                BackgroundColor="Transparent"/>
                                     </Frame>
-                                    <Button Grid.Row="1" Grid.ColumnSpan="2" x:Name="btnBilgileriGuncelleMobile" Text="Bilgileri Güncelle"
-                                            BackgroundColor="#dfd5c9" TextColor="#3a3a3a" CornerRadius="18"/>
+                                    <Button Grid.Row="1" Grid.ColumnSpan="2"
+                                            x:Name="btnBilgileriGuncelleMobile"
+                                            Text="Bilgileri Güncelle"
+                                            BackgroundColor="#dfd5c9"
+                                            TextColor="#3a3a3a"
+                                            CornerRadius="18"/>
                                 </Grid>
 
-                                <Label x:Name="lblGenelTamamMobile" FontSize="13" TextColor="#2d2e32"/>
-                                <VerticalStackLayout x:Name="MobilAdimlarPanel" Spacing="10"/>
+                                <Label x:Name="lblGenelTamamMobile"
+                                       FontSize="13"
+                                       TextColor="#2d2e32"/>
+                                <VerticalStackLayout x:Name="MobilAdimlarPanel"
+                                                     Spacing="10"/>
                             </VerticalStackLayout>
                         </Frame>
 
                         <!-- Yorumlar (Mobil) -->
-                        <Frame BackgroundColor="#d8d0ca" CornerRadius="18" HasShadow="False" Padding="14">
+                        <Frame BackgroundColor="#d8d0ca"
+                               CornerRadius="18"
+                               HasShadow="False"
+                               Padding="14">
                             <VerticalStackLayout Spacing="12">
-                                <Label Text="Projeye Yorumlar" FontSize="16" FontAttributes="Bold"/>
+                                <Label Text="Projeye Yorumlar"
+                                       FontSize="16"
+                                       FontAttributes="Bold"/>
                                 <CollectionView x:Name="MobilYorumCollection"
                                                 ItemsSource="{Binding MobilYorumlar}"
-                                                HeightRequest="320"
-                                                ItemSizingStrategy="MeasureFirstItem">
+                                                HeightRequest="320">
                                     <CollectionView.ItemsLayout>
                                         <LinearItemsLayout Orientation="Vertical" ItemSpacing="8"/>
                                     </CollectionView.ItemsLayout>
                                 </CollectionView>
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,6,0,0">
-                                    <Frame Grid.Column="0" BackgroundColor="White" CornerRadius="12" HasShadow="False" Padding="8">
-                                        <Editor x:Name="MobilYorumEditor" Placeholder="Yorum yaz..." HeightRequest="44"/>
+                                <Grid ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="8"
+                                      Margin="0,6,0,0">
+                                    <Frame Grid.Column="0"
+                                           BackgroundColor="White"
+                                           CornerRadius="12"
+                                           HasShadow="False"
+                                           Padding="8">
+                                        <Editor x:Name="MobilYorumEditor"
+                                                Placeholder="Yorum yaz..."
+                                                HeightRequest="44"/>
                                     </Frame>
-                                    <Button Grid.Column="1" Text="Gönder" x:Name="BtnYorumGonderMobile"/>
+                                    <Button Grid.Column="1"
+                                            Text="Gönder"
+                                            x:Name="BtnYorumGonderMobile"/>
                                 </Grid>
                             </VerticalStackLayout>
                         </Frame>
@@ -139,21 +211,45 @@
                 <Picker x:Name="cmbProjeSecimi" IsVisible="False"/>
 
                 <!-- Proje Seçim Popup -->
-                <Grid x:Name="popupMask" Grid.Row="0" Grid.RowSpan="3" IsVisible="False"
-                      BackgroundColor="#80000000" ZIndex="999">
-                    <Grid VerticalOptions="Center" HorizontalOptions="Center">
-                        <Frame x:Name="ProjePopup" Padding="0" CornerRadius="26" BackgroundColor="White"
-                               WidthRequest="360" MaximumHeightRequest="600">
+                <Grid x:Name="popupMask"
+                      Grid.Row="0"
+                      Grid.RowSpan="3"
+                      IsVisible="False"
+                      BackgroundColor="#80000000"
+                      ZIndex="999"
+                      VerticalOptions="Center"
+                      HorizontalOptions="Center">
+                    <Grid VerticalOptions="Center"
+                          HorizontalOptions="Center">
+                        <Frame x:Name="ProjePopup"
+                               Padding="0"
+                               CornerRadius="26"
+                               BackgroundColor="White"
+                               WidthRequest="360"
+                               MaximumHeightRequest="600">
                             <Grid RowDefinitions="Auto,Auto,*,Auto">
-                                <Grid Grid.Row="0" Padding="18,14" ColumnDefinitions="*,Auto">
-                                    <Label Text="Proje Seç" FontSize="20" FontAttributes="Bold"/>
-                                    <ImageButton Grid.Column="1" Source="close.png"
+                                <Grid Grid.Row="0"
+                                      Padding="18,14"
+                                      ColumnDefinitions="*,Auto">
+                                    <Label Text="Proje Seç"
+                                           FontSize="20"
+                                           FontAttributes="Bold"/>
+                                    <ImageButton Grid.Column="1"
+                                                 Source="close.png"
                                                  Clicked="TapCloseProjePopup_Clicked"/>
                                 </Grid>
-                                <Frame Grid.Row="1" Margin="18,14,18,10" Padding="12" CornerRadius="18" BackgroundColor="#ECE6DF">
-                                    <Entry x:Name="entryMobilAra" Placeholder="Proje ara..." />
+                                <Frame Grid.Row="1"
+                                       Margin="18,14,18,10"
+                                       Padding="12"
+                                       CornerRadius="18"
+                                       BackgroundColor="#ECE6DF">
+                                    <Entry x:Name="entryMobilAra"
+                                           Placeholder="Proje ara..." />
                                 </Frame>
-                                <CollectionView x:Name="cvProjeSecim" Grid.Row="2" Margin="12,0,12,8">
+                                <CollectionView x:Name="cvProjeSecim"
+                                                Grid.Row="2"
+                                                Margin="12,0,12,8"
+                                                HeightRequest="300">
                                     <CollectionView.ItemsLayout>
                                         <LinearItemsLayout Orientation="Vertical" ItemSpacing="10"/>
                                     </CollectionView.ItemsLayout>

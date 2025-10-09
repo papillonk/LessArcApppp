@@ -241,6 +241,11 @@
                   IsVisible="{OnPlatform Android=True, iOS=True, WinUI=False, MacCatalyst=False}"
                   Padding="{Binding ScaledPadding}" RowSpacing="{Binding ScaledSpacing}">
 
+                <!-- iOS çökmesini önlemek için: boş liste kaynağı -->
+                <Grid.Resources>
+                    <x:Array x:Key="EmptyList" Type="{x:Type x:Object}" />
+                </Grid.Resources>
+
                 <Grid RowSpacing="{Binding ScaledSmallSpacing}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -254,6 +259,7 @@
                     <Label Text="📢 Bildirim Gönderme" FontAttributes="Bold"
                            FontSize="{Binding ScaledFontSize}" TextColor="#D6C9C1" Grid.Row="0"/>
 
+                    <!-- Admin seçimi tetikleyici (etikete tıklayınca da çalışır) -->
                     <Frame Padding="{Binding ScaledSmallPadding}" BackgroundColor="#D6C9C1"
                            CornerRadius="12" HasShadow="True" HorizontalOptions="Center"
                            WidthRequest="{Binding ScaledPickAdminWidth}" Grid.Row="1">
@@ -271,7 +277,11 @@
                             <Label Text="Admin Seçin" Grid.Column="1"
                                    FontSize="{Binding ScaledFontSize3}" TextColor="#324f53"
                                    HorizontalOptions="Center" VerticalOptions="Center"
-                                   FontAttributes="Bold" />
+                                   FontAttributes="Bold">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="BtnAdminSec_Clicked" />
+                                </Label.GestureRecognizers>
+                            </Label>
                         </Grid>
                     </Frame>
 
@@ -297,7 +307,10 @@
                                 FontSize="{Binding ScaledFontSize4}" HorizontalOptions="Fill" />
                     </VerticalStackLayout>
 
+                    <!-- Günlük liste (NULL SAFE) -->
                     <CollectionView x:Name="lstGecmisBildirimlerMobile" Grid.Row="5"
+                                    ItemSizingStrategy="MeasureAllItems"
+                                    ItemsSource="{Binding GecmisBildirimler, TargetNullValue={StaticResource EmptyList}}"
                                     VerticalScrollBarVisibility="Always">
                         <CollectionView.ItemsLayout>
                             <LinearItemsLayout Orientation="Vertical" />
@@ -341,7 +354,7 @@
                     </CollectionView>
                 </Grid>
 
-                <!-- ======= Mobile: Admin selection popup (görsel 2) ======= -->
+                <!-- ======= Mobile: Admin selection popup ======= -->
                 <Grid x:Name="frameAdminPopup" IsVisible="False" ZIndex="99"
                       BackgroundColor="#B3000000" VerticalOptions="FillAndExpand"
                       HorizontalOptions="FillAndExpand" InputTransparent="False" Padding="0">
@@ -383,49 +396,36 @@
                                         Clicked="BtnAdminIptal_Clicked"/>
                             </Grid>
 
-                            <!-- Liste -->
+                            <!-- Liste (NULL SAFE + sade template, CheckBox/event yok) -->
                             <CollectionView x:Name="cvAdminSecim" Grid.Row="2"
-                                            SelectionMode="Multiple" VerticalScrollBarVisibility="Always">
+                                            SelectionMode="Multiple"
+                                            ItemSizingStrategy="MeasureAllItems"
+                                            ItemsSource="{Binding Adminler, TargetNullValue={StaticResource EmptyList}}"
+                                            VerticalScrollBarVisibility="Always">
                                 <CollectionView.ItemsLayout>
                                     <LinearItemsLayout Orientation="Vertical"/>
                                 </CollectionView.ItemsLayout>
-
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate>
                                         <Frame x:Name="itemRoot" Margin="6" Padding="10"
                                                BackgroundColor="#FFF" CornerRadius="12" HasShadow="False">
                                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                                 <Grid.GestureRecognizers>
+                                                    <!-- seçim kodda ToggleSelectionCommand ile yönetiliyor -->
                                                     <TapGestureRecognizer
                                                         Command="{Binding Source={x:Reference __page}, Path=BindingContext.ToggleSelectionCommand}"
                                                         CommandParameter="{Binding .}"/>
                                                 </Grid.GestureRecognizers>
 
-                                                <CheckBox x:Name="chk"
-                                                          Grid.Column="0"
-                                                          HorizontalOptions="Start"
-                                                          VerticalOptions="Center"
-                                                          CheckedChanged="AdminCheckBox_CheckedChanged" />
+                                                <Image Source="check_round.png"
+                                                       IsVisible="{Binding IsSecili}"
+                                                       WidthRequest="18" HeightRequest="18"
+                                                       VerticalOptions="Center" />
 
                                                 <Label Grid.Column="1" Text="{Binding AdSoyad}"
                                                        FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
                                                        TextColor="#2c3e50" VerticalOptions="Center"/>
                                             </Grid>
-
-                                            <VisualStateManager.VisualStateGroups>
-                                                <VisualStateGroup Name="CommonStates">
-                                                    <VisualState Name="Normal">
-                                                        <VisualState.Setters>
-                                                            <Setter TargetName="itemRoot" Property="BorderColor" Value="Transparent"/>
-                                                        </VisualState.Setters>
-                                                    </VisualState>
-                                                    <VisualState Name="Selected">
-                                                        <VisualState.Setters>
-                                                            <Setter TargetName="itemRoot" Property="BorderColor" Value="#9BA3AE"/>
-                                                        </VisualState.Setters>
-                                                    </VisualState>
-                                                </VisualStateGroup>
-                                            </VisualStateManager.VisualStateGroups>
                                         </Frame>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
@@ -454,7 +454,7 @@
                     </Frame>
                 </Grid>
 
-                <!-- ======= Mobile: history popup ======= -->
+                <!-- ======= Mobile: history popup (NULL SAFE) ======= -->
                 <Grid x:Name="frameGecmisMobile" IsVisible="False" ZIndex="99"
                       BackgroundColor="#B3000000" VerticalOptions="FillAndExpand"
                       HorizontalOptions="FillAndExpand" InputTransparent="False" Padding="0">
@@ -497,6 +497,8 @@
                             </HorizontalStackLayout>
 
                             <CollectionView x:Name="lstGecmisPopupMobile" Grid.Row="2"
+                                            ItemSizingStrategy="MeasureAllItems"
+                                            ItemsSource="{Binding GecmisPopup, TargetNullValue={StaticResource EmptyList}}"
                                             VerticalScrollBarVisibility="Always">
                                 <CollectionView.ItemsLayout>
                                     <LinearItemsLayout Orientation="Vertical" />
