@@ -26,8 +26,8 @@
 		<CFBundleIdentifier>com.nisakara.lessarc</CFBundleIdentifier>
 
 		<!-- Sürümleme -->
-		<ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
-		<ApplicationVersion>10</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+		<ApplicationVersion>11</ApplicationVersion>
 
 		<!-- Android SDK hedefleri -->
 		<AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>

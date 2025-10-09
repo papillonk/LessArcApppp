@@ -30,6 +30,7 @@
         <Grid Grid.Row="1">
 
             <!-- ========== MOBİL ========== -->
+            <!-- Mobil bölümü: popup kaldırıldı, yerine pickerProjeler eklendi. -->
             <Grid x:Name="MobilGrid"
                   IsVisible="False"
                   RowSpacing="10"
@@ -49,24 +50,34 @@
                        HorizontalOptions="Center"
                        Margin="12,12,12,10" />
 
-                <!-- Proje Seçim Butonu -->
-                <Frame Grid.Row="1" Padding="8" CornerRadius="12" BackgroundColor="#ebe9e5"
-                       HasShadow="False" BorderColor="#F5F5DC" Margin="12,0,12,10">
-                    <Grid>
-                        <Frame BackgroundColor="White" CornerRadius="14" HasShadow="False" Padding="12,10">
-                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                                <Image Source="filter.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                <Label x:Name="lblMobilSecimMetni" Grid.Column="1" Text="🔽 Proje Seç" TextColor="#2d2e32"/>
-                            </Grid>
-                        </Frame>
-                        <Button x:Name="btnOpenPopupOverlay" BackgroundColor="#01000000" Opacity="0.01"
-                                BorderWidth="0" CornerRadius="0"
-                                HorizontalOptions="Fill" VerticalOptions="Fill"
-                                Clicked="BtnOpenProjePopup_Clicked"/>
-                    </Grid>
-                </Frame>
+                <!-- === YENİ: Mobil proje seçimi (popup yerine picker) === -->
+                <StackLayout Grid.Row="1"
+                             x:Name="mobileLayout"
+                             IsVisible="True"
+                             Padding="0"
+                             Spacing="{Binding S_M}"
+                             BackgroundColor="Transparent"
+                             Margin="12,0,12,10">
+                    <Label Text="Bir proje seçin"
+                           FontAttributes="Bold"
+                           FontSize="{Binding F_Body}"
+                           TextColor="#D6C9C1" />
 
-                <!-- Proje Detayları (Mobil) -->
+                    <Frame BackgroundColor="White"
+                           CornerRadius="{Binding C_SmallRadius}"
+                           Padding="{Binding P_FieldPad}"
+                           HasShadow="True">
+                        <Picker x:Name="pickerProjeler"
+                                Title="Projeler"
+                                SelectedIndexChanged="pickerProjeler_SelectedIndexChanged"
+                                ItemDisplayBinding="{Binding Baslik}"
+                                TextColor="#2d2e32"
+                                FontSize="{Binding F_Body}"
+                                BackgroundColor="Transparent"/>
+                    </Frame>
+                </StackLayout>
+
+                <!-- Proje Detayları (Mobil) - artık tarih seçimi görünür DatePicker'lar ile -->
                 <ScrollView Grid.Row="2" Margin="12,0,12,12">
                     <VerticalStackLayout Spacing="16">
                         <!-- Detay kartı -->
@@ -91,48 +102,44 @@
                                            VerticalOptions="Center"/>
                                 </Grid>
 
-                                <!-- Tarihler -->
-                                <Grid ColumnDefinitions="Auto,*"
-                                      RowDefinitions="Auto,Auto"
-                                      ColumnSpacing="10"
-                                      RowSpacing="10"
-                                      HorizontalOptions="Center">
-                                    <Label Grid.Row="0" Grid.Column="0"
-                                           Text="Başlangıç:"
-                                           FontAttributes="Bold"/>
-                                    <Frame Grid.Row="0" Grid.Column="1"
-                                           BackgroundColor="#dfd5c9"
-                                           CornerRadius="18"
-                                           HasShadow="False"
-                                           Padding="14,12"
-                                           HeightRequest="52"
-                                           WidthRequest="220">
-                                        <Grid>
-                                            <Label VerticalOptions="Center"
-                                                   TextColor="#3a3a3a"
-                                                   Text="{Binding Source={x:Reference dpBaslangicMobile}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
-                                            <DatePicker x:Name="dpBaslangicMobile" Opacity="0"/>
-                                        </Grid>
-                                    </Frame>
+                                <!-- Tarihler: artık görünür DatePicker kullanılıyor (başlangıç & bitiş) -->
+                                <ScrollView>
+                                    <VerticalStackLayout Spacing="12" Margin="0,4,0,0">
+                                        <!-- Başlangıç Tarihi -->
+                                        <Frame BackgroundColor="#FFFFFF"
+                                               CornerRadius="10"
+                                               Padding="{Binding ScaledSmallPadding}"
+                                               HasShadow="True"
+                                               BorderColor="#E5E5E5">
+                                            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                                <DatePicker x:Name="dpBaslangicMobile"
+                                                            Format="dd.MM.yyyy"
+                                                            DateSelected="DpBaslangicMobile_DateSelected"
+                                                            BackgroundColor="Transparent"
+                                                            TextColor="#222"
+                                                            FontSize="{Binding ScaledFontSize3}"
+                                                            HorizontalOptions="Fill" />
+                                            </Grid>
+                                        </Frame>
 
-                                    <Label Grid.Row="1" Grid.Column="0"
-                                           Text="Bitiş:"
-                                           FontAttributes="Bold"/>
-                                    <Frame Grid.Row="1" Grid.Column="1"
-                                           BackgroundColor="#dfd5c9"
-                                           CornerRadius="18"
-                                           HasShadow="False"
-                                           Padding="14,12"
-                                           HeightRequest="52"
-                                           WidthRequest="220">
-                                        <Grid>
-                                            <Label VerticalOptions="Center"
-                                                   TextColor="#3a3a3a"
-                                                   Text="{Binding Source={x:Reference dpBitisMobile}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
-                                            <DatePicker x:Name="dpBitisMobile" Opacity="0"/>
-                                        </Grid>
-                                    </Frame>
-                                </Grid>
+                                        <!-- Bitiş Tarihi -->
+                                        <Frame BackgroundColor="#FFFFFF"
+                                               CornerRadius="10"
+                                               Padding="{Binding ScaledSmallPadding}"
+                                               HasShadow="True"
+                                               BorderColor="#E5E5E5">
+                                            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                                <DatePicker x:Name="dpBitisMobile"
+                                                            Format="dd.MM.yyyy"
+                                                            DateSelected="DpBitisMobile_DateSelected"
+                                                            BackgroundColor="Transparent"
+                                                            TextColor="#222"
+                                                            FontSize="{Binding ScaledFontSize3}"
+                                                            HorizontalOptions="Fill" />
+                                            </Grid>
+                                        </Frame>
+                                    </VerticalStackLayout>
+                                </ScrollView>
 
                                 <!-- Durum -->
                                 <Grid ColumnDefinitions="Auto,*"
@@ -207,57 +214,8 @@
                     </VerticalStackLayout>
                 </ScrollView>
 
-                <!-- Proje seçimi için Picker (arka planda) -->
-                <Picker x:Name="cmbProjeSecimi" IsVisible="False"/>
+                <!-- eski popup ve cvProjeSecim kaldırıldı (popup yerine pickerProjeler var) -->
 
-                <!-- Proje Seçim Popup -->
-                <Grid x:Name="popupMask"
-                      Grid.Row="0"
-                      Grid.RowSpan="3"
-                      IsVisible="False"
-                      BackgroundColor="#80000000"
-                      ZIndex="999"
-                      VerticalOptions="Center"
-                      HorizontalOptions="Center">
-                    <Grid VerticalOptions="Center"
-                          HorizontalOptions="Center">
-                        <Frame x:Name="ProjePopup"
-                               Padding="0"
-                               CornerRadius="26"
-                               BackgroundColor="White"
-                               WidthRequest="360"
-                               MaximumHeightRequest="600">
-                            <Grid RowDefinitions="Auto,Auto,*,Auto">
-                                <Grid Grid.Row="0"
-                                      Padding="18,14"
-                                      ColumnDefinitions="*,Auto">
-                                    <Label Text="Proje Seç"
-                                           FontSize="20"
-                                           FontAttributes="Bold"/>
-                                    <ImageButton Grid.Column="1"
-                                                 Source="close.png"
-                                                 Clicked="TapCloseProjePopup_Clicked"/>
-                                </Grid>
-                                <Frame Grid.Row="1"
-                                       Margin="18,14,18,10"
-                                       Padding="12"
-                                       CornerRadius="18"
-                                       BackgroundColor="#ECE6DF">
-                                    <Entry x:Name="entryMobilAra"
-                                           Placeholder="Proje ara..." />
-                                </Frame>
-                                <CollectionView x:Name="cvProjeSecim"
-                                                Grid.Row="2"
-                                                Margin="12,0,12,8"
-                                                HeightRequest="300">
-                                    <CollectionView.ItemsLayout>
-                                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="10"/>
-                                    </CollectionView.ItemsLayout>
-                                </CollectionView>
-                            </Grid>
-                        </Frame>
-                    </Grid>
-                </Grid>
             </Grid>
 
             <!-- ============= MASAÜSTÜ ============= -->

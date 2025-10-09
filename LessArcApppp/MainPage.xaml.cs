@@ -32,25 +32,16 @@ namespace LessArcApppp
         private const string SEC_PASS = "login_saved_pass";
         private const string SEC_TOKEN = "jwt_token";
 
-        // İstersen test için override verilebilir (emülatörde "http://10.0.2.2:7013" gibi)
+        // Constructor
         public MainPage(HttpClient httpClient, string? baseUrlOverride = null)
         {
             InitializeComponent();
             NavigationPage.SetHasNavigationBar(this, false);
 
-            // Arka plan (opsiyonel)
             BackgroundImageSource = "arkaplann.png";
 
-            // Masaüstü/Mobil görünümü ayır
-            ToggleLayoutsByDevice();
+            _client = httpClient ?? new HttpClient();
 
-            // XAML'de de bağlı ama güvence olsun:
-            SizeChanged += ContentPage_SizeChanged;
-
-            // 🔗 DI’dan gelen HttpClient
-            _client = httpClient;
-
-            // DI’da BaseAddress yoksa: override → yoksa bulut
             if (_client.BaseAddress is null)
             {
                 var effective = string.IsNullOrWhiteSpace(baseUrlOverride)
@@ -59,11 +50,15 @@ namespace LessArcApppp
                 _client.BaseAddress = new Uri(effective, UriKind.Absolute);
             }
 
-            // JSON kabul başlığı (gerekirse)
             if (!_client.DefaultRequestHeaders.Accept.Any(h => h.MediaType == "application/json"))
                 _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            // ✅ Sayfa yüklendiğinde kayıtlı bilgileri doldur
+            ToggleLayoutsByDevice();
+
+            // XAML'de de bağlı ama güvence olsun:
+            SizeChanged += ContentPage_SizeChanged;
+
+            // Sayfa yüklendiğinde kayıtlı bilgileri doldur
             Loaded += async (_, __) => await LoadSavedCredentialsAsync();
         }
 
@@ -72,11 +67,13 @@ namespace LessArcApppp
         {
             var idiom = DeviceInfo.Idiom;
             bool isPhone = idiom == DeviceIdiom.Phone;
-            mobileLayout.IsVisible = isPhone;
-            desktopLayout.IsVisible = !isPhone;
+
+            // XAML tarafında mobileLayout / desktopLayout adları korunmalı
+            if (mobileLayout != null) mobileLayout.IsVisible = isPhone;
+            if (desktopLayout != null) desktopLayout.IsVisible = !isPhone;
         }
 
-        // ====== ViewBox ölçekleme (MOBİL: yok, DESKTOP: var) ======
+        // ====== SizeChanged handler ======
         void ContentPage_SizeChanged(object sender, EventArgs e)
         {
             if (Width <= 0 || Height <= 0) return;
@@ -85,79 +82,45 @@ namespace LessArcApppp
 
             if (isPhone)
             {
-                // 📱 Mobilde ViewBox ölçekleme YOK → 1:1 kalsın
+                // Mobil: gridCanvas tüm ekranı kapsasın; kartı ortala
                 gridCanvas.Scale = 1;
                 gridCanvas.WidthRequest = Width;
                 gridCanvas.HeightRequest = Height;
 
-                // Mobile giriş kartı: ekranın ~%90’ı, makul sınırlar içinde
-                if (this.FindByName<Frame>("mobileCard") is Frame mcard)
-                    mcard.WidthRequest = Math.Clamp(Width * 0.90, 320, 420);
+                if (mobileCard != null)
+                    mobileCard.WidthRequest = Math.Clamp(Width * 0.90, 320, 420);
 
-                // ➜ Kartı ekranda aşağı konumlandır
-                PositionMobileCard();
+                // kesinlikle ortala (XAML ayarıyla birlikte)
+                if (mobileCard != null)
+                {
+                    mobileCard.HorizontalOptions = LayoutOptions.Center;
+                    mobileCard.VerticalOptions = LayoutOptions.Center;
+                }
+
+                // karartma ve panelin tüm alanı kaplamasını sağla
+                if (arkaplanMobile != null)
+                {
+                    arkaplanMobile.HorizontalOptions = LayoutOptions.Fill;
+                    arkaplanMobile.VerticalOptions = LayoutOptions.Fill;
+                }
+                if (sifreUnuttumPanelMobile != null)
+                {
+                    sifreUnuttumPanelMobile.HorizontalOptions = LayoutOptions.Center;
+                    sifreUnuttumPanelMobile.VerticalOptions = LayoutOptions.Center;
+                }
+
                 return;
             }
 
-            // 💻 Masaüstü/laptop: ViewBox ölçekleme aktif
+            // Desktop: eski davranış (ViewBox benzeri)
             double scaleW = Width / DesignW;
             double scaleH = Height / DesignH;
             double scale = Math.Clamp(Math.Min(scaleW, scaleH), MinScale, MaxScale);
 
             gridCanvas.Scale = scale;
 
-            // Desktop giriş kartı makul aralıkta kalsın
             if (this.FindByName<Frame>("loginCard") is Frame card)
                 card.WidthRequest = Math.Clamp(Width * 0.32, 420, 520);
-        }
-
-        // 📍 Mobil kartı ekranda daha aşağı hizala
-        private void PositionMobileCard()
-        {
-            if (mobileLayout == null || !mobileLayout.IsVisible) return;
-
-            // Ölçü kaynağı: gridCanvas varsa onu, yoksa sayfanın toplam yüksekliğini kullan
-            double containerHeight = gridCanvas?.Height > 0 ? gridCanvas.Height : this.Height;
-            if (containerHeight <= 0) return;
-
-            // iOS çentik/safe-area için küçük bir pay bırak (Android’de genelde gerek olmuyor)
-            double safeTopPad = DeviceInfo.Platform == DevicePlatform.iOS ? 12 : 0;
-
-            // Kart yüksekliği: ilk ölçüm gelene kadar yaklaşık
-            double cardHeight = mobileCard?.Height > 0 ? mobileCard.Height : 360;
-
-            // Kartın merkezi ekranın DesiredCenterYRatioMobile oranına gelsin:
-            // top boşluk piksel = hedefMerkezY - kartYarısı
-            double targetCenterY = containerHeight * DesiredCenterYRatioMobile;
-            double topPixels = Math.Max(0, targetCenterY - (cardHeight / 2) + safeTopPad);
-
-            // mobileLayout: RowDefinitions = "*,Auto,*" olmalı
-            var rows = mobileLayout.RowDefinitions;
-            if (rows.Count == 3)
-            {
-                rows[0].Height = new GridLength(topPixels, GridUnitType.Absolute);
-                rows[1].Height = GridLength.Auto;
-                rows[2].Height = GridLength.Star;
-            }
-
-            // Kartın altına küçük boşluk
-            if (mobileCard != null)
-            {
-                var m = mobileCard.Margin;
-                mobileCard.Margin = new Thickness(m.Left, m.Top, m.Right, 24);
-            }
-
-            // Karartma / şifre paneli tüm alanı kaplasın
-            if (arkaplanMobile != null)
-            {
-                Grid.SetRow(arkaplanMobile, 0);
-                Grid.SetRowSpan(arkaplanMobile, 3);
-            }
-            if (sifreUnuttumPanelMobile != null)
-            {
-                Grid.SetRow(sifreUnuttumPanelMobile, 0);
-                Grid.SetRowSpan(sifreUnuttumPanelMobile, 3);
-            }
         }
 
         // ======================================================
@@ -165,7 +128,7 @@ namespace LessArcApppp
         // ======================================================
         private async Task HandleLoginAsync(string kullaniciAdi, string sifre, Label? hataLabel = null)
         {
-            var loginModel = new LoginModel
+            var loginModel = new Models.LoginModel
             {
                 KullaniciAdi = kullaniciAdi?.Trim(),
                 Password = sifre
@@ -192,7 +155,7 @@ namespace LessArcApppp
                 }
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(
+                var tokenResponse = JsonSerializer.Deserialize<Models.TokenResponse>(
                     responseContent,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
@@ -254,8 +217,8 @@ namespace LessArcApppp
         private async void BtnGirisYap_Clicked(object sender, EventArgs e)
         {
             await HandleLoginAsync(
-                kullaniciAdi: txtKullaniciAdi.Text,
-                sifre: txtSifre.Text,
+                kullaniciAdi: txtKullaniciAdi?.Text,
+                sifre: txtSifre?.Text,
                 hataLabel: lblHata
             );
         }
@@ -263,16 +226,18 @@ namespace LessArcApppp
         // ==========================
         // MASAÜSTÜ: Şifre Sıfırlama
         // ==========================
+        // Bu method XAML içinde: Clicked="BtnSifreUnuttum_Toggle"
         private void BtnSifreUnuttum_Toggle(object sender, EventArgs e)
         {
-            bool yeniDurum = !sifreUnuttumPanel.IsVisible;
-            sifreUnuttumPanel.IsVisible = yeniDurum;
-            arkaplan.IsVisible = yeniDurum;
+            bool yeniDurum = !(sifreUnuttumPanel?.IsVisible ?? false);
+            if (sifreUnuttumPanel != null) sifreUnuttumPanel.IsVisible = yeniDurum;
+            if (arkaplan != null) arkaplan.IsVisible = yeniDurum;
         }
 
+        // Bu method XAML içinde: Clicked="BtnKodGonder_Clicked"
         private async void BtnKodGonder_Clicked(object sender, EventArgs e)
         {
-            string eposta = txtSifreResetEposta.Text?.Trim();
+            string eposta = txtSifreResetEposta?.Text?.Trim();
             if (string.IsNullOrWhiteSpace(eposta))
             {
                 await DisplayAlert("Hata", "Lütfen e-posta adresinizi girin.", "Tamam");
@@ -290,11 +255,12 @@ namespace LessArcApppp
                 await DisplayAlert("Hata", $"Kod gönderilemedi: {await response.Content.ReadAsStringAsync()}", "Tamam");
         }
 
+        // Bu method XAML içinde: Clicked="BtnSifreSifirla_Clicked"
         private async void BtnSifreSifirla_Clicked(object sender, EventArgs e)
         {
-            string eposta = txtSifreResetEposta.Text?.Trim();
-            string kod = txtKod.Text?.Trim();
-            string yeniSifre = txtYeniSifreReset.Text;
+            string eposta = txtSifreResetEposta?.Text?.Trim();
+            string kod = txtKod?.Text?.Trim();
+            string yeniSifre = txtYeniSifreReset?.Text;
 
             if (string.IsNullOrWhiteSpace(eposta) ||
                 string.IsNullOrWhiteSpace(kod) ||
@@ -311,8 +277,8 @@ namespace LessArcApppp
             if (response.IsSuccessStatusCode)
             {
                 await DisplayAlert("Başarılı", "Şifreniz başarıyla sıfırlandı. Giriş yapabilirsiniz.", "Tamam");
-                sifreUnuttumPanel.IsVisible = false;
-                arkaplan.IsVisible = false;
+                if (sifreUnuttumPanel != null) sifreUnuttumPanel.IsVisible = false;
+                if (arkaplan != null) arkaplan.IsVisible = false;
             }
             else
             {
@@ -326,25 +292,27 @@ namespace LessArcApppp
         private async void BtnGirisYapMobile_Clicked(object sender, EventArgs e)
         {
             await HandleLoginAsync(
-                kullaniciAdi: txtKullaniciAdiMobile.Text,
-                sifre: txtSifreMobile.Text,
+                kullaniciAdi: txtKullaniciAdiMobile?.Text,
+                sifre: txtSifreMobile?.Text,
                 hataLabel: lblHataMobile
             );
         }
 
         // ==========================
-        // MOBİL: Şifre Sıfırlama
+        // MOBİL: Şifre Sıfırlama toggle
         // ==========================
+        // XAML: Clicked="BtnSifreUnuttum_ToggleMobile"
         private void BtnSifreUnuttum_ToggleMobile(object sender, EventArgs e)
         {
-            bool yeniDurum = !sifreUnuttumPanelMobile.IsVisible;
-            sifreUnuttumPanelMobile.IsVisible = yeniDurum;
-            arkaplanMobile.IsVisible = yeniDurum;
+            bool yeniDurum = !(sifreUnuttumPanelMobile?.IsVisible ?? false);
+            if (sifreUnuttumPanelMobile != null) sifreUnuttumPanelMobile.IsVisible = yeniDurum;
+            if (arkaplanMobile != null) arkaplanMobile.IsVisible = yeniDurum;
         }
 
+        // XAML: Clicked="BtnKodGonderMobile_Clicked"
         private async void BtnKodGonderMobile_Clicked(object sender, EventArgs e)
         {
-            string eposta = txtSifreResetEpostaMobile.Text?.Trim();
+            string eposta = txtSifreResetEpostaMobile?.Text?.Trim();
             if (string.IsNullOrWhiteSpace(eposta))
             {
                 await DisplayAlert("Hata", "Lütfen e-posta adresinizi girin.", "Tamam");
@@ -362,11 +330,12 @@ namespace LessArcApppp
                 await DisplayAlert("Hata", $"Kod gönderilemedi: {await response.Content.ReadAsStringAsync()}", "Tamam");
         }
 
+        // XAML: Clicked="BtnSifreSifirlaMobile_Clicked"
         private async void BtnSifreSifirlaMobile_Clicked(object sender, EventArgs e)
         {
-            string eposta = txtSifreResetEpostaMobile.Text?.Trim();
-            string kod = txtKodMobile.Text?.Trim();
-            string yeniSifre = txtYeniSifreResetMobile.Text;
+            string eposta = txtSifreResetEpostaMobile?.Text?.Trim();
+            string kod = txtKodMobile?.Text?.Trim();
+            string yeniSifre = txtYeniSifreResetMobile?.Text;
 
             if (string.IsNullOrWhiteSpace(eposta) ||
                 string.IsNullOrWhiteSpace(kod) ||
@@ -383,8 +352,8 @@ namespace LessArcApppp
             if (response.IsSuccessStatusCode)
             {
                 await DisplayAlert("Başarılı", "Şifreniz başarıyla sıfırlandı. Giriş yapabilirsiniz.", "Tamam");
-                sifreUnuttumPanelMobile.IsVisible = false;
-                arkaplanMobile.IsVisible = false;
+                if (sifreUnuttumPanelMobile != null) sifreUnuttumPanelMobile.IsVisible = false;
+                if (arkaplanMobile != null) arkaplanMobile.IsVisible = false;
             }
             else
             {
@@ -422,25 +391,3 @@ namespace LessArcApppp
         }
     }
 }
-
-/* --- Kullanılan DTO örnekleri ---
-namespace LessArcApppp.Models
-{
-    public class LoginModel
-    {
-        public string? KullaniciAdi { get; set; }
-        public string? Password { get; set; }
-    }
-
-    public class TokenResponse
-    {
-        public int Id { get; set; }
-        public string KullaniciAdi { get; set; } = "";
-        public string Ad { get; set; } = "";
-        public string Soyad { get; set; } = "";
-        public string Eposta { get; set; } = "";
-        public string Rol { get; set; } = "";     // "Admin" | "Calisan"
-        public string Token { get; set; } = "";
-    }
-}
-*/

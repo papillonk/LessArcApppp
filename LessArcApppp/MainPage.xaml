@@ -9,7 +9,6 @@
     Shell.NavBarIsVisible="False"
     SizeChanged="ContentPage_SizeChanged"
     ios:Page.UseSafeArea="False">
-    <!-- iOS safe area kapalı: Android ile birebir -->
 
     <Grid>
         <!-- 🌆 Arka Plan -->
@@ -25,11 +24,9 @@
               HorizontalOptions="Center"
               VerticalOptions="Center"
               Padding="0">
-            <!-- iOS için ekstra padding yok -->
 
             <!-- 💻 MASAÜSTÜ -->
             <Grid x:Name="desktopLayout" IsVisible="False">
-                <!-- 🎯 Giriş Kartı: Android’deki gibi Start + 200px -->
                 <Grid HorizontalOptions="Center"
                       VerticalOptions="Start"
                       Margin="0,200,0,0">
@@ -41,7 +38,6 @@
                            HasShadow="True"
                            BorderColor="#8C8279"
                            WidthRequest="360">
-
                         <VerticalStackLayout Spacing="18">
                             <Entry x:Name="txtKullaniciAdi"
                                    Placeholder="Kullanıcı Adı"
@@ -57,7 +53,6 @@
                                    TextColor="Black"
                                    HeightRequest="45" />
                             <Grid ColumnDefinitions="Auto,*" Margin="2,-6,2,2">
-                                <!-- Boyutları sabitledim ki iki platform aynı dursun -->
                                 <CheckBox x:Name="chkBeniHatirlaDesktop"
                                           VerticalOptions="Center"
                                           HeightRequest="20"
@@ -93,7 +88,6 @@
                     </Frame>
                 </Grid>
 
-                <!-- 🔲 Arka Karartma -->
                 <BoxView x:Name="arkaplan"
                          BackgroundColor="Black"
                          Opacity="0.6"
@@ -103,7 +97,6 @@
                          VerticalOptions="Fill"
                          ZIndex="9" />
 
-                <!-- 🔒 Şifre Sıfırlama Paneli -->
                 <Frame x:Name="sifreUnuttumPanel"
                        IsVisible="False"
                        Padding="20"
@@ -115,6 +108,7 @@
                        HeightRequest="420"
                        HasShadow="True"
                        ZIndex="11">
+                    <!-- içeriği aynı kaldı -->
                     <VerticalStackLayout Spacing="12">
                         <ImageButton Source="close.png"
                                      Clicked="BtnSifreUnuttum_Toggle"
@@ -168,78 +162,71 @@
                 </Frame>
             </Grid>
 
-            <!-- 📱 MOBİL - DEĞİŞİKLİK BURADA -->
+            <!-- 📱 MOBİL - basit tek-satırlı Grid: içerik her zaman ortalanır -->
             <Grid x:Name="mobileLayout"
-                  IsVisible="False"
-                  RowDefinitions="*,Auto,*">
+                  IsVisible="False">
+                <!-- Orta: kart (EKRANIN TAM ORTASINDA) -->
+                <Frame x:Name="mobileCard"
+                       CornerRadius="16"
+                       BackgroundColor="grey"
+                       Padding="22"
+                       HasShadow="True"
+                       BorderColor="#8C8279"
+                       WidthRequest="350"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       ZIndex="5">
+                    <VerticalStackLayout Spacing="16">
+                        <Entry x:Name="txtKullaniciAdiMobile"
+                               Placeholder="Kullanıcı Adı"
+                               PlaceholderColor="#666"
+                               BackgroundColor="White"
+                               TextColor="Black"
+                               HeightRequest="45" />
+                        <Entry x:Name="txtSifreMobile"
+                               Placeholder="Şifre"
+                               IsPassword="True"
+                               PlaceholderColor="#666"
+                               BackgroundColor="White"
+                               TextColor="Black"
+                               HeightRequest="45" />
+                        <Grid ColumnDefinitions="Auto,*" Margin="2,-6,2,2">
+                            <CheckBox x:Name="chkBeniHatirlaMobile"
+                                      VerticalOptions="Center"
+                                      HeightRequest="20"
+                                      WidthRequest="20"
+                                      Color="#58544b" />
+                            <Label Grid.Column="1"
+                                   Text="Beni Hatırla"
+                                   VerticalOptions="Center"
+                                   TextColor="#2c3e50" />
+                        </Grid>
+                        <Button Text="Giriş Yap"
+                                Clicked="BtnGirisYapMobile_Clicked"
+                                BackgroundColor="#3f4943"
+                                TextColor="White"
+                                CornerRadius="10"
+                                HeightRequest="47"
+                                FontSize="14" />
+                        <Label Text="Şifremi Unuttum?"
+                               FontSize="16"
+                               TextColor="#2c3e50"
+                               HorizontalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="BtnSifreUnuttum_ToggleMobile" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label x:Name="lblHataMobile"
+                               TextColor="Red"
+                               IsVisible="False"
+                               FontSize="12"
+                               HorizontalOptions="Center"
+                               Margin="0,4,0,0" />
+                    </VerticalStackLayout>
+                </Frame>
 
-                <!-- Orta satır: kart (EKRANIN TAM ORTASINDA) -->
-                <Grid Grid.Row="1"
-                      HorizontalOptions="Center"
-                      VerticalOptions="Center"
-                      Padding="0"
-                      Margin="0,0,0,0">
-                    <Frame x:Name="mobileCard"
-                           CornerRadius="16"
-                           BackgroundColor="grey"
-                           Padding="22"
-                           HasShadow="True"
-                           BorderColor="#8C8279"
-                           WidthRequest="350">
-                        <VerticalStackLayout Spacing="16">
-                            <Entry x:Name="txtKullaniciAdiMobile"
-                                   Placeholder="Kullanıcı Adı"
-                                   PlaceholderColor="#666"
-                                   BackgroundColor="White"
-                                   TextColor="Black"
-                                   HeightRequest="45" />
-                            <Entry x:Name="txtSifreMobile"
-                                   Placeholder="Şifre"
-                                   IsPassword="True"
-                                   PlaceholderColor="#666"
-                                   BackgroundColor="White"
-                                   TextColor="Black"
-                                   HeightRequest="45" />
-                            <Grid ColumnDefinitions="Auto,*" Margin="2,-6,2,2">
-                                <!-- Boyut sabit: iki platformda aynı dursun -->
-                                <CheckBox x:Name="chkBeniHatirlaMobile"
-                                          VerticalOptions="Center"
-                                          HeightRequest="20"
-                                          WidthRequest="20"
-                                          Color="#58544b" />
-                                <Label Grid.Column="1"
-                                       Text="Beni Hatırla"
-                                       VerticalOptions="Center"
-                                       TextColor="#2c3e50" />
-                            </Grid>
-                            <Button Text="Giriş Yap"
-                                    Clicked="BtnGirisYapMobile_Clicked"
-                                    BackgroundColor="#3f4943"
-                                    TextColor="White"
-                                    CornerRadius="10"
-                                    HeightRequest="47"
-                                    FontSize="14" />
-                            <Label Text="Şifremi Unuttum?"
-                                   FontSize="16"
-                                   TextColor="#2c3e50"
-                                   HorizontalOptions="Center">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="BtnSifreUnuttum_ToggleMobile" />
-                                </Label.GestureRecognizers>
-                            </Label>
-                            <Label x:Name="lblHataMobile"
-                                   TextColor="Red"
-                                   IsVisible="False"
-                                   FontSize="12"
-                                   HorizontalOptions="Center"
-                                   Margin="0,4,0,0" />
-                        </VerticalStackLayout>
-                    </Frame>
-                </Grid>
-
-                <!-- Karartma -->
+                <!-- Karartma: tüm alanı kaplasın -->
                 <BoxView x:Name="arkaplanMobile"
-                         Grid.Row="0" Grid.RowSpan="3"
                          BackgroundColor="Black"
                          Opacity="0.6"
                          IsVisible="False"
@@ -250,7 +237,6 @@
 
                 <!-- Şifre Sıfırlama (mobil) -->
                 <Frame x:Name="sifreUnuttumPanelMobile"
-                       Grid.Row="0" Grid.RowSpan="3"
                        IsVisible="False"
                        Padding="18"
                        BackgroundColor="#e7e6e4"

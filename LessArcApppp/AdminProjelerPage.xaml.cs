@@ -22,23 +22,14 @@ namespace LessArcApppp
     public partial class AdminProjelerPage : ContentPage
     {
         // ============================
-        // 📏 RESPONSIVE ÖLÇEKLEME
+        // Responsive / scale props
         // ============================
-
-        // Tasarım referans genişliği (mobilde baseline)
         public double BaseWidth { get; set; } = 430.0;
-
-        // Tavanlar
         public double MaxDesktopScale { get; set; } = 1.85;
         public double MaxMobileScale { get; set; } = 1.30;
-
-        // Kullanıcı isteğe bağlı zoom (örn. 1.20 = +%20) -> null ise devre dışı
         public double? UserZoomFactor { get; set; } = null;
-
-        // Masaüstünde aşırı geniş pencerelerde etkili DIP cap
         public double DesktopEffectiveWidthCap { get; set; } = 2200;
 
-        // Masaüstü için genişliğe göre yumuşak ölçek eğrisi
         private readonly (double w, double s)[] _desktopScaleCurve =
         {
             (  800, 1.00),
@@ -52,7 +43,6 @@ namespace LessArcApppp
             ( 2560, 1.80),
         };
 
-        // Sayfa genelinde bağlanan değerler (XAML’de kullanılıyor)
         public double ScaledFontSize { get; private set; } = 26;
         public double ScaledFontSize2 { get; private set; } = 20;
         public double ScaledFontSize3 { get; private set; } = 14;
@@ -67,7 +57,6 @@ namespace LessArcApppp
         public double ScaledButtonWidth { get; private set; } = 210;
         public double ScaledButtonIcon { get; private set; } = 24;
 
-        // XAML’de kullanılan composite Thickness’ler
         public Thickness M_ItemBetween { get; private set; } = new Thickness(0, 6, 0, 0);
 
         private static double Lerp(double a, double b, double t) => a + (b - a) * t;
@@ -75,10 +64,8 @@ namespace LessArcApppp
         private double AutoScaleFromCurve(double widthDip)
         {
             if (_desktopScaleCurve.Length == 0) return 1.0;
-
             if (widthDip <= _desktopScaleCurve[0].w) return _desktopScaleCurve[0].s;
             if (widthDip >= _desktopScaleCurve[^1].w) return _desktopScaleCurve[^1].s;
-
             for (int i = 0; i < _desktopScaleCurve.Length - 1; i++)
             {
                 var (w1, s1) = _desktopScaleCurve[i];
@@ -92,18 +79,12 @@ namespace LessArcApppp
             return _desktopScaleCurve[^1].s;
         }
 
-        // ⭐️ SOL DAR / SAĞ GENİŞ oran ayarlayıcı
         private void AdjustDesktopColumns(double widthDip)
         {
-            // Masaüstü değilse dokunma
             if (DeviceInfo.Idiom != DeviceIdiom.Desktop) return;
-
-            // XAML'de iki kolonlu ana grid'e x:Name="DesktopTwoColGrid" verdiğini varsayıyorum
             var grid = this.FindByName<Grid>("DesktopTwoColGrid");
             if (grid == null || grid.ColumnDefinitions.Count < 2) return;
 
-            // Breakpoint’lere göre weights (sol daha dar, sağ daha geniş)
-            // Küçükten büyüğe: 1:2  ->  1:2.4  ->  1:2.8  ->  1:3.2
             (double left, double right) w = widthDip switch
             {
                 <= 1100 => (1.0, 2.0),
@@ -112,13 +93,11 @@ namespace LessArcApppp
                 _ => (1.0, 3.2),
             };
 
-            // Solda mutlak max genişlik (görsel dengesizlik olmasın)
             double maxLeftPx = 520;
             if (grid.Width > 0 && grid.Width * (w.left / (w.left + w.right)) > maxLeftPx)
             {
                 var targetLeftRatio = maxLeftPx / grid.Width;
                 var targetRightRatio = Math.Max(0.0001, 1 - targetLeftRatio);
-                // Oranı yumuşak normalize et
                 w.left = targetLeftRatio * 10;
                 w.right = targetRightRatio * 10;
             }
@@ -131,7 +110,6 @@ namespace LessArcApppp
         {
             var w = this.Width;
             if (double.IsNaN(w) || w <= 0) return;
-
             bool isDesktop = DeviceInfo.Idiom == DeviceIdiom.Desktop;
             double widthDip = isDesktop ? Math.Min(w, DesktopEffectiveWidthCap) : w;
 
@@ -176,18 +154,16 @@ namespace LessArcApppp
             OnPropertyChanged(nameof(ScaledButtonIcon));
             OnPropertyChanged(nameof(M_ItemBetween));
 
-            // 🔥 yeni: oranları da güncelle
             AdjustDesktopColumns(widthDip);
         }
 
         // ============================
-        // 🔧 SAYFA LOJİĞİ (mevcut kod)
+        // Page logic
         // ============================
-
         private const string TarihHataMetni = "Bitiş tarihi başlangıç tarihinden önce olamaz.";
         private static bool IsEndBeforeStart(DateTime bas, DateTime bit) => bit < bas;
 
-        private readonly HttpClient _http;          // DI HttpClient
+        private readonly HttpClient _http;
         private readonly string token;
 
         private List<AdminProjeListDto> tumProjeler = new();
@@ -204,20 +180,22 @@ namespace LessArcApppp
         private readonly ObservableCollection<AdminProjeListDto> _mobilListe = new();
         private readonly ObservableCollection<AdminProjeListDto> _desktopListe = new();
 
-        // SignalR
         private HubConnection? _hub;
 
         public ObservableCollection<ProjeYorumDto> MobilYorumlar { get; } = new();
         public ObservableCollection<ProjeYorumDto> DesktopYorumlar { get; } = new();
 
+        // debounce flag for ScrollTo
+        private bool _scrollPending = false;
+
+        // --- ctor ---
         public AdminProjelerPage(HttpClient httpClient, string kullaniciToken)
         {
             InitializeComponent();
 
-            _http = httpClient;
+            _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             token = kullaniciToken ?? string.Empty;
 
-            // Authorization header yoksa tak
             var auth = _http.DefaultRequestHeaders.Authorization;
             if (auth is null || auth.Scheme != "Bearer" || string.IsNullOrWhiteSpace(auth.Parameter))
             {
@@ -225,63 +203,77 @@ namespace LessArcApppp
                     _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
-            // BindingContext (ölçek binding’leri için gerekli)
             BindingContext = this;
 
-            // 🪄 Responsive: pencere boyutu değiştikçe yeniden ölçekle
-            SizeChanged += (_, __) => RecomputeScale();
-            // İlk hesap
+            // use named handler so we can unsubscribe later
+            SizeChanged += OnSizeChanged;
             RecomputeScale();
 
-            // Mobil/desktop görünürlük
             bool isMobile = DeviceInfo.Platform == DevicePlatform.Android || DeviceInfo.Platform == DevicePlatform.iOS;
-            MobilGrid.IsVisible = isMobile;
-            MasaustuGrid.IsVisible = !isMobile;
+            try { if (this.FindByName<Grid>("MobilGrid") is Grid mg) mg.IsVisible = isMobile; } catch { }
+            try { if (this.FindByName<Grid>("MasaustuGrid") is Grid dg) dg.IsVisible = !isMobile; } catch { }
 
-            // XAML referansları
+            // editors
             _desktopYorumEditor = this.FindByName<Editor>("DesktopYorumEditor");
             _mobilYorumEditor = this.FindByName<Editor>("MobilYorumEditor");
 
-            // Masaüstü liste kaynağı ve arama olayı
-            ProjelerListesi.ItemsSource = _desktopListe;
+            // desktop list
+            var projelerCV = this.FindByName<CollectionView>("ProjelerListesi");
+            if (projelerCV != null) projelerCV.ItemsSource = _desktopListe;
             if (this.FindByName<Entry>("entryAraDesktop") is Entry entryAra)
                 entryAra.TextChanged += entryAraDesktop_TextChanged;
 
-            // Güncelle butonları
-            btnBilgileriGuncelleDesktop.Clicked += BtnBilgileriGuncelleDesktop_Clicked;
-            btnBilgileriGuncelleMobile.Clicked += BtnBilgileriGuncelleMobile_Clicked;
+            // update buttons (use FindByName to be robust)
+            if (this.FindByName<Button>("btnBilgileriGuncelleDesktop") is Button btnDesk)
+                btnDesk.Clicked += BtnBilgileriGuncelleDesktop_Clicked;
+            if (this.FindByName<Button>("btnBilgileriGuncelleMobile") is Button btnMob)
+                btnMob.Clicked += BtnBilgileriGuncelleMobile_Clicked;
 
-            pickerDurumDesktop.SelectedIndexChanged += (_, __) =>
-                UpdateHeaderCheckVisibility(GetPickerDurumValue(pickerDurumDesktop), isMobile: false);
-            pickerDurumMobile.SelectedIndexChanged += (_, __) =>
-                UpdateHeaderCheckVisibility(GetPickerDurumValue(pickerDurumMobile), isMobile: true);
+            if (this.FindByName<Picker>("pickerDurumDesktop") is Picker pdDesk)
+                pdDesk.SelectedIndexChanged += (_, __) =>
+                    UpdateHeaderCheckVisibility(GetPickerDurumValue(pdDesk), isMobile: false);
+            if (this.FindByName<Picker>("pickerDurumMobile") is Picker pdMob)
+                pdMob.SelectedIndexChanged += (_, __) =>
+                    UpdateHeaderCheckVisibility(GetPickerDurumValue(pdMob), isMobile: true);
 
-            // Mobil popup listesi & arama
-            cvProjeSecim.ItemsSource = _mobilListe;
-            entryMobilAra.TextChanged += (_, e) => ApplyMobilFilter(e.NewTextValue ?? "");
+            // mobil proje picker
+            if (this.FindByName<Picker>("pickerProjeler") is Picker pk)
+                pk.SelectedIndexChanged += pickerProjeler_SelectedIndexChanged;
+
+            // yorum gönder butonları
+            if (this.FindByName<Button>("BtnYorumGonderMobile") is Button btnYrmMob)
+                btnYrmMob.Clicked += BtnYorumGonderMobile_Clicked;
+            if (this.FindByName<Button>("BtnYorumGonderDesktop") is Button btnYrmDesk)
+                btnYrmDesk.Clicked += BtnYorumGonderDesktop_Clicked;
+
+            // DatePicker event handlers: attach for safety (XAML may also have them - avoid double-binding if you know XAML already binds)
+            if (this.FindByName<DatePicker>("dpBaslangicMobile") is DatePicker dpBasMob)
+                dpBasMob.DateSelected += DpBaslangicMobile_DateSelected;
+            if (this.FindByName<DatePicker>("dpBitisMobile") is DatePicker dpBitMob)
+                dpBitMob.DateSelected += DpBitisMobile_DateSelected;
 
             EnsureMobileDetailsAlwaysVisible();
-            if (popupMask != null) popupMask.IsVisible = false;
 
-            // SignalR Hub init & listeners
             InitSignalR();
 
+            // initial load
             _ = ProjeleriGetir();
         }
+
+        // named size changed handler so we can unsubscribe
+        private void OnSizeChanged(object? sender, EventArgs e) => RecomputeScale();
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            // İlk açılışta tekrar ölç (özellikle pencere hazır olduğunda)
             RecomputeScale();
-
             await EnsureIdentity();
             EnsureMobileDetailsAlwaysVisible();
-            if (popupMask != null) popupMask.IsVisible = false;
 
-            if (_hub is { State: not HubConnectionState.Connected })
+            // Start hub here (only once)
+            if (_hub != null && _hub.State != HubConnectionState.Connected)
             {
-                try { await _hub!.StartAsync(); } catch { /* sessizce geç */ }
+                try { await _hub.StartAsync(); } catch { }
             }
         }
 
@@ -289,17 +281,26 @@ namespace LessArcApppp
         {
             try
             {
+                // unsubscribe SizeChanged
+                SizeChanged -= OnSizeChanged;
+
                 if (_hub is { State: HubConnectionState.Connected })
                     await _hub.StopAsync();
+
+                if (_hub != null)
+                {
+                    try { await _hub.DisposeAsync(); } catch { }
+                    _hub = null;
+                }
             }
-            catch { /* yoksay */ }
+            catch { }
             base.OnDisappearing();
         }
 
-        // ========= SignalR =========
+        // ===== SignalR =====
         private void InitSignalR()
         {
-            // BaseAddress + /hubs/projechat
+            if (_http.BaseAddress is null) return;
             var hubUrl = new Uri(_http.BaseAddress!, "/hubs/projechat").ToString();
 
             _hub = new HubConnectionBuilder()
@@ -310,38 +311,23 @@ namespace LessArcApppp
                 .WithAutomaticReconnect()
                 .Build();
 
-            // Sunucudan mesaj (YorumDto) geldiğinde sadece EKLE (reload yok)
-            _hub.On<ProjeYorumDto>("message", msg =>
-            {
-                MainThread.BeginInvokeOnMainThread(() => AddIncomingMessage(msg));
-            });
+            // Ensure handlers call MainThread
+            _hub.On<ProjeYorumDto>("message", msg => MainThread.BeginInvokeOnMainThread(() => AddIncomingMessage(msg)));
+            _hub.On<ProjeYorumDto>("commentUpdated", msg => MainThread.BeginInvokeOnMainThread(() => ApplyUpdatedMessage(msg)));
+            _hub.On<int>("commentDeleted", yorumId => MainThread.BeginInvokeOnMainThread(() => RemoveMessage(yorumId)));
 
-            // Yorum düzenleme/silme canlı bildirimleri
-            _hub.On<ProjeYorumDto>("commentUpdated", msg =>
-            {
-                MainThread.BeginInvokeOnMainThread(() => ApplyUpdatedMessage(msg));
-            });
-
-            _hub.On<int>("commentDeleted", yorumId =>
-            {
-                MainThread.BeginInvokeOnMainThread(() => RemoveMessage(yorumId));
-            });
-
-            _ = Task.Run(async () =>
-            {
-                try { await _hub.StartAsync(); } catch { /* bağlanamazsa UI'yi bozma */ }
-            });
+            // NOTE: Do NOT auto-start the hub here to avoid races with UI initialization.
+            // Start is handled in OnAppearing.
         }
 
-        // Sadece aktif projeye ve sadece yeni ise EKLE; sona ekle; alta kaydır
         private void AddIncomingMessage(ProjeYorumDto msg)
         {
-            int? aktifId = MasaustuGrid.IsVisible ? _aktifDesktopProjeId : _aktifMobilProjeId;
+            int? aktifId = (this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false) ? _aktifDesktopProjeId : _aktifMobilProjeId;
             if (aktifId is not int aktifProjeId) return;
             if (msg.ProjeId != aktifProjeId) return;
 
-            var list = MasaustuGrid.IsVisible ? DesktopYorumlar : MobilYorumlar;
-            var view = MasaustuGrid.IsVisible
+            var list = (this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false) ? DesktopYorumlar : MobilYorumlar;
+            var view = (this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false)
                 ? this.FindByName<CollectionView>("DesktopYorumCollection")
                 : this.FindByName<CollectionView>("MobilYorumCollection");
 
@@ -350,8 +336,34 @@ namespace LessArcApppp
             msg.IsEditable = (msg.KullaniciId == _myUserId);
             msg.IsDeletable = (msg.KullaniciId == _myUserId);
 
-            list.Add(msg);
-            ScrollToBottom(view, list.Count);
+            // list is ObservableCollection bound to UI; ensure UI thread
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                try
+                {
+                    list.Add(msg);
+
+                    // debounce scroll calls to avoid rapid consecutive native layout invalidations
+                    if (!_scrollPending)
+                    {
+                        _scrollPending = true;
+                        MainThread.BeginInvokeOnMainThread(async () =>
+                        {
+                            try
+                            {
+                                await Task.Delay(50);
+                                ScrollToBottom(view, list.Count);
+                            }
+                            catch { }
+                            finally
+                            {
+                                _scrollPending = false;
+                            }
+                        });
+                    }
+                }
+                catch { }
+            });
         }
 
         private static void ScrollToBottom(CollectionView? cv, int count)
@@ -359,7 +371,36 @@ namespace LessArcApppp
             try
             {
                 if (cv == null || count <= 0) return;
-                cv.ScrollTo(count - 1, position: ScrollToPosition.End, animate: true);
+
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    try
+                    {
+                        // wait for handler to become available (layout inflation on iOS)
+                        int attempts = 6;
+                        while (attempts-- > 0 && cv.Handler == null)
+                            await Task.Delay(50);
+
+                        if (cv.Handler == null) return;
+
+                        try
+                        {
+                            cv.ScrollTo(count - 1, position: ScrollToPosition.End, animate: true);
+                        }
+                        catch
+                        {
+                            // fallback: small delay then try without animation
+                            try
+                            {
+                                await Task.Delay(80);
+                                if (cv.Handler != null)
+                                    cv.ScrollTo(count - 1, position: ScrollToPosition.End, animate: false);
+                            }
+                            catch { }
+                        }
+                    }
+                    catch { }
+                });
             }
             catch { }
         }
@@ -367,7 +408,6 @@ namespace LessArcApppp
         private async Task JoinChatRoomAsync(int projeId)
         {
             if (_hub is null) return;
-
             if (_hub.State != HubConnectionState.Connected)
             {
                 try { await _hub.StartAsync(); } catch { }
@@ -381,7 +421,7 @@ namespace LessArcApppp
             await _hub.InvokeAsync("JoinProject", projeId);
         }
 
-        // ========== TAP tabanlı seçim ==========
+        // Tap on desktop project card (x:Name used in XAML)
         private void ProjeKart_Tapped(object sender, TappedEventArgs e)
         {
             var secilen = (sender as Element)?.BindingContext as AdminProjeListDto;
@@ -389,60 +429,50 @@ namespace LessArcApppp
 
             _aktifDesktopProjeId = secilen.Id;
 
-            lblSeciliProjeBaslik.Text = secilen.Baslik ?? "";
-            dpBaslangicDesktop.Date = (secilen.BaslangicTarihi ?? DateTime.Today).Date;
-            dpBitisDesktop.Date = (secilen.BitisTarihi ?? DateTime.Today).Date;
+            SafeSetLabelText("lblSeciliProjeBaslik", secilen.Baslik ?? "");
+            if (this.FindByName<DatePicker>("dpBaslangicDesktop") is DatePicker db) db.Date = (secilen.BaslangicTarihi ?? DateTime.Today).Date;
+            if (this.FindByName<DatePicker>("dpBitisDesktop") is DatePicker dbit) dbit.Date = (secilen.BitisTarihi ?? DateTime.Today).Date;
 
-            // API → UI map (gelen veriyi picker'a uyarlıyoruz)
             var uiDurum = MapApiDurumToUi(secilen.Durum);
-            SelectDurumOnPicker(pickerDurumDesktop, uiDurum);
+            if (this.FindByName<Picker>("pickerDurumDesktop") is Picker pk) SelectDurumOnPicker(pk, uiDurum);
             UpdateHeaderCheckVisibility(uiDurum, isMobile: false);
 
-            ProjeDetaylariPanel.Children.Clear();
-            _ = AdimlariYukle(secilen.Id, ProjeDetaylariPanel, isMobile: false);
+            var detPanel = this.FindByName<VerticalStackLayout>("ProjeDetaylariPanel");
+            if (detPanel != null) detPanel.Children.Clear();
+
+            _ = AdimlariYukle(secilen.Id, detPanel ?? (Layout)new VerticalStackLayout(), isMobile: false);
             _ = YorumlariYukleVeGoster(secilen.Id, mobile: false);
 
             _ = JoinChatRoomAsync(secilen.Id);
         }
 
-        private async void PopupKart_Tapped(object sender, TappedEventArgs e)
+        // Mobile picker selection
+        private async void pickerProjeler_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            var secilen = (sender as Element)?.BindingContext as AdminProjeListDto;
-            if (secilen == null) return;
+            if (sender is not Picker p) return;
+            if (p.SelectedIndex < 0) return;
 
-            HidePopup();
+            var selected = p.SelectedItem as AdminProjeListDto;
+            if (selected == null)
+            {
+                if (p.SelectedIndex >= 0 && p.SelectedIndex < tumProjeler.Count)
+                    selected = tumProjeler[p.SelectedIndex];
+            }
+            if (selected == null) return;
 
-            _aktifMobilProjeId = secilen.Id;
-            lblMobilSecimMetni.Text =
-                $"{secilen.Baslik}   •   {(!string.IsNullOrWhiteSpace(secilen.KullaniciAdSoyad) ? secilen.KullaniciAdSoyad : "çalışan 1")}";
-
-            await YukuMobilProje(secilen);
-            await JoinChatRoomAsync(secilen.Id);
+            _aktifMobilProjeId = selected.Id;
+            SafeSetLabelText("lblMobilSecimMetni", $"{selected.Baslik}   •   {(!string.IsNullOrWhiteSpace(selected.KullaniciAdSoyad) ? selected.KullaniciAdSoyad : "çalışan 1")}");
+            await YukuMobilProje(selected);
+            await JoinChatRoomAsync(selected.Id);
         }
-
-        // Popup aç/kapat
-        private void BtnOpenProjePopup_Clicked(object sender, EventArgs e) => ShowPopup();
-        private void TapCloseProjePopup_Tapped(object? sender, TappedEventArgs e) => HidePopup();
-        private void TapCloseProjePopup_Clicked(object? sender, EventArgs e) => HidePopup();
-
-        private void ShowPopup()
-        {
-            if (!MobilGrid.IsVisible) return;
-            popupMask.IsVisible = true;
-            entryMobilAra.Text = string.Empty;
-            ApplyMobilFilter("");
-            MainThread.BeginInvokeOnMainThread(() => entryMobilAra.Focus());
-        }
-
-        private void HidePopup() => popupMask.IsVisible = false;
 
         private void EnsureMobileDetailsAlwaysVisible()
         {
-            MobilProjeDetaylariPanel.IsVisible = true;
-            dpBaslangicMobile.IsEnabled = true;
-            dpBitisMobile.IsEnabled = true;
-            pickerDurumMobile.IsEnabled = true;
-            btnBilgileriGuncelleMobile.IsEnabled = true;
+            try { if (this.FindByName<VerticalStackLayout>("MobilProjeDetaylariPanel") is VerticalStackLayout v) v.IsVisible = true; } catch { }
+            try { if (this.FindByName<DatePicker>("dpBaslangicMobile") is DatePicker d) d.IsEnabled = true; } catch { }
+            try { if (this.FindByName<DatePicker>("dpBitisMobile") is DatePicker d) d.IsEnabled = true; } catch { }
+            try { if (this.FindByName<Picker>("pickerDurumMobile") is Picker p) p.IsEnabled = true; } catch { }
+            try { if (this.FindByName<Button>("btnBilgileriGuncelleMobile") is Button b) b.IsEnabled = true; } catch { }
         }
 
         // ===== PROJELER =====
@@ -458,18 +488,22 @@ namespace LessArcApppp
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
-                tumProjeler = JsonConvert.DeserializeObject<List<AdminProjeListDto>>(json) ?? new();
+                var list = JsonConvert.DeserializeObject<List<AdminProjeListDto>>(json) ?? new();
 
-                // API → UI map ederek listeleri doldur
-                tumProjeler.ForEach(p => p.Durum = MapApiDurumToUi(p.Durum));
+                // UI değişikliklerini main thread'e al
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    list.ForEach(p => p.Durum = MapApiDurumToUi(p.Durum));
+                    tumProjeler = list;
 
-                RefreshDesktopList();
-                _mobilListe.Clear();
-                foreach (var p in tumProjeler)
-                    _mobilListe.Add(p);
+                    RefreshDesktopList();
 
-                lblMobilSecimMetni.Text = "🔽 Proje Seç";
-                EnsureMobileDetailsAlwaysVisible();
+                    _mobilListe.Clear();
+                    foreach (var p in tumProjeler) _mobilListe.Add(p);
+
+                    SafeSetLabelText("lblMobilSecimMetni", "🔽 Proje Seç");
+                    EnsureMobileDetailsAlwaysVisible();
+                });
             }
             catch (Exception ex)
             {
@@ -477,24 +511,26 @@ namespace LessArcApppp
             }
         }
 
-        // ====== MASAÜSTÜ ARAMA / FİLTRE ======
         private void entryAraDesktop_TextChanged(object sender, TextChangedEventArgs e)
             => ApplyDesktopFilter(e.NewTextValue ?? "");
 
         private void ApplyDesktopFilter(string query)
         {
             string q = Key(query ?? "");
-            _desktopListe.Clear();
+            // desktop list is bound to UI; ensure we are on MainThread
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                _desktopListe.Clear();
 
-            IEnumerable<AdminProjeListDto> src = tumProjeler;
+                IEnumerable<AdminProjeListDto> src = tumProjeler;
 
-            if (!string.IsNullOrWhiteSpace(q))
-                src = tumProjeler.Where(p =>
-                    Key(p.Baslik ?? "").Contains(q) ||
-                    Key(p.KullaniciAdSoyad ?? "").Contains(q));
+                if (!string.IsNullOrWhiteSpace(q))
+                    src = tumProjeler.Where(p =>
+                        Key(p.Baslik ?? "").Contains(q) ||
+                        Key(p.KullaniciAdSoyad ?? "").Contains(q));
 
-            foreach (var p in src)
-                _desktopListe.Add(p);
+                foreach (var p in src) _desktopListe.Add(p);
+            });
         }
 
         private void RefreshDesktopList()
@@ -503,55 +539,26 @@ namespace LessArcApppp
             ApplyDesktopFilter(q);
         }
 
-        // ====== MOBİL ARAMA / FİLTRE ======
-        private void ApplyMobilFilter(string query)
-        {
-            string q = Key(query ?? "");
-            _mobilListe.Clear();
-
-            IEnumerable<AdminProjeListDto> src = tumProjeler;
-
-            if (!string.IsNullOrWhiteSpace(q))
-                src = tumProjeler.Where(p =>
-                    Key(p.Baslik ?? "").Contains(q) ||
-                    Key(p.KullaniciAdSoyad ?? "").Contains(q));
-
-            foreach (var p in src)
-                _mobilListe.Add(p);
-        }
-
-        // Eski gizli picker desteği
-        private async void cmbProjeSecimi_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var index = cmbProjeSecimi.SelectedIndex;
-            if (index < 0 || index >= tumProjeler.Count)
-            {
-                EnsureMobileDetailsAlwaysVisible();
-                return;
-            }
-            await YukuMobilProje(tumProjeler[index]);
-        }
-
         private async Task YukuMobilProje(AdminProjeListDto secilen)
         {
             _aktifMobilProjeId = secilen.Id;
 
             EnsureMobileDetailsAlwaysVisible();
 
-            lblSeciliProjeBaslikMobile.Text = secilen.Baslik ?? "";
-            dpBaslangicMobile.Date = (secilen.BaslangicTarihi ?? DateTime.Today).Date;
-            dpBitisMobile.Date = (secilen.BitisTarihi ?? DateTime.Today).Date;
+            SafeSetLabelText("lblSeciliProjeBaslikMobile", secilen.Baslik ?? "");
+            if (this.FindByName<DatePicker>("dpBaslangicMobile") is DatePicker db) db.Date = (secilen.BaslangicTarihi ?? DateTime.Today).Date;
+            if (this.FindByName<DatePicker>("dpBitisMobile") is DatePicker dbit) dbit.Date = (secilen.BitisTarihi ?? DateTime.Today).Date;
 
             var uiDurum = MapApiDurumToUi(secilen.Durum);
-            SelectDurumOnPicker(pickerDurumMobile, uiDurum);
+            if (this.FindByName<Picker>("pickerDurumMobile") is Picker pMobile) SelectDurumOnPicker(pMobile, uiDurum);
             UpdateHeaderCheckVisibility(uiDurum, isMobile: true);
 
-            MobilAdimlarPanel.Children.Clear();
-            await AdimlariYukle(secilen.Id, MobilAdimlarPanel, isMobile: true);
+            var mobilPanel = this.FindByName<VerticalStackLayout>("MobilAdimlarPanel");
+            if (mobilPanel != null) mobilPanel.Children.Clear();
+            await AdimlariYukle(secilen.Id, mobilPanel ?? (Layout)new VerticalStackLayout(), isMobile: true);
             await YorumlariYukleVeGoster(secilen.Id, mobile: true);
         }
 
-        // ===== ADIMLAR =====
         private async Task AdimlariYukle(int projeId, Layout hedefPanel, bool isMobile)
         {
             try
@@ -559,8 +566,12 @@ namespace LessArcApppp
                 var response = await _http.GetAsync($"/api/ProjeAdimlari/Proje/{projeId}");
                 if (!response.IsSuccessStatusCode)
                 {
-                    hedefPanel.Children.Add(new Label { Text = "Adımlar getirilemedi.", TextColor = Colors.Red });
-                    SetGenelTamamLabel(isMobile, 0);
+                    // UI update on main thread
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        hedefPanel.Children.Add(new Label { Text = "Adımlar getirilemedi.", TextColor = Colors.Red });
+                        SetGenelTamamLabel(isMobile, 0);
+                    });
                     return;
                 }
 
@@ -568,39 +579,47 @@ namespace LessArcApppp
                 var adimlar = JsonConvert.DeserializeObject<List<ProjeAdimiDto>>(json) ?? new();
 
                 double ort = adimlar.Count > 0 ? adimlar.Average(a => a.TamamlanmaYuzdesi) : 0;
-                SetGenelTamamLabel(isMobile, ort);
 
-                foreach (var adim in adimlar)
+                // UI additions must be on main thread
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    hedefPanel.Children.Add(new Frame
+                    SetGenelTamamLabel(isMobile, ort);
+
+                    foreach (var adim in adimlar)
                     {
-                        BackgroundColor = Colors.White,
-                        BorderColor = Colors.LightGray,
-                        CornerRadius = 8,
-                        HasShadow = false,
-                        Padding = new Thickness(10, 6),
-                        Margin = new Thickness(0, 2),
-                        Content = new VerticalStackLayout
+                        hedefPanel.Children.Add(new Frame
                         {
-                            Spacing = 2,
-                            Children =
+                            BackgroundColor = Colors.White,
+                            BorderColor = Colors.LightGray,
+                            CornerRadius = 8,
+                            HasShadow = false,
+                            Padding = new Thickness(10, 6),
+                            Margin = new Thickness(0, 2),
+                            Content = new VerticalStackLayout
                             {
-                                CreateBlackLabel(adim.AdimBasligi, 14, true),
-                                new Label
+                                Spacing = 2,
+                                Children =
                                 {
-                                    Text = $"Tamamlanma: %{adim.TamamlanmaYuzdesi}",
-                                    FontSize = 13,
-                                    TextColor = Colors.ForestGreen
+                                    CreateBlackLabel(adim.AdimBasligi, 14, true),
+                                    new Label
+                                    {
+                                        Text = $"Tamamlanma: %{adim.TamamlanmaYuzdesi}",
+                                        FontSize = 13,
+                                        TextColor = Colors.ForestGreen
+                                    }
                                 }
                             }
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             }
             catch (Exception ex)
             {
-                hedefPanel.Children.Add(new Label { Text = $"Hata: {ex.Message}", TextColor = Colors.Red });
-                SetGenelTamamLabel(isMobile, 0);
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    hedefPanel.Children.Add(new Label { Text = $"Hata: {ex.Message}", TextColor = Colors.Red });
+                    SetGenelTamamLabel(isMobile, 0);
+                });
             }
         }
 
@@ -615,11 +634,11 @@ namespace LessArcApppp
         private void SetGenelTamamLabel(bool isMobile, double ort)
         {
             string text = $"Projenin Genel Tamamlanma Durumu: %{ort:F0}";
-            if (isMobile) lblGenelTamamMobile.Text = text;
-            else lblGenelTamamDesktop.Text = text;
+            if (isMobile) SafeSetLabelText("lblGenelTamamMobile", text);
+            else SafeSetLabelText("lblGenelTamamDesktop", text);
         }
 
-        // ===== GÜNCELLE =====
+        // Güncelleme (desktop/mobile)
         private async void BtnBilgileriGuncelleDesktop_Clicked(object? sender, EventArgs e)
         {
             if (_aktifDesktopProjeId is not int pid)
@@ -633,9 +652,9 @@ namespace LessArcApppp
                 return;
             }
 
-            DateTime bas = dpBaslangicDesktop.Date;
-            DateTime bit = dpBitisDesktop.Date;
-            string durumUi = GetPickerDurumValue(pickerDurumDesktop); // UI string
+            DateTime bas = this.FindByName<DatePicker>("dpBaslangicDesktop")?.Date ?? DateTime.Today;
+            DateTime bit = this.FindByName<DatePicker>("dpBitisDesktop")?.Date ?? DateTime.Today;
+            string durumUi = GetPickerDurumValue(this.FindByName<Picker>("pickerDurumDesktop"));
 
             await UpdateProjectAsync(pid, bas, bit, durumUi, isMobile: false);
         }
@@ -655,14 +674,13 @@ namespace LessArcApppp
                 return;
             }
 
-            DateTime bas = dpBaslangicMobile.Date;
-            DateTime bit = dpBitisMobile.Date;
-            string durumUi = GetPickerDurumValue(pickerDurumMobile);
+            DateTime bas = this.FindByName<DatePicker>("dpBaslangicMobile")?.Date ?? DateTime.Today;
+            DateTime bit = this.FindByName<DatePicker>("dpBitisMobile")?.Date ?? DateTime.Today;
+            string durumUi = GetPickerDurumValue(this.FindByName<Picker>("pickerDurumMobile"));
 
             await UpdateProjectAsync(pid, bas, bit, durumUi, isMobile: true);
         }
 
-        // ———— PUT payload ————
         private object BuildUpdatePayload(int projeId, DateTime baslangic, DateTime bitis, string durumUi)
         {
             var item = tumProjeler.FirstOrDefault(p => p.Id == projeId);
@@ -674,7 +692,7 @@ namespace LessArcApppp
                 id = projeId,
                 baslik = item?.Baslik ?? string.Empty,
                 baslangicTarihi = (DateTime?)baslangic,
-                bitisTarihi = isDone ? (DateTime?)bitis : null, // kritik fark
+                bitisTarihi = isDone ? (DateTime?)bitis : null,
                 durum = string.IsNullOrWhiteSpace(durumApi) ? null : durumApi
             };
         }
@@ -703,7 +721,6 @@ namespace LessArcApppp
         {
             try
             {
-                // Ön kontrol
                 if (IsEndBeforeStart(baslangic, bitis))
                 {
                     await DisplayAlert("Hata", TarihHataMetni, "Tamam");
@@ -734,7 +751,6 @@ namespace LessArcApppp
                     return;
                 }
 
-                // Yerelde güncelle
                 var item = tumProjeler.FirstOrDefault(p => p.Id == projeId);
                 if (item != null)
                 {
@@ -743,24 +759,29 @@ namespace LessArcApppp
                     item.Durum = MapApiDurumToUi(MapUiDurumToApi(durumUi));
                 }
 
-                RefreshDesktopList();
-                _mobilListe.Clear();
-                foreach (var p in tumProjeler) _mobilListe.Add(p);
-
-                UpdateHeaderCheckVisibility(item?.Durum ?? durumUi, isMobile);
+                // UI updates on main thread
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    RefreshDesktopList();
+                    _mobilListe.Clear();
+                    foreach (var p in tumProjeler) _mobilListe.Add(p);
+                    UpdateHeaderCheckVisibility(item?.Durum ?? durumUi, isMobile);
+                });
 
                 await DisplayAlert("Başarılı", "Proje bilgileri güncellendi.", "Tamam");
 
                 if (isMobile && _aktifMobilProjeId is int mpid)
                 {
-                    MobilAdimlarPanel.Children.Clear();
-                    await AdimlariYukle(mpid, MobilAdimlarPanel, isMobile: true);
+                    var mobilPanel = this.FindByName<VerticalStackLayout>("MobilAdimlarPanel");
+                    MainThread.BeginInvokeOnMainThread(() => mobilPanel?.Children.Clear());
+                    await AdimlariYukle(mpid, mobilPanel ?? (Layout)new VerticalStackLayout(), isMobile: true);
                     await YorumlariYukleVeGoster(mpid, mobile: true);
                 }
                 else if (!isMobile && _aktifDesktopProjeId is int dpid)
                 {
-                    ProjeDetaylariPanel.Children.Clear();
-                    await AdimlariYukle(dpid, ProjeDetaylariPanel, isMobile: false);
+                    var deskPanel = this.FindByName<VerticalStackLayout>("ProjeDetaylariPanel");
+                    MainThread.BeginInvokeOnMainThread(() => deskPanel?.Children.Clear());
+                    await AdimlariYukle(dpid, deskPanel ?? (Layout)new VerticalStackLayout(), isMobile: false);
                     await YorumlariYukleVeGoster(dpid, mobile: false);
                 }
             }
@@ -794,7 +815,6 @@ namespace LessArcApppp
             }
         }
 
-        // İlk yükleme: ARTAN tarihe göre doldur (chat alttan aksın). Reload sadece burada.
         private async Task YorumlariYukleVeGoster(int projeId, bool mobile)
         {
             try
@@ -804,8 +824,10 @@ namespace LessArcApppp
                 var resp = await _http.GetAsync($"/api/Yorumlar/proje/{projeId}");
                 if (!resp.IsSuccessStatusCode)
                 {
-                    if (mobile) MobilYorumlar.Clear();
-                    else DesktopYorumlar.Clear();
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        if (mobile) MobilYorumlar.Clear(); else DesktopYorumlar.Clear();
+                    });
                     return;
                 }
 
@@ -816,50 +838,58 @@ namespace LessArcApppp
 
                 var sirali = yorumlar.OrderBy(x => x.OlusturmaTarihi).ToList();
 
-                if (mobile)
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    MobilYorumlar.Clear();
-                    foreach (var y in sirali) MobilYorumlar.Add(y);
-                    var cv = this.FindByName<CollectionView>("MobilYorumCollection");
-                    ScrollToBottom(cv, MobilYorumlar.Count);
-                }
-                else
-                {
-                    DesktopYorumlar.Clear();
-                    foreach (var y in sirali) DesktopYorumlar.Add(y);
-                    var cv = this.FindByName<CollectionView>("DesktopYorumCollection");
-                    ScrollToBottom(cv, DesktopYorumlar.Count);
-                }
+                    if (mobile)
+                    {
+                        MobilYorumlar.Clear();
+                        foreach (var y in sirali) MobilYorumlar.Add(y);
+                        var cv = this.FindByName<CollectionView>("MobilYorumCollection");
+                        ScrollToBottom(cv, MobilYorumlar.Count);
+                    }
+                    else
+                    {
+                        DesktopYorumlar.Clear();
+                        foreach (var y in sirali) DesktopYorumlar.Add(y);
+                        var cv = this.FindByName<CollectionView>("DesktopYorumCollection");
+                        ScrollToBottom(cv, DesktopYorumlar.Count);
+                    }
+                });
             }
             catch (Exception ex)
             {
-                if (mobile)
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    MobilYorumlar.Clear();
-                    MobilYorumlar.Add(new ProjeYorumDto { KullaniciAdSoyad = "Hata", YorumMetni = ex.Message });
-                }
-                else
-                {
-                    DesktopYorumlar.Clear();
-                    DesktopYorumlar.Add(new ProjeYorumDto { KullaniciAdSoyad = "Hata", YorumMetni = ex.Message });
-                }
+                    if (mobile)
+                    {
+                        MobilYorumlar.Clear();
+                        MobilYorumlar.Add(new ProjeYorumDto { KullaniciAdSoyad = "Hata", YorumMetni = ex.Message });
+                    }
+                    else
+                    {
+                        DesktopYorumlar.Clear();
+                        DesktopYorumlar.Add(new ProjeYorumDto { KullaniciAdSoyad = "Hata", YorumMetni = ex.Message });
+                    }
+                });
             }
         }
 
-        // --- YENİ: Yorum güncelle/sil için yerel UI helper'ları ---
         private void ApplyUpdatedMessage(ProjeYorumDto msg)
         {
-            ReplaceInCollection(MobilYorumlar, msg);
-            ReplaceInCollection(DesktopYorumlar, msg);
+            // ReplaceInCollection mutasyonlarını UI threadte çalıştır
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                ReplaceInCollection(MobilYorumlar, msg);
+                ReplaceInCollection(DesktopYorumlar, msg);
 
-            var cv = MasaustuGrid.IsVisible
-                ? this.FindByName<CollectionView>("DesktopYorumCollection")
-                : this.FindByName<CollectionView>("MobilYorumCollection");
-            var count = MasaustuGrid.IsVisible ? DesktopYorumlar.Count : MobilYorumlar.Count;
-            ScrollToBottom(cv, count);
+                var cv = this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false
+                    ? this.FindByName<CollectionView>("DesktopYorumCollection")
+                    : this.FindByName<CollectionView>("MobilYorumCollection");
+                var count = (this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false) ? DesktopYorumlar.Count : MobilYorumlar.Count;
+                ScrollToBottom(cv, count);
+            });
         }
 
-        // Önemli: Replace (Replace event) -> UI hemen güncellenir
         private void ReplaceInCollection(ObservableCollection<ProjeYorumDto> coll, ProjeYorumDto msg)
         {
             if (coll == null || coll.Count == 0) return;
@@ -887,14 +917,17 @@ namespace LessArcApppp
 
         private void RemoveMessage(int yorumId)
         {
-            RemoveFromCollection(MobilYorumlar, yorumId);
-            RemoveFromCollection(DesktopYorumlar, yorumId);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                RemoveFromCollection(MobilYorumlar, yorumId);
+                RemoveFromCollection(DesktopYorumlar, yorumId);
 
-            var cv = MasaustuGrid.IsVisible
-                ? this.FindByName<CollectionView>("DesktopYorumCollection")
-                : this.FindByName<CollectionView>("MobilYorumCollection");
-            var count = MasaustuGrid.IsVisible ? DesktopYorumlar.Count : MobilYorumlar.Count;
-            ScrollToBottom(cv, count);
+                var cv = this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false
+                    ? this.FindByName<CollectionView>("DesktopYorumCollection")
+                    : this.FindByName<CollectionView>("MobilYorumCollection");
+                var count = (this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false) ? DesktopYorumlar.Count : MobilYorumlar.Count;
+                ScrollToBottom(cv, count);
+            });
         }
 
         private static void RemoveFromCollection(ObservableCollection<ProjeYorumDto> coll, int yorumId)
@@ -904,7 +937,7 @@ namespace LessArcApppp
             if (item != null) coll.Remove(item);
         }
 
-        // SignalR ile mesaj gönder
+        // Send chat via hub
         private async Task SendChatAsync(int projeId, string text)
         {
             if (_hub is null || string.IsNullOrWhiteSpace(text)) return;
@@ -915,14 +948,8 @@ namespace LessArcApppp
                 YorumMetni = text.Trim()
             };
 
-            try
-            {
-                await _hub.InvokeAsync("SendMessage", dto);
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Hata", $"Mesaj gönderilemedi: {ex.Message}", "Tamam");
-            }
+            try { await _hub.InvokeAsync("SendMessage", dto); }
+            catch (Exception ex) { await DisplayAlert("Hata", $"Mesaj gönderilemedi: {ex.Message}", "Tamam"); }
         }
 
         private async Task YorumGonderDesktop()
@@ -948,7 +975,7 @@ namespace LessArcApppp
         private void BtnYorumGonderMobile_Clicked(object sender, EventArgs e) => _ = YorumGonderMobil();
         private void BtnYorumGonderDesktop_Clicked(object sender, EventArgs e) => _ = YorumGonderDesktop();
 
-        // ===== Yorum DÜZENLE (ANLIK) =====
+        // Edit / Delete comment handlers
         private async void EditYorum_Clicked(object sender, EventArgs e)
         {
             try
@@ -1000,7 +1027,7 @@ namespace LessArcApppp
                     var payload = await resp.Content.ReadAsStringAsync();
                     updated = JsonConvert.DeserializeObject<ProjeYorumDto>(payload);
                 }
-                catch { /* yoksay */ }
+                catch { }
 
                 if (updated != null)
                 {
@@ -1020,7 +1047,6 @@ namespace LessArcApppp
             }
         }
 
-        // ===== Yorum SİL (ANLIK) =====
         private async void SilYorum_Clicked(object sender, EventArgs e)
         {
             try
@@ -1034,9 +1060,7 @@ namespace LessArcApppp
                     return;
                 }
 
-                bool onay = await DisplayAlert("Silinsin mi?",
-                                               "Bu yorumu silmek istiyor musun?",
-                                               "Evet", "Hayır");
+                bool onay = await DisplayAlert("Silinsin mi?", "Bu yorumu silmek istiyor musun?", "Evet", "Hayır");
                 if (!onay) return;
 
                 var resp = await _http.DeleteAsync($"/api/Yorumlar/{yorum.Id}");
@@ -1055,11 +1079,10 @@ namespace LessArcApppp
             }
         }
 
-        // ===== Yardımcılar =====
+        // Helpers for pickers, normalization, mapping
         private void SelectDurumOnPicker(Picker picker, string? durumUi)
         {
             if (picker == null) return;
-
             string[] items = { "Başlamadı", "Devam Ediyor", "Tamamlandı" };
             if (picker.ItemsSource == null || picker.ItemsSource.Count == 0)
                 picker.ItemsSource = items.ToList();
@@ -1076,7 +1099,7 @@ namespace LessArcApppp
         }
 
         private string GetPickerDurumValue(Picker picker)
-            => (picker.SelectedItem as string) ?? string.Empty;
+            => (picker?.SelectedItem as string) ?? string.Empty;
 
         private static string Normalize(string s) =>
             (s ?? string.Empty).Trim().ToLowerInvariant()
@@ -1098,15 +1121,20 @@ namespace LessArcApppp
         private void UpdateHeaderCheckVisibility(string? durumUi, bool isMobile)
         {
             bool visible = IsDone(durumUi);
-            if (isMobile) imgCheckMobile.IsVisible = visible;
-            else imgCheckDesktop.IsVisible = visible;
+            if (isMobile)
+            {
+                if (this.FindByName<Image>("imgCheckMobile") is Image im) im.IsVisible = visible;
+            }
+            else
+            {
+                if (this.FindByName<Image>("imgCheckDesktop") is Image imd) imd.IsVisible = visible;
+            }
         }
 
-        // ===== Kimlik =====
+        // ===== Identity helpers =====
         private async Task EnsureIdentity()
         {
             _myUserId = 0;
-
             if (int.TryParse(await SecureStorage.GetAsync("UserId"), out var uid))
                 _myUserId = uid;
 
@@ -1122,13 +1150,10 @@ namespace LessArcApppp
             {
                 var parts = jwt.Split('.');
                 if (parts.Length < 2) return 0;
-
                 static string Pad(string s) => s.PadRight(s.Length + (4 - s.Length % 4) % 4, '=');
-
                 var payloadPart = parts[1].Replace('-', '+').Replace('_', '/');
                 var payloadBytes = Convert.FromBase64String(Pad(payloadPart));
                 var payloadJson = Encoding.UTF8.GetString(payloadBytes);
-
                 var jo = JsonConvert.DeserializeObject<Dictionary<string, object>>(payloadJson)!;
 
                 string? raw =
@@ -1141,13 +1166,9 @@ namespace LessArcApppp
 
                 return int.TryParse(raw, out var id) ? id : 0;
             }
-            catch
-            {
-                return 0;
-            }
+            catch { return 0; }
         }
 
-        // ===== Durum Map'leri =====
         private static string MapUiDurumToApi(string? ui)
         {
             var k = Key(ui ?? "");
@@ -1172,11 +1193,46 @@ namespace LessArcApppp
             };
         }
 
-        // Hub'a gönderim için küçük DTO
         private sealed class YorumEkleDtoClient
         {
             public int ProjeId { get; set; }
             public string YorumMetni { get; set; } = string.Empty;
+        }
+
+        // ===== Event handlers required by XAML (correct signatures) =====
+
+        // DateSelected event signature in MAUI: EventHandler<DateChangedEventArgs>
+        private async void DpBaslangicMobile_DateSelected(object sender, DateChangedEventArgs e)
+        {
+            if (this.FindByName<DatePicker>("dpBitisMobile") is DatePicker dpBit)
+            {
+                if (dpBit.Date < e.NewDate)
+                {
+                    dpBit.Date = e.NewDate;
+                    await DisplayAlert("Uyarı", "Bitiş tarihi başlangıç tarihinden önce olamaz. Bitiş tarihi başlangıç tarihine ayarlandı.", "Tamam");
+                }
+            }
+        }
+
+        private async void DpBitisMobile_DateSelected(object sender, DateChangedEventArgs e)
+        {
+            if (this.FindByName<DatePicker>("dpBaslangicMobile") is DatePicker dpBas)
+            {
+                if (e.NewDate < dpBas.Date)
+                {
+                    if (this.FindByName<DatePicker>("dpBitisMobile") is DatePicker dpBit)
+                        dpBit.Date = dpBas.Date;
+
+                    await DisplayAlert("Uyarı", TarihHataMetni, "Tamam");
+                }
+            }
+        }
+
+        // ===== Safety / small helpers =====
+        private void SafeSetLabelText(string name, string text)
+        {
+            var lbl = this.FindByName<Label>(name);
+            if (lbl != null) lbl.Text = text;
         }
     }
 }

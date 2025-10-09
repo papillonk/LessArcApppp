@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -79,7 +80,7 @@ namespace LessArcApppp
 
             ScaledButtonHeight = Math.Max(36, 44 * scale);
             ScaledPrimaryButtonWidth = Math.Max(130, 180 * scale);
-            ScaledSecondaryButtonWidth = Math.Max(170, 260 * scale); // <-- DÜZELTİLDİ (Math.Max)
+            ScaledSecondaryButtonWidth = Math.Max(170, 260 * scale);
 
             ScaledIcon = Math.Max(14, 20 * scale);
             ScaledIconTouch = Math.Max(28, 32 * scale);
@@ -173,7 +174,7 @@ namespace LessArcApppp
         public BildirimGonderPage(HttpClient httpClient, string kullaniciToken)
         {
             InitializeComponent();
-            _http = httpClient;
+            _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             token = kullaniciToken ?? string.Empty;
 
             if (!_http.DefaultRequestHeaders.Accept.Any(h => h.MediaType == "application/json"))
@@ -286,14 +287,21 @@ namespace LessArcApppp
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    lstAdminler.ItemsSource = adminKullanicilar;
+                    try
+                    {
+                        if (lstAdminler != null) lstAdminler.ItemsSource = adminKullanicilar;
 
-                    // popup listesi filtreli koleksiyondan beslenecek
-                    _adminFiltre.Clear();
-                    foreach (var a in adminKullanicilar) _adminFiltre.Add(a);
+                        // popup listesi filtreli koleksiyondan beslenecek
+                        _adminFiltre.Clear();
+                        foreach (var a in adminKullanicilar) _adminFiltre.Add(a);
 
-                    if (cvAdminSecim != null)
-                        cvAdminSecim.ItemsSource = _adminFiltre;
+                        if (cvAdminSecim != null)
+                            cvAdminSecim.ItemsSource = _adminFiltre;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"AdminleriYukle -> UI set hata: {ex}");
+                    }
                 });
             }
             catch (Exception ex)
@@ -331,38 +339,38 @@ namespace LessArcApppp
 
         private async void BtnGonder_Clicked(object sender, EventArgs e)
         {
-            var btn = (Button)sender;
-            await btn.ScaleTo(0.9, 100);
-            await btn.ScaleTo(1, 100);
-
-            List<Kullanici> secilenAdminler;
-            string mesaj;
-
-            if (DeviceInfo.Idiom == DeviceIdiom.Desktop)
-            {
-                secilenAdminler = lstAdminler.SelectedItems.Cast<Kullanici>().ToList();
-                mesaj = entryMesajDesktop.Text;
-            }
-            else
-            {
-                secilenAdminler = cvAdminSecim.SelectedItems.Cast<Kullanici>().ToList();
-                mesaj = entryMesajMobile.Text;
-            }
-
-            if (!secilenAdminler.Any())
-            {
-                await DisplayAlert("Uyarı", "Lütfen en az bir admin seçin.", "Tamam");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(mesaj))
-            {
-                await DisplayAlert("Uyarı", "Mesaj boş olamaz.", "Tamam");
-                return;
-            }
-
             try
             {
+                var btn = (Button)sender;
+                await btn.ScaleTo(0.9, 100);
+                await btn.ScaleTo(1, 100);
+
+                List<Kullanici> secilenAdminler;
+                string mesaj;
+
+                if (DeviceInfo.Idiom == DeviceIdiom.Desktop)
+                {
+                    secilenAdminler = lstAdminler?.SelectedItems?.Cast<Kullanici>().ToList() ?? new List<Kullanici>();
+                    mesaj = entryMesajDesktop?.Text ?? string.Empty;
+                }
+                else
+                {
+                    secilenAdminler = cvAdminSecim?.SelectedItems?.Cast<Kullanici>().ToList() ?? new List<Kullanici>();
+                    mesaj = entryMesajMobile?.Text ?? string.Empty;
+                }
+
+                if (!secilenAdminler.Any())
+                {
+                    await DisplayAlert("Uyarı", "Lütfen en az bir admin seçin.", "Tamam");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(mesaj))
+                {
+                    await DisplayAlert("Uyarı", "Mesaj boş olamaz.", "Tamam");
+                    return;
+                }
+
                 var dto = new
                 {
                     Mesaj = mesaj.Trim(),
@@ -377,8 +385,8 @@ namespace LessArcApppp
 
                 if (response.IsSuccessStatusCode)
                 {
-                    entryMesajDesktop.Text = string.Empty;
-                    entryMesajMobile.Text = string.Empty;
+                    if (entryMesajDesktop != null) entryMesajDesktop.Text = string.Empty;
+                    if (entryMesajMobile != null) entryMesajMobile.Text = string.Empty;
                     await DisplayAlert("Başarılı", "Bildirim(ler) gönderildi.", "Tamam");
                     await GonderilenBildirimleriYukle();
                 }
@@ -407,10 +415,20 @@ namespace LessArcApppp
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    lstGecmisBildirimlerDesktop.ItemsSource = bugunku;
-                    lstGecmisBildirimlerMobile.ItemsSource = bugunku;
-                    lstGecmisPopupDesktop.ItemsSource = gonderilenBildirimler;
-                    lstGecmisPopupMobile.ItemsSource = gonderilenBildirimler;
+                    try
+                    {
+                        // Desktop/Mobile için ObservableCollection kullan (UI tarafı daha stabil olur)
+                        lstGecmisBildirimlerDesktop.ItemsSource = new ObservableCollection<Bildirim>(bugunku);
+                        lstGecmisBildirimlerMobile.ItemsSource = new ObservableCollection<Bildirim>(bugunku);
+
+                        // Popup listeleri tüm geçmişi gösterir
+                        lstGecmisPopupDesktop.ItemsSource = gonderilenBildirimler;
+                        lstGecmisPopupMobile.ItemsSource = gonderilenBildirimler;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"GonderilenBildirimleriYukle -> UI set hata: {ex}");
+                    }
                 });
             }
             catch (Exception ex)
@@ -419,49 +437,134 @@ namespace LessArcApppp
             }
         }
 
+        // Güvenli popup açma / kapama + null-check + mainthread + try/catch
         private async void BtnGecmisGoster_Clicked(object sender, EventArgs e)
         {
-            var hedef = DeviceInfo.Idiom == DeviceIdiom.Desktop ? frameGecmisDesktop : frameGecmisMobile;
-            hedef.IsVisible = true;
-            hedef.Opacity = 0;
-            hedef.Scale = 0.9;
-            await Task.WhenAll(
-                hedef.FadeTo(1, 250),
-                hedef.ScaleTo(1, 250, Easing.CubicOut)
-            );
+            try
+            {
+                var hedef = DeviceInfo.Idiom == DeviceIdiom.Desktop ? frameGecmisDesktop : frameGecmisMobile;
+                if (hedef == null) return;
+
+                // run the show on main thread (with small delay to avoid race conditions)
+                await MainThread.InvokeOnMainThreadAsync(() => ShowPopupSafeAsync(hedef));
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Hata", $"Popup açılamadı: {ex.Message}", "Tamam");
+            }
+        }
+
+        private async Task ShowPopupSafeAsync(View hedef)
+        {
+            try
+            {
+                hedef.IsVisible = true;
+                hedef.Opacity = 0;
+                hedef.Scale = 0.95;
+
+                // kısa bekleme ile native layout'un hazırlanması sağlanır
+                await Task.Delay(40);
+
+                await Task.WhenAll(
+                    hedef.FadeTo(1, 250),
+                    hedef.ScaleTo(1, 250, Easing.CubicOut)
+                );
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"ShowPopupSafeAsync hata: {ex}");
+                try { hedef.IsVisible = false; } catch { }
+            }
         }
 
         private async void BtnGecmisGizle_Clicked(object sender, EventArgs e)
         {
-            var hedef = DeviceInfo.Idiom == DeviceIdiom.Desktop ? frameGecmisDesktop : frameGecmisMobile;
-            await hedef.FadeTo(0, 200);
-            hedef.IsVisible = false;
+            try
+            {
+                var hedef = DeviceInfo.Idiom == DeviceIdiom.Desktop ? frameGecmisDesktop : frameGecmisMobile;
+                if (hedef == null) return;
+
+                await MainThread.InvokeOnMainThreadAsync(() => HidePopupSafeAsync(hedef));
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Hata", $"Popup kapatılamadı: {ex.Message}", "Tamam");
+            }
+        }
+
+        private async Task HidePopupSafeAsync(View hedef)
+        {
+            try
+            {
+                await hedef.FadeTo(0, 200);
+                await Task.Delay(30);
+                hedef.IsVisible = false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"HidePopupSafeAsync hata: {ex}");
+                try { hedef.IsVisible = false; } catch { }
+            }
         }
 
         private void EntryAra_TextChanged(object sender, TextChangedEventArgs e)
         {
-            string anahtar = e.NewTextValue?.ToLower() ?? "";
-            var filtreli = gonderilenBildirimler
-                .Where(b => (b.Mesaj ?? string.Empty).ToLower().Contains(anahtar))
-                .ToList();
+            try
+            {
+                string anahtar = e.NewTextValue?.ToLower() ?? "";
+                var filtreli = gonderilenBildirimler
+                    .Where(b => (b.Mesaj ?? string.Empty).ToLower().Contains(anahtar))
+                    .ToList();
 
-            if (DeviceInfo.Idiom == DeviceIdiom.Desktop)
-                lstGecmisPopupDesktop.ItemsSource = filtreli;
-            else
-                lstGecmisPopupMobile.ItemsSource = filtreli;
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    try
+                    {
+                        if (DeviceInfo.Idiom == DeviceIdiom.Desktop)
+                            lstGecmisPopupDesktop.ItemsSource = new ObservableCollection<Bildirim>(filtreli);
+                        else
+                            lstGecmisPopupMobile.ItemsSource = new ObservableCollection<Bildirim>(filtreli);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"EntryAra_TextChanged -> UI set hata: {ex}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"EntryAra_TextChanged hata: {ex}");
+            }
         }
 
         private void DatePickerTarih_DateSelected(object sender, DateChangedEventArgs e)
         {
-            DateTime secilen = e.NewDate.Date;
-            var filtreli = gonderilenBildirimler
-                .Where(b => b.GonderimTarihi.Date == secilen)
-                .ToList();
+            try
+            {
+                DateTime secilen = e.NewDate.Date;
+                var filtreli = gonderilenBildirimler
+                    .Where(b => b.GonderimTarihi.Date == secilen)
+                    .ToList();
 
-            if (DeviceInfo.Idiom == DeviceIdiom.Desktop)
-                lstGecmisPopupDesktop.ItemsSource = filtreli;
-            else
-                lstGecmisPopupMobile.ItemsSource = filtreli;
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    try
+                    {
+                        if (DeviceInfo.Idiom == DeviceIdiom.Desktop)
+                            lstGecmisPopupDesktop.ItemsSource = new ObservableCollection<Bildirim>(filtreli);
+                        else
+                            lstGecmisPopupMobile.ItemsSource = new ObservableCollection<Bildirim>(filtreli);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"DatePickerTarih_DateSelected -> UI set hata: {ex}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"DatePickerTarih_DateSelected hata: {ex}");
+            }
         }
 
         private async void BtnBildirimSil_Clicked(object sender, EventArgs e)
@@ -470,9 +573,13 @@ namespace LessArcApppp
             var silinecek = btn?.BindingContext as Bildirim;
             if (silinecek == null) return;
 
-            await btn.RelRotateTo(10, 50);
-            await btn.RelRotateTo(-20, 50);
-            await btn.RelRotateTo(10, 50);
+            try
+            {
+                await btn.RelRotateTo(10, 50);
+                await btn.RelRotateTo(-20, 50);
+                await btn.RelRotateTo(10, 50);
+            }
+            catch { /* animasyon başarısız olsa da devam et */ }
 
             bool onay = await DisplayAlert("Sil", "Bu bildirimi silmek istiyor musunuz?", "Evet", "Hayır");
             if (!onay) return;
@@ -483,8 +590,19 @@ namespace LessArcApppp
 
                 if (response.IsSuccessStatusCode)
                 {
-                    gonderilenBildirimler.Remove(silinecek);
-                    await GonderilenBildirimleriYukle();
+                    // UI update on main thread
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                        try
+                        {
+                            gonderilenBildirimler.Remove(silinecek);
+                            await GonderilenBildirimleriYukle();
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"BtnBildirimSil_Clicked -> UI update hata: {ex}");
+                        }
+                    });
                 }
                 else
                 {
@@ -508,24 +626,30 @@ namespace LessArcApppp
             else
                 ApplyAdminFilter(string.Empty);
 
-            frameAdminPopup.IsVisible = true;
+            if (frameAdminPopup != null) frameAdminPopup.IsVisible = true;
         }
 
         private void BtnAdminOnayla_Clicked(object sender, EventArgs e)
         {
-            frameAdminPopup.IsVisible = false;
+            if (frameAdminPopup != null) frameAdminPopup.IsVisible = false;
 
-            var secilen = cvAdminSecim.SelectedItems.Cast<Kullanici>().Select(x => x.AdSoyad).ToList();
-            lblSecilenAdminler.Text = string.Join(", ", secilen);
-            lblSecilenAdminler.IsVisible = secilen.Any();
+            var secilen = cvAdminSecim?.SelectedItems?.Cast<Kullanici>().Select(x => x.AdSoyad).ToList() ?? new List<string>();
+            if (lblSecilenAdminler != null)
+            {
+                lblSecilenAdminler.Text = string.Join(", ", secilen);
+                lblSecilenAdminler.IsVisible = secilen.Any();
+            }
         }
 
         private void BtnAdminIptal_Clicked(object sender, EventArgs e)
         {
-            frameAdminPopup.IsVisible = false;
-            cvAdminSecim.SelectedItems.Clear();
-            lblSecilenAdminler.Text = "";
-            lblSecilenAdminler.IsVisible = false;
+            if (frameAdminPopup != null) frameAdminPopup.IsVisible = false;
+            cvAdminSecim?.SelectedItems?.Clear();
+            if (lblSecilenAdminler != null)
+            {
+                lblSecilenAdminler.Text = "";
+                lblSecilenAdminler.IsVisible = false;
+            }
 
             // Aramayı da sıfırla (varsa)
             if (this.FindByName<Entry>("entryAdminAra") is Entry ara)
