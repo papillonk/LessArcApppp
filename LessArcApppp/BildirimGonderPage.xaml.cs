@@ -23,7 +23,6 @@ namespace LessArcApppp
         // ============================
         // 📏 RESPONSIVE ÖLÇEKLEME
         // ============================
-
         private const double GlobalShrink = 0.92;
         public double BaseWidth { get; set; } = 460.0;
         public double MaxDesktopScale { get; set; } = 1.65;
@@ -162,7 +161,6 @@ namespace LessArcApppp
         // ============================
         // 🔧 SAYFA LOJİĞİ
         // ============================
-
         private readonly string token;
         private readonly HttpClient _http;
 
@@ -268,14 +266,21 @@ namespace LessArcApppp
             });
         }
 
-        public ICommand ToggleSelectionCommand => new Command<Kullanici>(admin =>
+        // 🚫 Null/yanlış tip korumalı + UI thread güvenli seçim komutu
+        public ICommand ToggleSelectionCommand => new Command<object>(item =>
         {
-            if (cvAdminSecim?.SelectedItems == null) return;
+            if (item is not Kullanici admin) return;
+            if (cvAdminSecim?.SelectedItems is null) return;
 
-            if (cvAdminSecim.SelectedItems.Contains(admin))
-                cvAdminSecim.SelectedItems.Remove(admin);
-            else
-                cvAdminSecim.SelectedItems.Add(admin);
+            void Toggle()
+            {
+                var list = cvAdminSecim!.SelectedItems;
+                if (list.Contains(admin)) list.Remove(admin);
+                else list.Add(admin);
+            }
+
+            if (Dispatcher.IsDispatchRequired) Dispatcher.Dispatch(Toggle);
+            else Toggle();
         });
 
         private async Task AdminleriYukle()
@@ -291,7 +296,6 @@ namespace LessArcApppp
                     {
                         if (lstAdminler != null) lstAdminler.ItemsSource = adminKullanicilar;
 
-                        // popup listesi filtreli koleksiyondan beslenecek
                         _adminFiltre.Clear();
                         foreach (var a in adminKullanicilar) _adminFiltre.Add(a);
 
@@ -330,11 +334,11 @@ namespace LessArcApppp
             foreach (var a in src) _adminFiltre.Add(a);
         }
 
-        // “Temizle” butonu için (XAML’de Clicked buna verilirse arama temizlenir)
+        // “Temizle” butonu için
         private void BtnAdminAraTemizle_Clicked(object sender, EventArgs e)
         {
             if (this.FindByName<Entry>("entryAdminAra") is Entry ara)
-                ara.Text = string.Empty; // EntryAdminAra_TextChanged tetiklenir ve liste resetlenir
+                ara.Text = string.Empty;
         }
 
         private async void BtnGonder_Clicked(object sender, EventArgs e)
@@ -417,18 +421,15 @@ namespace LessArcApppp
                 {
                     try
                     {
-                        // Desktop/Mobile için ObservableCollection kullan (UI tarafı daha stabil olur)
-                        lstGecmisBildirimlerDesktop.ItemsSource = new ObservableCollection<Bildirim>(bugunku);
-                        lstGecmisBildirimlerMobile.ItemsSource = new ObservableCollection<Bildirim>(bugunku);
+                        if (lstGecmisBildirimlerDesktop != null)
+                            lstGecmisBildirimlerDesktop.ItemsSource = new ObservableCollection<Bildirim>(bugunku);
+                        if (lstGecmisBildirimlerMobile != null)
+                            lstGecmisBildirimlerMobile.ItemsSource = new ObservableCollection<Bildirim>(bugunku);
 
-                        // Popup listeleri tüm geçmişi gösterir
-                        lstGecmisPopupDesktop.ItemsSource = gonderilenBildirimler;
-                        lstGecmisPopupMobile.ItemsSource = gonderilenBildirimler;
+                        if (lstGecmisPopupDesktop != null) lstGecmisPopupDesktop.ItemsSource = gonderilenBildirimler;
+                        if (lstGecmisPopupMobile != null) lstGecmisPopupMobile.ItemsSource = gonderilenBildirimler;
                     }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"GonderilenBildirimleriYukle -> UI set hata: {ex}");
-                    }
+                    catch (Exception ex) { Debug.WriteLine($"UI set hata: {ex}"); }
                 });
             }
             catch (Exception ex)
@@ -437,7 +438,7 @@ namespace LessArcApppp
             }
         }
 
-        // Güvenli popup açma / kapama + null-check + mainthread + try/catch
+        // Güvenli popup açma / kapama
         private async void BtnGecmisGoster_Clicked(object sender, EventArgs e)
         {
             try
@@ -445,7 +446,6 @@ namespace LessArcApppp
                 var hedef = DeviceInfo.Idiom == DeviceIdiom.Desktop ? frameGecmisDesktop : frameGecmisMobile;
                 if (hedef == null) return;
 
-                // run the show on main thread (with small delay to avoid race conditions)
                 await MainThread.InvokeOnMainThreadAsync(() => ShowPopupSafeAsync(hedef));
             }
             catch (Exception ex)
@@ -462,7 +462,6 @@ namespace LessArcApppp
                 hedef.Opacity = 0;
                 hedef.Scale = 0.95;
 
-                // kısa bekleme ile native layout'un hazırlanması sağlanır
                 await Task.Delay(40);
 
                 await Task.WhenAll(
@@ -590,18 +589,10 @@ namespace LessArcApppp
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // UI update on main thread
-                    MainThread.BeginInvokeOnMainThread(async () =>
+                    await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
-                        try
-                        {
-                            gonderilenBildirimler.Remove(silinecek);
-                            await GonderilenBildirimleriYukle();
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"BtnBildirimSil_Clicked -> UI update hata: {ex}");
-                        }
+                        gonderilenBildirimler.Remove(silinecek);
+                        await GonderilenBildirimleriYukle();
                     });
                 }
                 else
@@ -620,7 +611,6 @@ namespace LessArcApppp
 
         private void BtnAdminSec_Clicked(object sender, EventArgs e)
         {
-            // Pop-up açılırken mevcut arama metnine göre filtrenin güncellenmesi
             if (this.FindByName<Entry>("entryAdminAra") is Entry ara)
                 ApplyAdminFilter(ara.Text);
             else
@@ -631,9 +621,17 @@ namespace LessArcApppp
 
         private void BtnAdminOnayla_Clicked(object sender, EventArgs e)
         {
+            if (Dispatcher.IsDispatchRequired)
+            {
+                Dispatcher.Dispatch(() => BtnAdminOnayla_Clicked(sender, e));
+                return;
+            }
+
             if (frameAdminPopup != null) frameAdminPopup.IsVisible = false;
 
-            var secilen = cvAdminSecim?.SelectedItems?.Cast<Kullanici>().Select(x => x.AdSoyad).ToList() ?? new List<string>();
+            var secilen = cvAdminSecim?.SelectedItems?.Cast<Kullanici>()
+                              .Select(x => x.AdSoyad).ToList() ?? new List<string>();
+
             if (lblSecilenAdminler != null)
             {
                 lblSecilenAdminler.Text = string.Join(", ", secilen);
@@ -651,22 +649,22 @@ namespace LessArcApppp
                 lblSecilenAdminler.IsVisible = false;
             }
 
-            // Aramayı da sıfırla (varsa)
             if (this.FindByName<Entry>("entryAdminAra") is Entry ara)
                 ara.Text = string.Empty;
         }
 
         private void AdminCheckBox_CheckedChanged(object sender, CheckedChangedEventArgs e)
         {
-            if (sender is not CheckBox cb) return;
-            if (cb.BindingContext is not Kullanici admin) return;
+            if (sender is not CheckBox cb || cb.BindingContext is not Kullanici admin) return;
+            var list = cvAdminSecim?.SelectedItems; if (list is null) return;
 
-            var list = cvAdminSecim?.SelectedItems;
-            if (list == null) return;
-
-            bool contains = list.Cast<object>().Contains(admin);
-            if (e.Value && !contains) list.Add(admin);
-            else if (!e.Value && contains) list.Remove(admin);
+            void Apply()
+            {
+                bool contains = list.Cast<object>().Contains(admin);
+                if (e.Value && !contains) list.Add(admin);
+                else if (!e.Value && contains) list.Remove(admin);
+            }
+            if (Dispatcher.IsDispatchRequired) Dispatcher.Dispatch(Apply); else Apply();
         }
     }
 }

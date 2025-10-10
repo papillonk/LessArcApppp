@@ -8,6 +8,7 @@ using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Storage;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -165,6 +166,7 @@ namespace LessArcApppp
 
         private readonly HttpClient _http;
         private readonly string token;
+        private const string CloudFallbackBaseUrl = "https://lessarc.com.tr";
 
         private List<AdminProjeListDto> tumProjeler = new();
 
@@ -196,6 +198,20 @@ namespace LessArcApppp
             _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             token = kullaniciToken ?? string.Empty;
 
+            // --- ensure BaseAddress (fallback) ---
+            if (_http.BaseAddress is null)
+            {
+                try
+                {
+                    _http.BaseAddress = new Uri(CloudFallbackBaseUrl, UriKind.Absolute);
+                }
+                catch
+                {
+                    // ignore if fallback malformed; ProjeleriGetir will show error then
+                }
+            }
+
+            // Authorization header
             var auth = _http.DefaultRequestHeaders.Authorization;
             if (auth is null || auth.Scheme != "Bearer" || string.IsNullOrWhiteSpace(auth.Parameter))
             {
@@ -236,9 +252,23 @@ namespace LessArcApppp
                 pdMob.SelectedIndexChanged += (_, __) =>
                     UpdateHeaderCheckVisibility(GetPickerDurumValue(pdMob), isMobile: true);
 
-            // mobil proje picker
-            if (this.FindByName<Picker>("pickerProjeler") is Picker pk)
-                pk.SelectedIndexChanged += pickerProjeler_SelectedIndexChanged;
+            // mobil proje picker: ensure ItemsSource is bound to _mobilListe and display binding set
+            try
+            {
+                if (this.FindByName<Picker>("pickerProjeler") is Picker pk)
+                {
+                    // avoid duplicate event subscription by removing first (safe even if not previously attached)
+                    try { pk.SelectedIndexChanged -= pickerProjeler_SelectedIndexChanged; } catch { }
+                    pk.SelectedIndexChanged += pickerProjeler_SelectedIndexChanged;
+
+                    // Bind the ItemsSource to our observable collection (so updates reflect automatically)
+                    pk.ItemsSource = _mobilListe;
+
+                    // Ensure item text shows Baslik
+                    try { pk.ItemDisplayBinding = new Binding("Baslik"); } catch { }
+                }
+            }
+            catch { /* swallow - picker binding best-effort */ }
 
             // yorum gönder butonları
             if (this.FindByName<Button>("BtnYorumGonderMobile") is Button btnYrmMob)
@@ -320,6 +350,7 @@ namespace LessArcApppp
             // Start is handled in OnAppearing.
         }
 
+        // Replace existing AddIncomingMessage with this:
         private void AddIncomingMessage(ProjeYorumDto msg)
         {
             int? aktifId = (this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false) ? _aktifDesktopProjeId : _aktifMobilProjeId;
@@ -336,75 +367,114 @@ namespace LessArcApppp
             msg.IsEditable = (msg.KullaniciId == _myUserId);
             msg.IsDeletable = (msg.KullaniciId == _myUserId);
 
-            // list is ObservableCollection bound to UI; ensure UI thread
+            // Ensure UI-thread mutations
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 try
                 {
                     list.Add(msg);
 
-                    // debounce scroll calls to avoid rapid consecutive native layout invalidations
+                    // Debounce / delay scroll to avoid racing with native layout invalidation
                     if (!_scrollPending)
                     {
                         _scrollPending = true;
+                        // Run delayed scroll on UI thread as well
                         MainThread.BeginInvokeOnMainThread(async () =>
                         {
                             try
                             {
-                                await Task.Delay(50);
+                                // biraz daha uzun bekleyip tekrar dene (iOS için daha güvenli)
+                                await Task.Delay(120);
                                 ScrollToBottom(view, list.Count);
                             }
                             catch { }
                             finally
                             {
+                                // kısa bir ekstra bekleme ile pending'i sıfırla
+                                await Task.Delay(40);
                                 _scrollPending = false;
                             }
                         });
                     }
                 }
-                catch { }
+                catch
+                {
+                    // hata olursa sessiz geç (native crash'i önlemek için)
+                }
             });
         }
 
+        // Replace existing ScrollToBottom with this:
         private static void ScrollToBottom(CollectionView? cv, int count)
         {
-            try
+            // Fire-and-forget wrapper to avoid blocking caller; do safety checks inside.
+            if (cv == null || count <= 0) return;
+
+            _ = Task.Run(async () =>
             {
-                if (cv == null || count <= 0) return;
-
-                MainThread.BeginInvokeOnMainThread(async () =>
+                try
                 {
-                    try
-                    {
-                        // wait for handler to become available (layout inflation on iOS)
-                        int attempts = 6;
-                        while (attempts-- > 0 && cv.Handler == null)
-                            await Task.Delay(50);
+                    // small initial delay to let native layout settle
+                    await Task.Delay(80);
 
-                        if (cv.Handler == null) return;
+                    int attempts = 6;
+                    while (attempts-- > 0)
+                    {
+                        // ensure UI thread checks/operations
+                        bool canScroll = false;
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            canScroll = (cv.Handler != null) && (cv.ItemsSource != null) && (count > 0);
+                        });
+
+                        if (!canScroll)
+                        {
+                            await Task.Delay(80);
+                            continue;
+                        }
 
                         try
                         {
-                            cv.ScrollTo(count - 1, position: ScrollToPosition.End, animate: true);
+                            // final attempt on UI thread with try/catch
+                            await MainThread.InvokeOnMainThreadAsync(async () =>
+                            {
+                                try
+                                {
+                                    // ensure index in range
+                                    int idx = Math.Max(0, count - 1);
+                                    cv.ScrollTo(idx, position: ScrollToPosition.End, animate: true);
+                                }
+                                catch
+                                {
+                                    // fallback: try without animation after tiny delay
+                                    try
+                                    {
+                                        await Task.Delay(90);
+                                        int idx = Math.Max(0, count - 1);
+                                        cv.ScrollTo(idx, position: ScrollToPosition.End, animate: false);
+                                    }
+                                    catch
+                                    {
+                                        // swallow - native error may be transient
+                                    }
+                                }
+                            });
+
+                            // success -> break
+                            break;
                         }
                         catch
                         {
-                            // fallback: small delay then try without animation
-                            try
-                            {
-                                await Task.Delay(80);
-                                if (cv.Handler != null)
-                                    cv.ScrollTo(count - 1, position: ScrollToPosition.End, animate: false);
-                            }
-                            catch { }
+                            await Task.Delay(100);
                         }
                     }
-                    catch { }
-                });
-            }
-            catch { }
+                }
+                catch
+                {
+                    // swallow outer errors
+                }
+            });
         }
-
         private async Task JoinChatRoomAsync(int projeId)
         {
             if (_hub is null) return;
@@ -483,7 +553,9 @@ namespace LessArcApppp
                 var response = await _http.GetAsync("/api/Projeler/tum-projeler-detayli");
                 if (!response.IsSuccessStatusCode)
                 {
-                    await DisplayAlert("Hata", "Projeler alınamadı.", "Tamam");
+                    var raw = await response.Content.ReadAsStringAsync();
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                        DisplayAlert("Hata", $"Projeler alınamadı: {(int)response.StatusCode} {response.ReasonPhrase}\n{raw}", "Tamam"));
                     return;
                 }
 
@@ -500,6 +572,17 @@ namespace LessArcApppp
 
                     _mobilListe.Clear();
                     foreach (var p in tumProjeler) _mobilListe.Add(p);
+
+                    // Ensure picker bound (in case ctor didn't set)
+                    try
+                    {
+                        if (this.FindByName<Picker>("pickerProjeler") is Picker pk && pk.ItemsSource == null)
+                        {
+                            pk.ItemsSource = _mobilListe;
+                            try { pk.ItemDisplayBinding = new Binding("Baslik"); } catch { }
+                        }
+                    }
+                    catch { }
 
                     SafeSetLabelText("lblMobilSecimMetni", "🔽 Proje Seç");
                     EnsureMobileDetailsAlwaysVisible();
@@ -731,12 +814,13 @@ namespace LessArcApppp
                 var endpoint = $"/api/Projeler/{projeId}";
                 var payloadObj = BuildUpdatePayload(projeId, baslangic, bitis, durumUi);
 
-                var json = System.Text.Json.JsonSerializer.Serialize(
+                // <-- System.Text.Json yerine Newtonsoft.Json kullanıldı -->
+                var json = JsonConvert.SerializeObject(
                     payloadObj,
-                    new System.Text.Json.JsonSerializerOptions
+                    new JsonSerializerSettings
                     {
-                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
-                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                        NullValueHandling = NullValueHandling.Ignore
                     }
                 );
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -1003,12 +1087,14 @@ namespace LessArcApppp
                 yeniMetin = yeniMetin.Trim();
 
                 var body = new { YorumMetni = yeniMetin };
-                var json = System.Text.Json.JsonSerializer.Serialize(
+
+                // <-- System.Text.Json yerine Newtonsoft kullanıldı -->
+                var json = JsonConvert.SerializeObject(
                     body,
-                    new System.Text.Json.JsonSerializerOptions
+                    new JsonSerializerSettings
                     {
-                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
-                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                        NullValueHandling = NullValueHandling.Ignore
                     });
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
