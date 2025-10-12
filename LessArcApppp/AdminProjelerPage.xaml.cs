@@ -243,7 +243,7 @@ namespace LessArcApppp
             // mobil proje picker
             if (this.FindByName<Picker>("pickerProjeler") is Picker pk)
             {
-                pk.ItemsSource = _mobilListe;                 // ← EKLENDİ
+                pk.ItemsSource = _mobilListe; // mobil list bağlandı
                 pk.SelectedIndexChanged += pickerProjeler_SelectedIndexChanged;
             }
 
