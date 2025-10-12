@@ -257,6 +257,9 @@ namespace LessArcApppp
             InitSignalR();
 
             _ = ProjeleriGetir();
+
+            // --- iOS crash fix: masaüstü gridini tamamen kaldır ---
+            RemoveDesktopForIos();
         }
 
         private void OnSizeChanged(object? sender, EventArgs e) => RecomputeScale();
@@ -1254,7 +1257,9 @@ namespace LessArcApppp
         {
             try
             {
-                var key = (DeviceInfo.Platform == DevicePlatform.iOS) ? "IosYorumTemplate" : "OtherYorumTemplate";
+                var key = (DeviceInfo.Platform == DevicePlatform.iOS)
+                    ? "IosYorumTemplate"
+                    : "OtherYorumTemplate";   // doğru key
                 if (Resources != null && Resources.TryGetValue(key, out var obj) && obj is DataTemplate dt)
                 {
                     if (dt.CreateContent() is View view)
@@ -1268,6 +1273,27 @@ namespace LessArcApppp
             {
                 // XAML'de template veya host yoksa uygulamayı düşürme
             }
+        }
+
+        // ---------- iOS için masaüstü gridini kaldır ----------
+        private void RemoveDesktopForIos()
+        {
+            if (DeviceInfo.Platform != DevicePlatform.iOS) return;
+
+            try
+            {
+                if (this.FindByName<Grid>("MasaustuGrid") is Grid desktop)
+                {
+                    if (desktop.Parent is Layout layout)
+                        layout.Children.Remove(desktop);   // görsel ağaçtan tamamen çıkar
+                    else
+                        desktop.IsVisible = false;         // emniyet
+                }
+
+                if (this.FindByName<Grid>("MobilGrid") is Grid mobil)
+                    mobil.IsVisible = true;
+            }
+            catch { /* sessizce yut */ }
         }
     }
 }
