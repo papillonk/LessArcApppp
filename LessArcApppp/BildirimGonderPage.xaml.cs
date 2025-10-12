@@ -165,8 +165,6 @@ namespace LessArcApppp
         private readonly HttpClient _http;
 
         private ObservableCollection<Kullanici> adminKullanicilar = new();
-        private readonly ObservableCollection<Kullanici> _adminFiltre = new(); // popup’ta gösterilen
-
         private ObservableCollection<Bildirim> gonderilenBildirimler = new();
 
         public BildirimGonderPage(HttpClient httpClient, string kullaniciToken)
@@ -191,7 +189,6 @@ namespace LessArcApppp
             RecomputeScale();
 
             EnsureAdminListTemplates();
-            EnsureAdminPickTemplates(); // XAML’de ItemTemplate varsa dokunmaz
 
             _ = AdminleriYukle();
             _ = GonderilenBildirimleriYukle();
@@ -202,18 +199,51 @@ namespace LessArcApppp
             base.OnAppearing();
             RecomputeScale();
 
-            // Arama kutusuna canlı filtre bağla (XAML’de event yoksa da işler)
-            if (this.FindByName<Entry>("entryAdminAra") is Entry ara)
+            // Picker seçimi değişince etiketi güncelle
+            if (this.FindByName<Picker>("pickerAdmin") is Picker p)
             {
-                ara.TextChanged -= EntryAdminAra_TextChanged;
-                ara.TextChanged += EntryAdminAra_TextChanged;
+                p.SelectedIndexChanged -= PickerAdmin_SelectedIndexChanged;
+                p.SelectedIndexChanged += PickerAdmin_SelectedIndexChanged;
             }
 
             if (adminKullanicilar.Count == 0)
                 await AdminleriYukle();
+
+            UpdateSelectedAdminLabel();
         }
 
-        // Admin listesinde AdSoyad görünsün
+        private void PickerAdmin_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateSelectedAdminLabel();
+        }
+
+        private void UpdateSelectedAdminLabel()
+        {
+            try
+            {
+                var p = this.FindByName<Picker>("pickerAdmin");
+                var lbl = this.FindByName<Label>("lblSecilenAdminler");
+
+                if (p is null || lbl is null) return;
+
+                if (p.SelectedItem is Kullanici k && !string.IsNullOrWhiteSpace(k.AdSoyad))
+                {
+                    lbl.Text = k.AdSoyad;
+                    lbl.IsVisible = true;
+                }
+                else
+                {
+                    lbl.Text = string.Empty;
+                    lbl.IsVisible = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"UpdateSelectedAdminLabel hata: {ex}");
+            }
+        }
+
+        // Desktop admin listesinde AdSoyad görünsün
         private void EnsureAdminListTemplates()
         {
             if (lstAdminler == null) return;
@@ -239,50 +269,6 @@ namespace LessArcApppp
             });
         }
 
-        // XAML’de ItemTemplate tanımlıysa değiştirme; yoksa basit bir tane ver
-        private void EnsureAdminPickTemplates()
-        {
-            if (cvAdminSecim == null) return;
-            if (cvAdminSecim.ItemTemplate != null) return; // XAML tasarımını koru
-
-            cvAdminSecim.ItemTemplate = new DataTemplate(() =>
-            {
-                var frame = new Frame
-                {
-                    BackgroundColor = Color.FromArgb("#ecf0f1"),
-                    CornerRadius = 12,
-                    Padding = 10,
-                    Margin = new Thickness(4),
-                    HasShadow = false
-                };
-                var label = new Label
-                {
-                    FontSize = ScaledFontSize3,
-                    TextColor = Colors.Black
-                };
-                label.SetBinding(Label.TextProperty, "AdSoyad");
-                frame.Content = label;
-                return frame;
-            });
-        }
-
-        // 🚫 Null/yanlış tip korumalı + UI thread güvenli seçim komutu
-        public ICommand ToggleSelectionCommand => new Command<object>(item =>
-        {
-            if (item is not Kullanici admin) return;
-            if (cvAdminSecim?.SelectedItems is null) return;
-
-            void Toggle()
-            {
-                var list = cvAdminSecim!.SelectedItems;
-                if (list.Contains(admin)) list.Remove(admin);
-                else list.Add(admin);
-            }
-
-            if (Dispatcher.IsDispatchRequired) Dispatcher.Dispatch(Toggle);
-            else Toggle();
-        });
-
         private async Task AdminleriYukle()
         {
             try
@@ -296,11 +282,9 @@ namespace LessArcApppp
                     {
                         if (lstAdminler != null) lstAdminler.ItemsSource = adminKullanicilar;
 
-                        _adminFiltre.Clear();
-                        foreach (var a in adminKullanicilar) _adminFiltre.Add(a);
-
-                        if (cvAdminSecim != null)
-                            cvAdminSecim.ItemsSource = _adminFiltre;
+                        // Mobil Picker için
+                        if (this.FindByName<Picker>("pickerAdmin") is Picker p)
+                            p.ItemsSource = adminKullanicilar;
                     }
                     catch (Exception ex)
                     {
@@ -312,33 +296,6 @@ namespace LessArcApppp
             {
                 await DisplayAlert("Hata", $"Adminler yüklenemedi: {ex.Message}", "Tamam");
             }
-        }
-
-        // 🔎 Arama kutusu -> canlı filtre
-        private void EntryAdminAra_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            ApplyAdminFilter(e.NewTextValue);
-        }
-
-        private void ApplyAdminFilter(string? text)
-        {
-            string q = (text ?? string.Empty).Trim().ToLowerInvariant();
-
-            var src = string.IsNullOrEmpty(q)
-                ? adminKullanicilar
-                : new ObservableCollection<Kullanici>(
-                    adminKullanicilar.Where(a =>
-                        (a.AdSoyad ?? string.Empty).ToLowerInvariant().Contains(q)));
-
-            _adminFiltre.Clear();
-            foreach (var a in src) _adminFiltre.Add(a);
-        }
-
-        // “Temizle” butonu için
-        private void BtnAdminAraTemizle_Clicked(object sender, EventArgs e)
-        {
-            if (this.FindByName<Entry>("entryAdminAra") is Entry ara)
-                ara.Text = string.Empty;
         }
 
         private async void BtnGonder_Clicked(object sender, EventArgs e)
@@ -359,13 +316,16 @@ namespace LessArcApppp
                 }
                 else
                 {
-                    secilenAdminler = cvAdminSecim?.SelectedItems?.Cast<Kullanici>().ToList() ?? new List<Kullanici>();
+                    // 🔹 Mobil: tek seçim Picker
+                    var p = this.FindByName<Picker>("pickerAdmin");
+                    var tekAdmin = p?.SelectedItem as Kullanici;
+                    secilenAdminler = tekAdmin is null ? new List<Kullanici>() : new List<Kullanici> { tekAdmin };
                     mesaj = entryMesajMobile?.Text ?? string.Empty;
                 }
 
                 if (!secilenAdminler.Any())
                 {
-                    await DisplayAlert("Uyarı", "Lütfen en az bir admin seçin.", "Tamam");
+                    await DisplayAlert("Uyarı", "Lütfen bir admin seçin.", "Tamam");
                     return;
                 }
 
@@ -391,7 +351,7 @@ namespace LessArcApppp
                 {
                     if (entryMesajDesktop != null) entryMesajDesktop.Text = string.Empty;
                     if (entryMesajMobile != null) entryMesajMobile.Text = string.Empty;
-                    await DisplayAlert("Başarılı", "Bildirim(ler) gönderildi.", "Tamam");
+                    await DisplayAlert("Başarılı", "Bildirim gönderildi.", "Tamam");
                     await GonderilenBildirimleriYukle();
                 }
                 else
@@ -609,62 +569,10 @@ namespace LessArcApppp
         // XAML: SizeChanged="ContentPage_SizeChanged"
         private void ContentPage_SizeChanged(object sender, EventArgs e) => RecomputeScale();
 
-        private void BtnAdminSec_Clicked(object sender, EventArgs e)
-        {
-            if (this.FindByName<Entry>("entryAdminAra") is Entry ara)
-                ApplyAdminFilter(ara.Text);
-            else
-                ApplyAdminFilter(string.Empty);
-
-            if (frameAdminPopup != null) frameAdminPopup.IsVisible = true;
-        }
-
-        private void BtnAdminOnayla_Clicked(object sender, EventArgs e)
-        {
-            if (Dispatcher.IsDispatchRequired)
-            {
-                Dispatcher.Dispatch(() => BtnAdminOnayla_Clicked(sender, e));
-                return;
-            }
-
-            if (frameAdminPopup != null) frameAdminPopup.IsVisible = false;
-
-            var secilen = cvAdminSecim?.SelectedItems?.Cast<Kullanici>()
-                              .Select(x => x.AdSoyad).ToList() ?? new List<string>();
-
-            if (lblSecilenAdminler != null)
-            {
-                lblSecilenAdminler.Text = string.Join(", ", secilen);
-                lblSecilenAdminler.IsVisible = secilen.Any();
-            }
-        }
-
-        private void BtnAdminIptal_Clicked(object sender, EventArgs e)
-        {
-            if (frameAdminPopup != null) frameAdminPopup.IsVisible = false;
-            cvAdminSecim?.SelectedItems?.Clear();
-            if (lblSecilenAdminler != null)
-            {
-                lblSecilenAdminler.Text = "";
-                lblSecilenAdminler.IsVisible = false;
-            }
-
-            if (this.FindByName<Entry>("entryAdminAra") is Entry ara)
-                ara.Text = string.Empty;
-        }
-
-        private void AdminCheckBox_CheckedChanged(object sender, CheckedChangedEventArgs e)
-        {
-            if (sender is not CheckBox cb || cb.BindingContext is not Kullanici admin) return;
-            var list = cvAdminSecim?.SelectedItems; if (list is null) return;
-
-            void Apply()
-            {
-                bool contains = list.Cast<object>().Contains(admin);
-                if (e.Value && !contains) list.Add(admin);
-                else if (!e.Value && contains) list.Remove(admin);
-            }
-            if (Dispatcher.IsDispatchRequired) Dispatcher.Dispatch(Apply); else Apply();
-        }
+        // --------- ⚠️ KALDIRILAN ESKİ POPUP/ÇOKLU SEÇİM KODLARI ----------
+        // BtnAdminSec_Clicked / BtnAdminOnayla_Clicked / BtnAdminIptal_Clicked /
+        // EntryAdminAra_TextChanged / ApplyAdminFilter / AdminCheckBox_CheckedChanged /
+        // EnsureAdminPickTemplates / ToggleSelectionCommand
+        // Artık mobilde tek seçim Picker kullanılıyor.
     }
 }

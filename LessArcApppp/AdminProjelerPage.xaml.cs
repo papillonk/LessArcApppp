@@ -8,7 +8,6 @@ using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Storage;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -83,7 +82,8 @@ namespace LessArcApppp
         private void AdjustDesktopColumns(double widthDip)
         {
             if (DeviceInfo.Idiom != DeviceIdiom.Desktop) return;
-            var grid = this.FindByName<Grid>("DesktopTwoColGrid");
+
+            var grid = this.FindByName<Grid>("MasaustuGrid");
             if (grid == null || grid.ColumnDefinitions.Count < 2) return;
 
             (double left, double right) w = widthDip switch
@@ -166,7 +166,6 @@ namespace LessArcApppp
 
         private readonly HttpClient _http;
         private readonly string token;
-        private const string CloudFallbackBaseUrl = "https://lessarc.com.tr";
 
         private List<AdminProjeListDto> tumProjeler = new();
 
@@ -198,20 +197,6 @@ namespace LessArcApppp
             _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             token = kullaniciToken ?? string.Empty;
 
-            // --- ensure BaseAddress (fallback) ---
-            if (_http.BaseAddress is null)
-            {
-                try
-                {
-                    _http.BaseAddress = new Uri(CloudFallbackBaseUrl, UriKind.Absolute);
-                }
-                catch
-                {
-                    // ignore if fallback malformed; ProjeleriGetir will show error then
-                }
-            }
-
-            // Authorization header
             var auth = _http.DefaultRequestHeaders.Authorization;
             if (auth is null || auth.Scheme != "Bearer" || string.IsNullOrWhiteSpace(auth.Parameter))
             {
@@ -221,7 +206,6 @@ namespace LessArcApppp
 
             BindingContext = this;
 
-            // use named handler so we can unsubscribe later
             SizeChanged += OnSizeChanged;
             RecomputeScale();
 
@@ -239,7 +223,7 @@ namespace LessArcApppp
             if (this.FindByName<Entry>("entryAraDesktop") is Entry entryAra)
                 entryAra.TextChanged += entryAraDesktop_TextChanged;
 
-            // update buttons (use FindByName to be robust)
+            // update buttons
             if (this.FindByName<Button>("btnBilgileriGuncelleDesktop") is Button btnDesk)
                 btnDesk.Clicked += BtnBilgileriGuncelleDesktop_Clicked;
             if (this.FindByName<Button>("btnBilgileriGuncelleMobile") is Button btnMob)
@@ -252,23 +236,9 @@ namespace LessArcApppp
                 pdMob.SelectedIndexChanged += (_, __) =>
                     UpdateHeaderCheckVisibility(GetPickerDurumValue(pdMob), isMobile: true);
 
-            // mobil proje picker: ensure ItemsSource is bound to _mobilListe and display binding set
-            try
-            {
-                if (this.FindByName<Picker>("pickerProjeler") is Picker pk)
-                {
-                    // avoid duplicate event subscription by removing first (safe even if not previously attached)
-                    try { pk.SelectedIndexChanged -= pickerProjeler_SelectedIndexChanged; } catch { }
-                    pk.SelectedIndexChanged += pickerProjeler_SelectedIndexChanged;
-
-                    // Bind the ItemsSource to our observable collection (so updates reflect automatically)
-                    pk.ItemsSource = _mobilListe;
-
-                    // Ensure item text shows Baslik
-                    try { pk.ItemDisplayBinding = new Binding("Baslik"); } catch { }
-                }
-            }
-            catch { /* swallow - picker binding best-effort */ }
+            // mobil proje picker
+            if (this.FindByName<Picker>("pickerProjeler") is Picker pk)
+                pk.SelectedIndexChanged += pickerProjeler_SelectedIndexChanged;
 
             // yorum gönder butonları
             if (this.FindByName<Button>("BtnYorumGonderMobile") is Button btnYrmMob)
@@ -276,21 +246,12 @@ namespace LessArcApppp
             if (this.FindByName<Button>("BtnYorumGonderDesktop") is Button btnYrmDesk)
                 btnYrmDesk.Clicked += BtnYorumGonderDesktop_Clicked;
 
-            // DatePicker event handlers: attach for safety (XAML may also have them - avoid double-binding if you know XAML already binds)
-            if (this.FindByName<DatePicker>("dpBaslangicMobile") is DatePicker dpBasMob)
-                dpBasMob.DateSelected += DpBaslangicMobile_DateSelected;
-            if (this.FindByName<DatePicker>("dpBitisMobile") is DatePicker dpBitMob)
-                dpBitMob.DateSelected += DpBitisMobile_DateSelected;
-
             EnsureMobileDetailsAlwaysVisible();
-
             InitSignalR();
 
-            // initial load
             _ = ProjeleriGetir();
         }
 
-        // named size changed handler so we can unsubscribe
         private void OnSizeChanged(object? sender, EventArgs e) => RecomputeScale();
 
         protected override async void OnAppearing()
@@ -300,7 +261,6 @@ namespace LessArcApppp
             await EnsureIdentity();
             EnsureMobileDetailsAlwaysVisible();
 
-            // Start hub here (only once)
             if (_hub != null && _hub.State != HubConnectionState.Connected)
             {
                 try { await _hub.StartAsync(); } catch { }
@@ -311,7 +271,6 @@ namespace LessArcApppp
         {
             try
             {
-                // unsubscribe SizeChanged
                 SizeChanged -= OnSizeChanged;
 
                 if (_hub is { State: HubConnectionState.Connected })
@@ -341,16 +300,11 @@ namespace LessArcApppp
                 .WithAutomaticReconnect()
                 .Build();
 
-            // Ensure handlers call MainThread
             _hub.On<ProjeYorumDto>("message", msg => MainThread.BeginInvokeOnMainThread(() => AddIncomingMessage(msg)));
             _hub.On<ProjeYorumDto>("commentUpdated", msg => MainThread.BeginInvokeOnMainThread(() => ApplyUpdatedMessage(msg)));
             _hub.On<int>("commentDeleted", yorumId => MainThread.BeginInvokeOnMainThread(() => RemoveMessage(yorumId)));
-
-            // NOTE: Do NOT auto-start the hub here to avoid races with UI initialization.
-            // Start is handled in OnAppearing.
         }
 
-        // Replace existing AddIncomingMessage with this:
         private void AddIncomingMessage(ProjeYorumDto msg)
         {
             int? aktifId = (this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false) ? _aktifDesktopProjeId : _aktifMobilProjeId;
@@ -367,114 +321,80 @@ namespace LessArcApppp
             msg.IsEditable = (msg.KullaniciId == _myUserId);
             msg.IsDeletable = (msg.KullaniciId == _myUserId);
 
-            // Ensure UI-thread mutations
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 try
                 {
                     list.Add(msg);
 
-                    // Debounce / delay scroll to avoid racing with native layout invalidation
                     if (!_scrollPending)
                     {
                         _scrollPending = true;
-                        // Run delayed scroll on UI thread as well
                         MainThread.BeginInvokeOnMainThread(async () =>
                         {
                             try
                             {
-                                // biraz daha uzun bekleyip tekrar dene (iOS için daha güvenli)
-                                await Task.Delay(120);
+                                await Task.Delay(50);
                                 ScrollToBottom(view, list.Count);
                             }
                             catch { }
                             finally
                             {
-                                // kısa bir ekstra bekleme ile pending'i sıfırla
-                                await Task.Delay(40);
                                 _scrollPending = false;
                             }
                         });
                     }
                 }
-                catch
-                {
-                    // hata olursa sessiz geç (native crash'i önlemek için)
-                }
+                catch { }
             });
         }
 
-        // Replace existing ScrollToBottom with this:
-        private static void ScrollToBottom(CollectionView? cv, int count)
+        // >>> ScrollToBottom: iOS'ta tamamen kapatıldı (crash guard)
+        private void ScrollToBottom(CollectionView? cv, int count)
         {
-            // Fire-and-forget wrapper to avoid blocking caller; do safety checks inside.
             if (cv == null || count <= 0) return;
+            if (DeviceInfo.Platform == DevicePlatform.iOS) return; // iOS guard: otomatik kaydırmayı kapat
 
-            _ = Task.Run(async () =>
+            async Task TryScrollAsync()
             {
+                int attempts = 10;
+                while (attempts-- > 0 &&
+                       (cv.Handler == null || cv.Width <= 0 || cv.Height <= 0))
+                {
+                    await Task.Delay(50);
+                }
+                if (cv.Handler == null || cv.Width <= 0 || cv.Height <= 0) return;
+
                 try
                 {
-                    // small initial delay to let native layout settle
-                    await Task.Delay(80);
-
-                    int attempts = 6;
-                    while (attempts-- > 0)
-                    {
-                        // ensure UI thread checks/operations
-                        bool canScroll = false;
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            canScroll = (cv.Handler != null) && (cv.ItemsSource != null) && (count > 0);
-                        });
-
-                        if (!canScroll)
-                        {
-                            await Task.Delay(80);
-                            continue;
-                        }
-
-                        try
-                        {
-                            // final attempt on UI thread with try/catch
-                            await MainThread.InvokeOnMainThreadAsync(async () =>
-                            {
-                                try
-                                {
-                                    // ensure index in range
-                                    int idx = Math.Max(0, count - 1);
-                                    cv.ScrollTo(idx, position: ScrollToPosition.End, animate: true);
-                                }
-                                catch
-                                {
-                                    // fallback: try without animation after tiny delay
-                                    try
-                                    {
-                                        await Task.Delay(90);
-                                        int idx = Math.Max(0, count - 1);
-                                        cv.ScrollTo(idx, position: ScrollToPosition.End, animate: false);
-                                    }
-                                    catch
-                                    {
-                                        // swallow - native error may be transient
-                                    }
-                                }
-                            });
-
-                            // success -> break
-                            break;
-                        }
-                        catch
-                        {
-                            await Task.Delay(100);
-                        }
-                    }
+                    bool animate = true; // Android/Windows'ta animasyon serbest
+                    cv.ScrollTo(count - 1, position: ScrollToPosition.End, animate: animate);
                 }
                 catch
                 {
-                    // swallow outer errors
+                    try
+                    {
+                        await Task.Delay(80);
+                        cv.ScrollTo(count - 1, position: ScrollToPosition.End, animate: true);
+                    }
+                    catch { /* yut */ }
                 }
-            });
+            }
+
+            if (cv.Width <= 0 || cv.Height <= 0 || cv.Handler == null)
+            {
+                void Handler(object? s, EventArgs e)
+                {
+                    cv.SizeChanged -= Handler;
+                    MainThread.BeginInvokeOnMainThread(() => _ = TryScrollAsync());
+                }
+                cv.SizeChanged += Handler;
+                return;
+            }
+
+            MainThread.BeginInvokeOnMainThread(() => _ = TryScrollAsync());
         }
+
         private async Task JoinChatRoomAsync(int projeId)
         {
             if (_hub is null) return;
@@ -491,7 +411,6 @@ namespace LessArcApppp
             await _hub.InvokeAsync("JoinProject", projeId);
         }
 
-        // Tap on desktop project card (x:Name used in XAML)
         private void ProjeKart_Tapped(object sender, TappedEventArgs e)
         {
             var secilen = (sender as Element)?.BindingContext as AdminProjeListDto;
@@ -516,7 +435,6 @@ namespace LessArcApppp
             _ = JoinChatRoomAsync(secilen.Id);
         }
 
-        // Mobile picker selection
         private async void pickerProjeler_SelectedIndexChanged(object? sender, EventArgs e)
         {
             if (sender is not Picker p) return;
@@ -553,16 +471,13 @@ namespace LessArcApppp
                 var response = await _http.GetAsync("/api/Projeler/tum-projeler-detayli");
                 if (!response.IsSuccessStatusCode)
                 {
-                    var raw = await response.Content.ReadAsStringAsync();
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                        DisplayAlert("Hata", $"Projeler alınamadı: {(int)response.StatusCode} {response.ReasonPhrase}\n{raw}", "Tamam"));
+                    await DisplayAlert("Hata", "Projeler alınamadı.", "Tamam");
                     return;
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
                 var list = JsonConvert.DeserializeObject<List<AdminProjeListDto>>(json) ?? new();
 
-                // UI değişikliklerini main thread'e al
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     list.ForEach(p => p.Durum = MapApiDurumToUi(p.Durum));
@@ -572,17 +487,6 @@ namespace LessArcApppp
 
                     _mobilListe.Clear();
                     foreach (var p in tumProjeler) _mobilListe.Add(p);
-
-                    // Ensure picker bound (in case ctor didn't set)
-                    try
-                    {
-                        if (this.FindByName<Picker>("pickerProjeler") is Picker pk && pk.ItemsSource == null)
-                        {
-                            pk.ItemsSource = _mobilListe;
-                            try { pk.ItemDisplayBinding = new Binding("Baslik"); } catch { }
-                        }
-                    }
-                    catch { }
 
                     SafeSetLabelText("lblMobilSecimMetni", "🔽 Proje Seç");
                     EnsureMobileDetailsAlwaysVisible();
@@ -600,7 +504,6 @@ namespace LessArcApppp
         private void ApplyDesktopFilter(string query)
         {
             string q = Key(query ?? "");
-            // desktop list is bound to UI; ensure we are on MainThread
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 _desktopListe.Clear();
@@ -649,7 +552,6 @@ namespace LessArcApppp
                 var response = await _http.GetAsync($"/api/ProjeAdimlari/Proje/{projeId}");
                 if (!response.IsSuccessStatusCode)
                 {
-                    // UI update on main thread
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         hedefPanel.Children.Add(new Label { Text = "Adımlar getirilemedi.", TextColor = Colors.Red });
@@ -663,7 +565,6 @@ namespace LessArcApppp
 
                 double ort = adimlar.Count > 0 ? adimlar.Average(a => a.TamamlanmaYuzdesi) : 0;
 
-                // UI additions must be on main thread
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     SetGenelTamamLabel(isMobile, ort);
@@ -814,13 +715,12 @@ namespace LessArcApppp
                 var endpoint = $"/api/Projeler/{projeId}";
                 var payloadObj = BuildUpdatePayload(projeId, baslangic, bitis, durumUi);
 
-                // <-- System.Text.Json yerine Newtonsoft.Json kullanıldı -->
-                var json = JsonConvert.SerializeObject(
+                var json = System.Text.Json.JsonSerializer.Serialize(
                     payloadObj,
-                    new JsonSerializerSettings
+                    new System.Text.Json.JsonSerializerOptions
                     {
-                        ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                        NullValueHandling = NullValueHandling.Ignore
+                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
                     }
                 );
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -843,7 +743,6 @@ namespace LessArcApppp
                     item.Durum = MapApiDurumToUi(MapUiDurumToApi(durumUi));
                 }
 
-                // UI updates on main thread
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     RefreshDesktopList();
@@ -960,7 +859,6 @@ namespace LessArcApppp
 
         private void ApplyUpdatedMessage(ProjeYorumDto msg)
         {
-            // ReplaceInCollection mutasyonlarını UI threadte çalıştır
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 ReplaceInCollection(MobilYorumlar, msg);
@@ -1021,7 +919,6 @@ namespace LessArcApppp
             if (item != null) coll.Remove(item);
         }
 
-        // Send chat via hub
         private async Task SendChatAsync(int projeId, string text)
         {
             if (_hub is null || string.IsNullOrWhiteSpace(text)) return;
@@ -1059,7 +956,6 @@ namespace LessArcApppp
         private void BtnYorumGonderMobile_Clicked(object sender, EventArgs e) => _ = YorumGonderMobil();
         private void BtnYorumGonderDesktop_Clicked(object sender, EventArgs e) => _ = YorumGonderDesktop();
 
-        // Edit / Delete comment handlers
         private async void EditYorum_Clicked(object sender, EventArgs e)
         {
             try
@@ -1087,14 +983,12 @@ namespace LessArcApppp
                 yeniMetin = yeniMetin.Trim();
 
                 var body = new { YorumMetni = yeniMetin };
-
-                // <-- System.Text.Json yerine Newtonsoft kullanıldı -->
-                var json = JsonConvert.SerializeObject(
+                var json = System.Text.Json.JsonSerializer.Serialize(
                     body,
-                    new JsonSerializerSettings
+                    new System.Text.Json.JsonSerializerOptions
                     {
-                        ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                        NullValueHandling = NullValueHandling.Ignore
+                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
                     });
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -1285,9 +1179,7 @@ namespace LessArcApppp
             public string YorumMetni { get; set; } = string.Empty;
         }
 
-        // ===== Event handlers required by XAML (correct signatures) =====
-
-        // DateSelected event signature in MAUI: EventHandler<DateChangedEventArgs>
+        // ===== Event handlers required by XAML =====
         private async void DpBaslangicMobile_DateSelected(object sender, DateChangedEventArgs e)
         {
             if (this.FindByName<DatePicker>("dpBitisMobile") is DatePicker dpBit)
@@ -1302,6 +1194,7 @@ namespace LessArcApppp
 
         private async void DpBitisMobile_DateSelected(object sender, DateChangedEventArgs e)
         {
+            // >>> TYPO FIX: dpBaslangicaMobile -> dpBaslangicMobile
             if (this.FindByName<DatePicker>("dpBaslangicMobile") is DatePicker dpBas)
             {
                 if (e.NewDate < dpBas.Date)
