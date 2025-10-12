@@ -196,6 +196,7 @@ namespace LessArcApppp
         public AdminProjelerPage(HttpClient httpClient, string kullaniciToken)
         {
             InitializeComponent();
+            InjectMobilYorumView(); // iOS/Android yorum görünümü inject
 
             _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             token = kullaniciToken ?? string.Empty;
@@ -241,7 +242,10 @@ namespace LessArcApppp
 
             // mobil proje picker
             if (this.FindByName<Picker>("pickerProjeler") is Picker pk)
+            {
+                pk.ItemsSource = _mobilListe;                 // ← EKLENDİ
                 pk.SelectedIndexChanged += pickerProjeler_SelectedIndexChanged;
+            }
 
             // yorum gönder butonları
             if (this.FindByName<Button>("BtnYorumGonderMobile") is Button btnYrmMob)
@@ -485,7 +489,8 @@ namespace LessArcApppp
                 var response = await _http.GetAsync("/api/Projeler/tum-projeler-detayli");
                 if (!response.IsSuccessStatusCode)
                 {
-                    await DisplayAlert("Hata", "Projeler alınamadı.", "Tamam");
+                    var raw = await response.Content.ReadAsStringAsync();
+                    await DisplayAlert("Hata", $"Projeler alınamadı ({(int)response.StatusCode}).\n{raw}", "Tamam");
                     return;
                 }
 
@@ -1242,6 +1247,27 @@ namespace LessArcApppp
         {
             var lbl = this.FindByName<Label>(name);
             if (lbl != null) lbl.Text = text;
+        }
+
+        // ---------- iOS/Android yorum görünümü inject ----------
+        private void InjectMobilYorumView()
+        {
+            try
+            {
+                var key = (DeviceInfo.Platform == DevicePlatform.iOS) ? "IosYorumTemplate" : "OtherYorumTemplate";
+                if (Resources != null && Resources.TryGetValue(key, out var obj) && obj is DataTemplate dt)
+                {
+                    if (dt.CreateContent() is View view)
+                    {
+                        var host = this.FindByName<ContentView>("MobilYorumHost");
+                        if (host != null) host.Content = view;
+                    }
+                }
+            }
+            catch
+            {
+                // XAML'de template veya host yoksa uygulamayı düşürme
+            }
         }
     }
 }
