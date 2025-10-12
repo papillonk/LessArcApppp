@@ -177,19 +177,41 @@
                        VerticalOptions="Center"
                        ZIndex="5">
                     <VerticalStackLayout Spacing="16">
+                        <!-- Kullanıcı Adı -->
                         <Entry x:Name="txtKullaniciAdiMobile"
                                Placeholder="Kullanıcı Adı"
                                PlaceholderColor="#666"
                                BackgroundColor="White"
                                TextColor="Black"
                                HeightRequest="45" />
-                        <Entry x:Name="txtSifreMobile"
-                               Placeholder="Şifre"
-                               IsPassword="True"
-                               PlaceholderColor="#666"
-                               BackgroundColor="White"
-                               TextColor="Black"
-                               HeightRequest="45" />
+
+                        <!-- Şifre (ikonlu versiyon) -->
+                        <Frame BackgroundColor="White"
+                               CornerRadius="8"
+                               Padding="0"
+                               HasShadow="False">
+                            <Grid ColumnDefinitions="*,Auto" Padding="10,0">
+                                <Entry x:Name="txtSifreMobile"
+                                       Placeholder="Şifre"
+                                       IsPassword="True"
+                                       PlaceholderColor="#666"
+                                       BackgroundColor="Transparent"
+                                       TextColor="Black"
+                                       HeightRequest="45"
+                                       VerticalOptions="Center"/>
+                                <ImageButton x:Name="btnSifreGoster"
+                                             Grid.Column="1"
+                                             Source="eye_off.png"
+                                             BackgroundColor="Transparent"
+                                             Padding="0"
+                                             WidthRequest="28"
+                                             HeightRequest="28"
+                                             VerticalOptions="Center"
+                                             HorizontalOptions="End"
+                                             Clicked="BtnSifreGoster_Clicked"/>
+                            </Grid>
+                        </Frame>
+
                         <Grid ColumnDefinitions="Auto,*" Margin="2,-6,2,2">
                             <CheckBox x:Name="chkBeniHatirlaMobile"
                                       VerticalOptions="Center"

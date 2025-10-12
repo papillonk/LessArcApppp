@@ -154,72 +154,72 @@
                     </CollectionView>
                 </VerticalStackLayout>
             </ScrollView>
-
             <!-- ========== MOBİL ========== -->
-            <ScrollView x:Name="mobileLayout" IsVisible="False">
+            <ScrollView x:Name="mobileLayout" IsVisible="True">
                 <VerticalStackLayout Padding="{Binding P_Page}" Spacing="{Binding S_M}">
 
                     <Label Text="✔ TAMAMLANMIŞ PROJELER"
-                           FontSize="{Binding F_Title}" FontAttributes="Bold"
-                           TextColor="#D0CFCF" HorizontalOptions="Center" Margin="0,10" />
+                       FontSize="{Binding F_Title}" FontAttributes="Bold"
+                       TextColor="#D0CFCF" HorizontalOptions="Center" Margin="0,10" />
 
                     <!-- Arama -->
                     <Frame BackgroundColor="#F3F3F3"
-                           CornerRadius="{Binding C_SmallRadius}"
-                           Padding="0"
-                           HasShadow="False"
-                           HeightRequest="44">
+                       CornerRadius="{Binding C_SmallRadius}"
+                       Padding="0"
+                       HasShadow="False"
+                       HeightRequest="44">
                         <Entry x:Name="entryAraMobile"
-                               Placeholder="🔍 Proje ara"
-                               PlaceholderColor="#5C5C5C"
-                               TextChanged="entryAra_TextChanged"
-                               FontSize="{Binding F_Body}"
-                               TextColor="#1E1E1E"
-                               VerticalOptions="Center"
-                               HorizontalTextAlignment="Center"
-                               BackgroundColor="Transparent"
-                               Margin="12,0"/>
+                           Placeholder="🔍 Proje ara"
+                           PlaceholderColor="#5C5C5C"
+                           TextChanged="entryAra_TextChanged"
+                           FontSize="{Binding F_Body}"
+                           TextColor="#1E1E1E"
+                           VerticalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           BackgroundColor="Transparent"
+                           Margin="12,0"/>
                     </Frame>
 
-                    <!-- Yıl Filtresi -->
+                    <!-- Yıl Filtresi (Picker görünmez, Label gösterir) -->
                     <Grid ColumnDefinitions="Auto,*"
-                          ColumnSpacing="{Binding S_M}"
-                          HeightRequest="46"
-                          VerticalOptions="Center">
+                      ColumnSpacing="{Binding S_M}"
+                      HeightRequest="46"
+                      VerticalOptions="Center">
                         <Label Text="📅 Yıl Filtresi:" FontSize="{Binding F_Body}" TextColor="#1E1E1E" VerticalOptions="Center" />
                         <Frame Grid.Column="1"
-                               BackgroundColor="#EEEEEE"
-                               BorderColor="#D0CFCF"
-                               CornerRadius="{Binding C_SmallRadius}"
-                               Padding="8,0"
-                               HasShadow="False"
-                               HeightRequest="46">
+                           BackgroundColor="#EEEEEE"
+                           BorderColor="#D0CFCF"
+                           CornerRadius="{Binding C_SmallRadius}"
+                           Padding="8,0"
+                           HasShadow="False"
+                           HeightRequest="46">
                             <Grid>
+                                <!-- 👇 ItemsSource code-behind’da atanacak (string listesi) -->
                                 <Picker x:Name="pickerYilMobile"
-                                        Title=""
-                                        ItemDisplayBinding="{Binding .}"
-                                        TextColor="Transparent"
-                                        BackgroundColor="Transparent"
-                                        FontSize="{Binding F_Body}"
-                                        HorizontalOptions="Fill"
-                                        VerticalOptions="Fill"
-                                        Opacity="0.01"
-                                        SelectedIndexChanged="pickerYil_SelectedIndexChanged"/>
+                                    BackgroundColor="Transparent"
+                                    TextColor="Transparent"
+                                    FontSize="{Binding F_Body}"
+                                    HorizontalOptions="Fill"
+                                    VerticalOptions="Fill"
+                                    Opacity="0.02"
+                                    SelectedIndexChanged="pickerYil_SelectedIndexChanged"/>
                                 <Label HorizontalOptions="Fill"
-                                       HorizontalTextAlignment="Center"
-                                       VerticalOptions="Center"
-                                       TextColor="#1E1E1E"
-                                       FontSize="{Binding F_Body}"
-                                       InputTransparent="True"
-                                       ZIndex="10"
-                                       Text="{Binding Source={x:Reference pickerYilMobile}, Path=SelectedItem, StringFormat='{}{0}', TargetNullValue=Tüm Yıllar}" />
+                                   HorizontalTextAlignment="Center"
+                                   VerticalOptions="Center"
+                                   TextColor="#1E1E1E"
+                                   FontSize="{Binding F_Body}"
+                                   InputTransparent="True"
+                                   ZIndex="10"
+                                   Text="{Binding Source={x:Reference pickerYilMobile},
+                                                  Path=SelectedItem,
+                                                  TargetNullValue=Tüm Yıllar}" />
                             </Grid>
                         </Frame>
                     </Grid>
 
                     <!-- Proje Kartları (Mobil) -->
                     <CollectionView x:Name="cvProjelerMobile"
-                                    ItemsSource="{Binding FiltreliProjeler}">
+                                ItemsSource="{Binding FiltreliProjeler}">
                         <CollectionView.ItemsLayout>
                             <LinearItemsLayout Orientation="Vertical" ItemSpacing="{Binding S_L}" />
                         </CollectionView.ItemsLayout>
@@ -227,10 +227,10 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <Frame BackgroundColor="#ebe9e5"
-                                       CornerRadius="{Binding C_Radius}"
-                                       Padding="{Binding P_ItemPad}"
-                                       Margin="0"
-                                       HasShadow="True">
+                                   CornerRadius="{Binding C_Radius}"
+                                   Padding="{Binding P_ItemPad}"
+                                   Margin="0"
+                                   HasShadow="True">
                                     <VerticalStackLayout Spacing="{Binding S_S}">
                                         <Label Text="PROJE ADI :" FontAttributes="Bold" FontSize="{Binding F_Small}" TextColor="#555"/>
                                         <Label Text="{Binding Baslik}" FontSize="{Binding F_Body}" TextColor="#1E1E1E"/>
@@ -245,7 +245,7 @@
                                         <Label Text="BAŞLANGIÇ TARİHİ :" FontAttributes="Bold" FontSize="{Binding F_Small}" TextColor="#555"/>
                                         <Label Text="{Binding BaslangicTarihiFormatted}" FontSize="{Binding F_Body}" TextColor="#333"/>
 
-                                        <Label Text="BİTİŞ TARİHİ :" FontAttributes="Bold" FontSize="{Binding F_Small}" TextColor="#555" Margin="0,8,0,0"/>
+                                        <Label Text="BİTİŞ TARİHİ :" FontAttributes="Bold" FontSize="{Binding F_Small}" Margin="0,8,0,0" TextColor="#555"/>
                                         <Label Text="{Binding BitisTarihiFormatted}" FontSize="{Binding F_Body}" TextColor="#333"/>
 
                                         <Label Text="{Binding SureFormatted}" FontSize="{Binding F_Small}" TextColor="#4E4E4E" Margin="0,8,0,0"/>

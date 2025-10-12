@@ -11,9 +11,7 @@
 
     <Grid RowDefinitions="Auto,*">
         <!-- 🔹 ÜST BAR -->
-        <controls:CustomTitleBar 
-            Grid.Row="0"
-            ShowBack="True"/>
+        <controls:CustomTitleBar Grid.Row="0" ShowBack="True"/>
 
         <!-- 🔹 GÖVDE -->
         <Grid Grid.Row="1">
@@ -34,10 +32,15 @@
                            TextColor="#D6C9C1" />
 
                     <!-- Bugünkü bildirimler -->
-                    <CollectionView x:Name="lstBugunBildirimler" BackgroundColor="Transparent">
+                    <CollectionView x:Name="lstBugunBildirimler"
+                                    BackgroundColor="Transparent"
+                                    Margin="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}">
                         <CollectionView.ItemsLayout>
-                            <LinearItemsLayout Orientation="Vertical" />
+                            <!-- Kartlar arası dikey boşluk -->
+                            <LinearItemsLayout Orientation="Vertical"
+                                               ItemSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}" />
                         </CollectionView.ItemsLayout>
+
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <Frame BackgroundColor="#66000000"
@@ -58,6 +61,7 @@
                                                    FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}"
                                                    TextColor="White" />
                                         </VerticalStackLayout>
+
                                         <HorizontalStackLayout Grid.Column="1"
                                                                Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}"
                                                                VerticalOptions="Center">

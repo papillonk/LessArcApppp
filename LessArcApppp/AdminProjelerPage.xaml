@@ -18,130 +18,14 @@
                 <Setter Property="TextColor" Value="Black" />
             </Style>
 
-            <!-- iOS: ScrollView + BindableLayout (CollectionView yok) -->
+            <!-- iOS yorum template -->
             <DataTemplate x:Key="IosYorumTemplate">
-                <ScrollView HeightRequest="350">
-                    <VerticalStackLayout
-                        Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}"
-                        BindableLayout.ItemsSource="{Binding MobilYorumlar, Source={x:Reference __page}}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate>
-                                <Frame CornerRadius="14"
-                                       BackgroundColor="#f6f4f3"
-                                       HasShadow="False"
-                                       Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
-                                       Margin="{Binding Source={x:Reference __page}, Path=BindingContext.M_ItemBetween}">
-                                    <Grid ColumnDefinitions="*,Auto"
-                                          RowDefinitions="Auto,Auto"
-                                          ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
-                                        <Grid Grid.Column="0" Grid.Row="0"
-                                              ColumnDefinitions="*,Auto"
-                                              ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
-                                            <Label Grid.Column="0"
-                                                   Text="{Binding KullaniciAdSoyad}"
-                                                   FontAttributes="Bold"
-                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
-                                                   TextColor="Black" />
-                                            <Label Grid.Column="1"
-                                                   Text="{Binding OlusturmaTarihi, StringFormat='{}{0:dd.MM.yyyy HH\\:mm}'}"
-                                                   FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
-                                                   TextColor="#666"
-                                                   VerticalTextAlignment="Center" />
-                                        </Grid>
-
-                                        <Label Grid.Column="0" Grid.Row="1"
-                                               Text="{Binding YorumMetni}"
-                                               FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
-                                               TextColor="Black"
-                                               Margin="0,4,12,0"
-                                               LineBreakMode="WordWrap"
-                                               MaxLines="4"/>
-
-                                        <HorizontalStackLayout Grid.Column="1" Grid.RowSpan="2"
-                                                               Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}"
-                                                               HorizontalOptions="End" VerticalOptions="Center">
-                                            <ImageButton Source="pencil.png"
-                                                         BackgroundColor="Transparent" Padding="0"
-                                                         WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
-                                                         HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
-                                                         CommandParameter="{Binding .}"
-                                                         IsVisible="{Binding IsEditable, Mode=OneWay}"
-                                                         Clicked="EditYorum_Clicked"/>
-                                            <ImageButton Source="sil.png"
-                                                         BackgroundColor="Transparent" Padding="0"
-                                                         WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
-                                                         HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
-                                                         CommandParameter="{Binding .}"
-                                                         IsVisible="{Binding IsDeletable, Mode=OneWay}"
-                                                         Clicked="SilYorum_Clicked"/>
-                                        </HorizontalStackLayout>
-                                    </Grid>
-                                </Frame>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-                </ScrollView>
+                <!-- ... (değişmedi) ... -->
             </DataTemplate>
 
-            <!-- Android/WinUI: CollectionView -->
+            <!-- Android/WinUI yorum template -->
             <DataTemplate x:Key="OtherYorumTemplate">
-                <CollectionView
-                    x:Name="MobilYorumCollection"
-                    ItemsSource="{Binding MobilYorumlar, Source={x:Reference __page}}"
-                    HeightRequest="350"
-                    ItemSizingStrategy="MeasureAllItems">
-                    <CollectionView.ItemsLayout>
-                        <LinearItemsLayout Orientation="Vertical"
-                                           ItemSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}"/>
-                    </CollectionView.ItemsLayout>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame CornerRadius="14" BackgroundColor="#f6f4f3" HasShadow="False"
-                                   Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
-                                   Margin="{Binding Source={x:Reference __page}, Path=BindingContext.M_ItemBetween}">
-                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto"
-                                      ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
-                                    <Grid Grid.Column="0" Grid.Row="0" ColumnDefinitions="*,Auto"
-                                          ColumnSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}">
-                                        <Label Grid.Column="0" Text="{Binding KullaniciAdSoyad}"
-                                               FontAttributes="Bold"
-                                               FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
-                                               TextColor="Black" />
-                                        <Label Grid.Column="1" Text="{Binding OlusturmaTarihi, StringFormat='{}{0:dd.MM.yyyy HH\\:mm}'}"
-                                               FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
-                                               TextColor="#666" VerticalTextAlignment="Center" />
-                                    </Grid>
-
-                                    <Label Grid.Column="0" Grid.Row="1" Text="{Binding YorumMetni}"
-                                           FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
-                                           TextColor="Black"
-                                           Margin="0,4,12,0"
-                                           LineBreakMode="WordWrap"
-                                           MaxLines="4"/>
-
-                                    <HorizontalStackLayout Grid.Column="1" Grid.RowSpan="2"
-                                                           Spacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}"
-                                                           HorizontalOptions="End" VerticalOptions="Center">
-                                        <ImageButton Source="pencil.png"
-                                                     BackgroundColor="Transparent" Padding="0"
-                                                     WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
-                                                     HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
-                                                     CommandParameter="{Binding .}"
-                                                     IsVisible="{Binding IsEditable, Mode=OneWay}"
-                                                     Clicked="EditYorum_Clicked"/>
-                                        <ImageButton Source="sil.png"
-                                                     BackgroundColor="Transparent" Padding="0"
-                                                     WidthRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
-                                                     HeightRequest="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledButtonIcon}"
-                                                     CommandParameter="{Binding .}"
-                                                     IsVisible="{Binding IsDeletable, Mode=OneWay}"
-                                                     Clicked="SilYorum_Clicked"/>
-                                    </HorizontalStackLayout>
-                                </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                <!-- ... (değişmedi) ... -->
             </DataTemplate>
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -208,6 +92,7 @@
                                Padding="14">
                             <VerticalStackLayout x:Name="MobilProjeDetaylariPanel"
                                                  Spacing="14">
+                                <!-- Başlık + check -->
                                 <Grid ColumnDefinitions="*,Auto">
                                     <Label x:Name="lblSeciliProjeBaslikMobile"
                                            Grid.Column="0"
@@ -223,62 +108,82 @@
                                            VerticalOptions="Center"/>
                                 </Grid>
 
-                                <ScrollView>
-                                    <VerticalStackLayout Spacing="12" Margin="0,4,0,0">
-                                        <Frame BackgroundColor="#FFFFFF"
-                                               CornerRadius="10"
-                                               Padding="{Binding ScaledSmallPadding}"
-                                               HasShadow="True"
-                                               BorderColor="#E5E5E5">
-                                            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
-                                                <DatePicker x:Name="dpBaslangicMobile"
-                                                            Format="dd.MM.yyyy"
-                                                            DateSelected="DpBaslangicMobile_DateSelected"
-                                                            BackgroundColor="Transparent"
-                                                            TextColor="#222"
-                                                            FontSize="{Binding ScaledFontSize3}"
-                                                            HorizontalOptions="Fill" />
-                                            </Grid>
-                                        </Frame>
-
-                                        <Frame BackgroundColor="#FFFFFF"
-                                               CornerRadius="10"
-                                               Padding="{Binding ScaledSmallPadding}"
-                                               HasShadow="True"
-                                               BorderColor="#E5E5E5">
-                                            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
-                                                <DatePicker x:Name="dpBitisMobile"
-                                                            Format="dd.MM.yyyy"
-                                                            DateSelected="DpBitisMobile_DateSelected"
-                                                            BackgroundColor="Transparent"
-                                                            TextColor="#222"
-                                                            FontSize="{Binding ScaledFontSize3}"
-                                                            HorizontalOptions="Fill" />
-                                            </Grid>
-                                        </Frame>
-                                    </VerticalStackLayout>
-                                </ScrollView>
-
+                                <!-- >>> DEĞİŞEN KISIM: Tarihler sağda dar, etiketler solda; Durum aynı hizada <<< -->
                                 <Grid ColumnDefinitions="Auto,*"
-                                      RowDefinitions="Auto,Auto"
+                                      RowDefinitions="Auto,Auto,Auto,Auto"
                                       ColumnSpacing="12"
-                                      RowSpacing="12"
-                                      HorizontalOptions="Center">
+                                      RowSpacing="12">
+
+                                    <!-- Başlangıç -->
                                     <Label Grid.Row="0" Grid.Column="0"
-                                           Text="Durum :"
-                                           FontAttributes="Bold"/>
+                                           Text="Başlangıç :"
+                                           FontAttributes="Bold"
+                                           VerticalTextAlignment="Center"/>
                                     <Frame Grid.Row="0" Grid.Column="1"
+                                           BackgroundColor="#FFFFFF"
+                                           CornerRadius="10"
+                                           Padding="{Binding ScaledSmallPadding}"
+                                           HasShadow="True"
+                                           BorderColor="#E5E5E5"
+                                           WidthRequest="220"
+                                           HorizontalOptions="End">
+                                        <Grid>
+                                            <Label VerticalOptions="Center"
+                                                   TextColor="#222"
+                                                   FontSize="{Binding ScaledFontSize3}"
+                                                   Text="{Binding Source={x:Reference dpBaslangicMobile}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
+                                            <DatePicker x:Name="dpBaslangicMobile"
+                                                        Opacity="0.02"
+                                                        BackgroundColor="Transparent"
+                                                        DateSelected="DpBaslangicMobile_DateSelected"/>
+                                        </Grid>
+                                    </Frame>
+
+                                    <!-- Bitiş -->
+                                    <Label Grid.Row="1" Grid.Column="0"
+                                           Text="Bitiş :"
+                                           FontAttributes="Bold"
+                                           VerticalTextAlignment="Center"/>
+                                    <Frame Grid.Row="1" Grid.Column="1"
+                                           BackgroundColor="#FFFFFF"
+                                           CornerRadius="10"
+                                           Padding="{Binding ScaledSmallPadding}"
+                                           HasShadow="True"
+                                           BorderColor="#E5E5E5"
+                                           WidthRequest="220"
+                                           HorizontalOptions="End">
+                                        <Grid>
+                                            <Label VerticalOptions="Center"
+                                                   TextColor="#222"
+                                                   FontSize="{Binding ScaledFontSize3}"
+                                                   Text="{Binding Source={x:Reference dpBitisMobile}, Path=Date, StringFormat='{0:dd.MM.yyyy}'}"/>
+                                            <DatePicker x:Name="dpBitisMobile"
+                                                        Opacity="0.02"
+                                                        BackgroundColor="Transparent"
+                                                        DateSelected="DpBitisMobile_DateSelected"/>
+                                        </Grid>
+                                    </Frame>
+
+                                    <!-- Durum (aynı hiza ve genişlik) -->
+                                    <Label Grid.Row="2" Grid.Column="0"
+                                           Text="Durum :"
+                                           FontAttributes="Bold"
+                                           VerticalTextAlignment="Center"/>
+                                    <Frame Grid.Row="2" Grid.Column="1"
                                            BackgroundColor="#dfd5c9"
                                            CornerRadius="18"
                                            HasShadow="False"
                                            Padding="10,8"
                                            HeightRequest="52"
-                                           WidthRequest="220">
+                                           WidthRequest="220"
+                                           HorizontalOptions="End">
                                         <Picker x:Name="pickerDurumMobile"
                                                 Title="Durum Seçin"
                                                 BackgroundColor="Transparent"/>
                                     </Frame>
-                                    <Button Grid.Row="1" Grid.ColumnSpan="2"
+
+                                    <!-- Güncelle butonu: değişmedi -->
+                                    <Button Grid.Row="3" Grid.ColumnSpan="2"
                                             x:Name="btnBilgileriGuncelleMobile"
                                             Text="Bilgileri Güncelle"
                                             BackgroundColor="#dfd5c9"

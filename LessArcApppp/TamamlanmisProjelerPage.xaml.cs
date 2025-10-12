@@ -25,7 +25,6 @@ namespace LessArcApppp
         private readonly ObservableCollection<ProjeViewModel> filtreliProjeler = new();
         private readonly UiScale _ui = new();
 
-        // ==== CTOR ====
         public TamamlanmisProjelerPage(HttpClient httpClient, string kullaniciToken, string? baseUrlOverride = null)
         {
             InitializeComponent();
@@ -33,7 +32,7 @@ namespace LessArcApppp
             _token = kullaniciToken ?? string.Empty;
             _http = httpClient;
 
-            // BaseAddress kontrol
+            // BaseAddress
             if (_http.BaseAddress is null)
             {
                 var effectiveBase = string.IsNullOrWhiteSpace(baseUrlOverride)
@@ -42,7 +41,7 @@ namespace LessArcApppp
                 _http.BaseAddress = new Uri(effectiveBase, UriKind.Absolute);
             }
 
-            // Token kontrol
+            // Token
             var auth = _http.DefaultRequestHeaders.Authorization;
             if (auth is null || auth.Scheme != "Bearer" || string.IsNullOrWhiteSpace(auth.Parameter))
             {
@@ -50,32 +49,34 @@ namespace LessArcApppp
                     _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
             }
 
-            // BindingContext
+            // Ölçek BindingContext
             BindingContext = _ui;
-            cvProjeler.ItemsSource = filtreliProjeler;
-            cvProjelerMobile.ItemsSource = filtreliProjeler;
+
+            // ItemsSource atamaları (varsa)
+            if (cvProjelerMobile != null)
+                cvProjelerMobile.ItemsSource = filtreliProjeler;
+            if (cvProjeler != null)
+                cvProjeler.ItemsSource = filtreliProjeler;
 
             ApplyResponsiveSizing(isInitial: true);
 
             _ = ProjeleriYukleAsync();
         }
 
-        // ==== VIEWMODEL ====
+        // ===== VM =====
         private class ProjeViewModel
         {
             public int Id { get; set; }
             public string Baslik { get; set; } = "";
             public string? KullaniciAdSoyad { get; set; } = "-";
-
             public DateTime? BaslangicTarihi { get; set; }
             public DateTime? BitisTarihi { get; set; }
-
             public string BaslangicTarihiFormatted { get; set; } = "-";
             public string BitisTarihiFormatted { get; set; } = "-";
             public string SureFormatted { get; set; } = "-";
         }
 
-        // ==== UI SCALE ====
+        // ===== UI SCALE =====
         private sealed class UiScale : INotifyPropertyChanged
         {
             double fTitle = 26, fBody = 15, fSmall = 13;
@@ -113,7 +114,7 @@ namespace LessArcApppp
             }
         }
 
-        // ==== RESPONSIVE ====
+        // ===== RESPONSIVE =====
         private void ApplyResponsiveSizing(bool isInitial = false)
         {
             double w = this.Width > 0
@@ -124,9 +125,7 @@ namespace LessArcApppp
 
             if (isPhone)
             {
-                _ui.F_Title = 22;
-                _ui.F_Body = 15;
-                _ui.F_Small = 13;
+                _ui.F_Title = 22; _ui.F_Body = 15; _ui.F_Small = 13;
                 _ui.S_L = 16; _ui.S_M = 12; _ui.S_S = 8;
                 _ui.C_Radius = 18; _ui.C_SmallRadius = 12;
                 _ui.P_Page = new Thickness(16);
@@ -134,14 +133,12 @@ namespace LessArcApppp
                 _ui.P_ItemPad = new Thickness(14);
                 _ui.H_Button = 44;
 
-                mobileLayout.IsVisible = true;
-                desktopLayout.IsVisible = false;
+                if (mobileLayout != null) mobileLayout.IsVisible = true;
+                if (desktopLayout != null) desktopLayout.IsVisible = false;
             }
             else
             {
-                _ui.F_Title = 26;
-                _ui.F_Body = 15;
-                _ui.F_Small = 13;
+                _ui.F_Title = 26; _ui.F_Body = 15; _ui.F_Small = 13;
                 _ui.S_L = 20; _ui.S_M = 14; _ui.S_S = 10;
                 _ui.C_Radius = 20; _ui.C_SmallRadius = 12;
                 _ui.P_Page = new Thickness(20);
@@ -149,14 +146,14 @@ namespace LessArcApppp
                 _ui.P_ItemPad = new Thickness(16);
                 _ui.H_Button = 46;
 
-                mobileLayout.IsVisible = false;
-                desktopLayout.IsVisible = true;
+                if (mobileLayout != null) mobileLayout.IsVisible = false;
+                if (desktopLayout != null) desktopLayout.IsVisible = true;
             }
 
             if (isInitial) Filtrele();
         }
 
-        // ==== LOAD DATA ====
+        // ===== LOAD DATA =====
         private async Task ProjeleriYukleAsync()
         {
             try
@@ -199,15 +196,34 @@ namespace LessArcApppp
                 foreach (var item in tumProjeler)
                     filtreliProjeler.Add(item);
 
+                // ---- Yıl seçenekleri ----
                 int minYil = DateTime.Now.Year - 5;
                 int maxYil = DateTime.Now.Year + 5;
+
+                // (Opsiyonel) veri tabanından türet:
+                // if (tumProjeler.Any())
+                // {
+                //     var dataMin = new[] { tumProjeler.Min(p => p.BaslangicTarihi?.Year ?? int.MaxValue),
+                //                           tumProjeler.Min(p => p.BitisTarihi?.Year      ?? int.MaxValue) }.Min();
+                //     var dataMax = new[] { tumProjeler.Max(p => p.BaslangicTarihi?.Year ?? int.MinValue),
+                //                           tumProjeler.Max(p => p.BitisTarihi?.Year      ?? int.MinValue) }.Max();
+                //     minYil = Math.Min(minYil, dataMin);
+                //     maxYil = Math.Max(maxYil, dataMax);
+                // }
+
                 var yilSecenekleri = new List<string> { "Tüm Yıllar" };
                 yilSecenekleri.AddRange(Enumerable.Range(minYil, maxYil - minYil + 1).Select(y => y.ToString()));
 
-                pickerYil.ItemsSource = yilSecenekleri;
-                pickerYilMobile.ItemsSource = yilSecenekleri;
-                pickerYil.SelectedIndex = 0;
-                pickerYilMobile.SelectedIndex = 0;
+                if (pickerYil != null)
+                {
+                    pickerYil.ItemsSource = yilSecenekleri;
+                    pickerYil.SelectedIndex = 0;
+                }
+                if (pickerYilMobile != null)
+                {
+                    pickerYilMobile.ItemsSource = yilSecenekleri;
+                    pickerYilMobile.SelectedIndex = 0;
+                }
             }
             catch (Exception ex)
             {
@@ -235,7 +251,7 @@ namespace LessArcApppp
             return string.Join(", ", parcalar);
         }
 
-        // ==== EVENTLER ====
+        // ===== EVENTS =====
         private void entryAra_TextChanged(object sender, TextChangedEventArgs e) => Filtrele();
         private void entryAraMobile_TextChanged(object sender, TextChangedEventArgs e) => Filtrele();
         private void pickerYil_SelectedIndexChanged(object sender, EventArgs e) => Filtrele();
@@ -243,12 +259,12 @@ namespace LessArcApppp
 
         private void Filtrele()
         {
-            string kelime = (mobileLayout.IsVisible ? entryAraMobile?.Text : entryAra?.Text) ?? "";
+            string kelime = (mobileLayout?.IsVisible == true ? entryAraMobile?.Text : entryAra?.Text) ?? "";
             kelime = kelime.ToLowerInvariant();
 
-            string secilenYilStr = mobileLayout.IsVisible
-                ? pickerYilMobile.SelectedItem?.ToString()
-                : pickerYil.SelectedItem?.ToString();
+            string secilenYilStr = (mobileLayout?.IsVisible == true)
+                ? pickerYilMobile?.SelectedItem?.ToString()
+                : pickerYil?.SelectedItem?.ToString();
 
             var q = tumProjeler.Where(p =>
                 (p.Baslik?.ToLowerInvariant().Contains(kelime) ?? false) ||

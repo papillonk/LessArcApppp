@@ -16,6 +16,9 @@ namespace LessArcApppp
     {
         private readonly HttpClient _client;
 
+        // 👁️ Şifre göster/gizle durumu (MOBİL)
+        private bool sifreGorunur = false;
+
         // ====== ViewBox benzeri ölçekleme sabitleri ======
         const double DesignW = 1100;   // gridCanvas.WidthRequest
         const double DesignH = 650;    // gridCanvas.HeightRequest
@@ -121,6 +124,18 @@ namespace LessArcApppp
 
             if (this.FindByName<Frame>("loginCard") is Frame card)
                 card.WidthRequest = Math.Clamp(Width * 0.32, 420, 520);
+        }
+
+        // 👁️ MOBİL: Şifre göster/gizle butonu
+        // XAML: Clicked="BtnSifreGoster_Clicked"
+        private void BtnSifreGoster_Clicked(object sender, EventArgs e)
+        {
+            sifreGorunur = !sifreGorunur;
+            if (txtSifreMobile != null)
+                txtSifreMobile.IsPassword = !sifreGorunur;
+
+            if (btnSifreGoster != null)
+                btnSifreGoster.Source = sifreGorunur ? "eye.png" : "eye_off.png";
         }
 
         // ======================================================

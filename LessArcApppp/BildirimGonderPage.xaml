@@ -344,12 +344,14 @@
 
                 <!-- ======= Mobile: history popup (NULL SAFE) ======= -->
                 <Grid x:Name="frameGecmisMobile" IsVisible="False" ZIndex="99"
-                      BackgroundColor="#B3000000" VerticalOptions="FillAndExpand"
-                      HorizontalOptions="FillAndExpand" InputTransparent="False" Padding="0">
+      BackgroundColor="#B3000000" VerticalOptions="FillAndExpand"
+      HorizontalOptions="FillAndExpand" InputTransparent="False" Padding="0">
+
                     <Frame BackgroundColor="#f4f3ec" Padding="{Binding ScaledSmallPadding}"
-                           WidthRequest="{Binding ScaledDialogWidthMobile}"
-                           HeightRequest="{Binding ScaledDialogHeightMobile}"
-                           VerticalOptions="Center" HorizontalOptions="Center">
+           WidthRequest="{Binding ScaledDialogWidthMobile}"
+           HeightRequest="{Binding ScaledDialogHeightMobile}"
+           VerticalOptions="Center" HorizontalOptions="Center">
+
                         <Grid RowSpacing="{Binding ScaledSmallSpacing}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -357,6 +359,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
+                            <!-- Header -->
                             <Grid Grid.Row="0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -364,43 +367,60 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Label Text="📂 Geçmiş Bildirimler" FontAttributes="Bold"
-                                       FontSize="{Binding ScaledFontSize2}" TextColor="#2c3e50"
-                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                       FontSize="{Binding ScaledFontSize2}" TextColor="#2c3e50"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
                                 <Button Text="❌" BackgroundColor="Transparent" TextColor="#e74c3c"
-                                        FontSize="{Binding ScaledFontSize3}" Clicked="BtnGecmisGizle_Clicked"
-                                        WidthRequest="{Binding ScaledIconTouch}" HeightRequest="{Binding ScaledIconTouch}"
-                                        Padding="0" HorizontalOptions="End" Margin="0,0,2,0"
-                                        VerticalOptions="Center" Grid.Column="1" />
+                        FontSize="{Binding ScaledFontSize3}" Clicked="BtnGecmisGizle_Clicked"
+                        WidthRequest="{Binding ScaledIconTouch}" HeightRequest="{Binding ScaledIconTouch}"
+                        Padding="0" HorizontalOptions="End" Margin="0,0,2,0"
+                        VerticalOptions="Center" Grid.Column="1" />
                             </Grid>
 
+                            <!-- Filters -->
                             <HorizontalStackLayout Grid.Row="1" Spacing="{Binding ScaledSmallSpacing}">
-                                <DatePicker x:Name="datePickerTarihMobile" Format="dd MMM yyyy"
-                                            WidthRequest="{Binding ScaledDateWidthMobile}"
-                                            DateSelected="DatePickerTarih_DateSelected" />
+
+                                <!-- Tarih: beyaz chip + siyah yazı -->
+                                <Frame BackgroundColor="White" CornerRadius="14" HasShadow="False"
+                       Padding="{Binding ScaledSmallPadding}"
+                       WidthRequest="{Binding ScaledDateWidthMobile}">
+                                    <DatePicker x:Name="datePickerTarihMobile"
+                                Format="dd MMM yyyy"
+                                BackgroundColor="Transparent"
+                                TextColor="Black"
+                                DateSelected="DatePickerTarih_DateSelected" />
+                                </Frame>
+
                                 <Entry x:Name="entryAraMobile" Placeholder="Anahtar kelime"
-                                       PlaceholderColor="#9AA4B2"
-                                       WidthRequest="{Binding ScaledSearchWidthMobile}"
-                                       FontSize="{Binding ScaledFontSize4}"
-                                       TextChanged="EntryAra_TextChanged" />
+                       PlaceholderColor="#9AA4B2"
+                       TextColor="Black"
+                       BackgroundColor="White"
+                       HeightRequest="44"
+                       WidthRequest="{Binding ScaledSearchWidthMobile}"
+                       FontSize="{Binding ScaledFontSize4}"
+                       TextChanged="EntryAra_TextChanged" />
                             </HorizontalStackLayout>
 
+                            <!-- List -->
                             <CollectionView x:Name="lstGecmisPopupMobile" Grid.Row="2"
-                                            ItemSizingStrategy="MeasureAllItems"
-                                            ItemsSource="{Binding GecmisPopup, TargetNullValue={StaticResource EmptyList}}"
-                                            VerticalScrollBarVisibility="Always">
+                            ItemSizingStrategy="MeasureAllItems"
+                            ItemsSource="{Binding GecmisPopup, TargetNullValue={StaticResource EmptyList}}"
+                            VerticalScrollBarVisibility="Always">
                                 <CollectionView.ItemsLayout>
                                     <LinearItemsLayout Orientation="Vertical" />
                                 </CollectionView.ItemsLayout>
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate>
                                         <Frame Padding="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}"
-                                               Margin="5" BackgroundColor="#ecf0f1" CornerRadius="10">
+                               Margin="5" BackgroundColor="#ecf0f1" CornerRadius="10" HasShadow="False">
                                             <StackLayout Spacing="4">
+                                                <!-- Başlık: siyah -->
                                                 <Label Text="{Binding Mesaj}" FontAttributes="Bold"
-                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}" />
+                                       TextColor="Black"
+                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize3}" />
+                                                <!-- Tarih: siyah -->
                                                 <Label Text="{Binding GonderimTarihi, StringFormat='{0:dd MMMM yyyy HH:mm}'}"
-                                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}"
-                                                       TextColor="Gray" />
+                                       TextColor="Black"
+                                       FontSize="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledFontSize4}" />
                                             </StackLayout>
                                         </Frame>
                                     </DataTemplate>
@@ -409,6 +429,7 @@
                         </Grid>
                     </Frame>
                 </Grid>
+
 
             </Grid>
         </Grid>
