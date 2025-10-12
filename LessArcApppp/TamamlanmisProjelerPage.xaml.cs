@@ -25,7 +25,7 @@ namespace LessArcApppp
         private readonly ObservableCollection<ProjeViewModel> filtreliProjeler = new();
         private readonly UiScale _ui = new();
 
-        // 👇 Eklendi
+        // geri gelince yenilemek için
         private bool _firstAppearDone;
 
         public TamamlanmisProjelerPage(HttpClient httpClient, string kullaniciToken, string? baseUrlOverride = null)
@@ -180,13 +180,12 @@ namespace LessArcApppp
                                    "/api/Projeler/tum-projeler-detayli")
                                ?? new List<AdminProjeListDto>();
 
+                // 🔥 Yalnızca gerçekten tamamlandı olanlar
                 bool IsTamam(AdminProjeListDto p)
                 {
                     var durum = p?.Durum?.Trim().ToLowerInvariant() ?? "";
-                    bool durumTamam = durum.Contains("tamamlan");
-                    bool bitisGecmis = p?.BitisTarihi.HasValue == true &&
-                                       p.BitisTarihi!.Value.Date <= DateTime.Today;
-                    return durumTamam || bitisGecmis;
+                    // "tamamlan", "tamamlandı", "tamam" gibi varyasyonları kapsar
+                    return durum.Contains("tamamlan");
                 }
 
                 var tamamlanmislar = projeler

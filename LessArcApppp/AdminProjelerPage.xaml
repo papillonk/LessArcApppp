@@ -210,13 +210,14 @@
            FontSize="16"
            FontAttributes="Bold"/>
 
-                                <!-- Liste: masaüstü ile aynı yapı, edit/sil mevcut -->
+                                <!-- Liste: aralara boşluk verildi -->
                                 <CollectionView x:Name="MobilYorumCollection"
                     ItemsSource="{Binding MobilYorumlar}"
                     HeightRequest="420"
                     ItemSizingStrategy="MeasureAllItems">
                                     <CollectionView.ItemsLayout>
-                                        <LinearItemsLayout Orientation="Vertical"/>
+                                        <LinearItemsLayout Orientation="Vertical"
+                           ItemSpacing="12"/>
                                     </CollectionView.ItemsLayout>
                                     <CollectionView.ItemTemplate>
                                         <DataTemplate>
@@ -224,7 +225,7 @@
                  BackgroundColor="#f6f4f3"
                  HasShadow="False"
                  Padding="12"
-                 Margin="0,6"
+                 Margin="0,10"
                  MaximumHeightRequest="180">
                                                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto"
                   ColumnSpacing="8">
@@ -253,7 +254,7 @@
                      LineBreakMode="WordWrap"
                      MaxLines="4"/>
 
-                                                    <!-- Aksiyonlar: Düzenle / Sil -->
+                                                    <!-- Aksiyonlar -->
                                                     <HorizontalStackLayout Grid.Column="1" Grid.RowSpan="2"
                                      Spacing="8"
                                      HorizontalOptions="End"
@@ -310,6 +311,7 @@
                                 </Grid>
                             </VerticalStackLayout>
                         </Frame>
+
 
                     </VerticalStackLayout>
                 </ScrollView>
