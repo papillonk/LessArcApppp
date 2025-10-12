@@ -189,6 +189,9 @@ namespace LessArcApppp
         // debounce flag for ScrollTo
         private bool _scrollPending = false;
 
+        // Platform flag (iOS için BindableLayout kullanıyoruz)
+        private bool IsIos => DeviceInfo.Platform == DevicePlatform.iOS;
+
         // --- ctor ---
         public AdminProjelerPage(HttpClient httpClient, string kullaniciToken)
         {
@@ -312,6 +315,18 @@ namespace LessArcApppp
             if (msg.ProjeId != aktifProjeId) return;
 
             var list = (this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false) ? DesktopYorumlar : MobilYorumlar;
+
+            // iOS: sadece listeyi güncelle (BindableLayout); autoscroll yok (crash guard)
+            if (IsIos)
+            {
+                if (list.Any(x => x.Id == msg.Id)) return;
+                msg.IsEditable = (msg.KullaniciId == _myUserId);
+                msg.IsDeletable = (msg.KullaniciId == _myUserId);
+                list.Add(msg);
+                return;
+            }
+
+            // Android/WinUI: CollectionView ile devam
             var view = (this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false)
                 ? this.FindByName<CollectionView>("DesktopYorumCollection")
                 : this.FindByName<CollectionView>("MobilYorumCollection");
@@ -349,11 +364,11 @@ namespace LessArcApppp
             });
         }
 
-        // >>> ScrollToBottom: iOS'ta tamamen kapatıldı (crash guard)
+        // Android/Windows için ScrollTo (iOS'ta kapalı)
         private void ScrollToBottom(CollectionView? cv, int count)
         {
             if (cv == null || count <= 0) return;
-            if (DeviceInfo.Platform == DevicePlatform.iOS) return; // iOS guard: otomatik kaydırmayı kapat
+            if (IsIos) return; // iOS guard
 
             async Task TryScrollAsync()
             {
@@ -367,8 +382,7 @@ namespace LessArcApppp
 
                 try
                 {
-                    bool animate = true; // Android/Windows'ta animasyon serbest
-                    cv.ScrollTo(count - 1, position: ScrollToPosition.End, animate: animate);
+                    cv.ScrollTo(count - 1, position: ScrollToPosition.End, animate: true);
                 }
                 catch
                 {
@@ -827,8 +841,13 @@ namespace LessArcApppp
                     {
                         MobilYorumlar.Clear();
                         foreach (var y in sirali) MobilYorumlar.Add(y);
-                        var cv = this.FindByName<CollectionView>("MobilYorumCollection");
-                        ScrollToBottom(cv, MobilYorumlar.Count);
+
+                        // iOS: autoscroll yok (BindableLayout)
+                        if (!IsIos)
+                        {
+                            var cv = this.FindByName<CollectionView>("MobilYorumCollection");
+                            ScrollToBottom(cv, MobilYorumlar.Count);
+                        }
                     }
                     else
                     {
@@ -863,6 +882,12 @@ namespace LessArcApppp
             {
                 ReplaceInCollection(MobilYorumlar, msg);
                 ReplaceInCollection(DesktopYorumlar, msg);
+
+                if (IsIos)
+                {
+                    // iOS: sadece liste güncelle; autoscroll yok
+                    return;
+                }
 
                 var cv = this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false
                     ? this.FindByName<CollectionView>("DesktopYorumCollection")
@@ -903,6 +928,12 @@ namespace LessArcApppp
             {
                 RemoveFromCollection(MobilYorumlar, yorumId);
                 RemoveFromCollection(DesktopYorumlar, yorumId);
+
+                if (IsIos)
+                {
+                    // iOS: sadece liste güncelle; autoscroll yok
+                    return;
+                }
 
                 var cv = this.FindByName<Grid>("MasaustuGrid")?.IsVisible ?? false
                     ? this.FindByName<CollectionView>("DesktopYorumCollection")
@@ -1194,7 +1225,6 @@ namespace LessArcApppp
 
         private async void DpBitisMobile_DateSelected(object sender, DateChangedEventArgs e)
         {
-            // >>> TYPO FIX: dpBaslangicaMobile -> dpBaslangicMobile
             if (this.FindByName<DatePicker>("dpBaslangicMobile") is DatePicker dpBas)
             {
                 if (e.NewDate < dpBas.Date)
