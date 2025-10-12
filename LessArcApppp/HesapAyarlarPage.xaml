@@ -263,34 +263,102 @@
 
                     <!-- ALT: Kullanıcı ekle formu -->
                     <Frame BackgroundColor="#c4c1bb" CornerRadius="20" Padding="18">
-                        <VerticalStackLayout Spacing="12">
+                        <VerticalStackLayout Spacing="14">
                             <Label Text="KULLANICI EKLE"
-                                   FontAttributes="Bold"
-                                   FontSize="18"
-                                   HorizontalOptions="Center"
-                                   TextColor="#4b4d44"/>
+               FontAttributes="Bold"
+               FontSize="18"
+               HorizontalOptions="Center"
+               TextColor="#4b4d44"/>
 
-                            <Entry x:Name="entryAdMobile" Placeholder="Ad"/>
-                            <Entry x:Name="entrySoyadMobile" Placeholder="Soyad"/>
-                            <Entry x:Name="entryEpostaMobile" Placeholder="Eposta" Keyboard="Email"/>
-                            <Entry x:Name="entryKullaniciAdiMobile" Placeholder="Kullanıcı Adı"/>
-                            <Entry x:Name="entrySifreMobile" Placeholder="Şifre" IsPassword="True"/>
+                            <!-- Ad -->
+                            <Border Stroke="#BDBDBD" StrokeThickness="1"
+                Background="White" StrokeShape="RoundRectangle 12"
+                Padding="14,10">
+                                <Entry x:Name="entryAdMobile"
+                   Placeholder="Ad"
+                   FontSize="16"
+                   TextColor="#1E1E1E"
+                   BackgroundColor="Transparent"
+                   HeightRequest="52"/>
+                            </Border>
 
-                            <Picker x:Name="pickerRolMobile" Title="Rol Seçiniz">
-                                <Picker.Items>
-                                    <x:String>admin</x:String>
-                                    <x:String>calisan</x:String>
-                                </Picker.Items>
-                            </Picker>
+                            <!-- Soyad -->
+                            <Border Stroke="#BDBDBD" StrokeThickness="1"
+                Background="White" StrokeShape="RoundRectangle 12"
+                Padding="14,10">
+                                <Entry x:Name="entrySoyadMobile"
+                   Placeholder="Soyad"
+                   FontSize="16"
+                   TextColor="#1E1E1E"
+                   BackgroundColor="Transparent"
+                   HeightRequest="52"/>
+                            </Border>
+
+                            <!-- Eposta -->
+                            <Border Stroke="#BDBDBD" StrokeThickness="1"
+                Background="White" StrokeShape="RoundRectangle 12"
+                Padding="14,10">
+                                <Entry x:Name="entryEpostaMobile"
+                   Placeholder="Eposta"
+                   Keyboard="Email"
+                   FontSize="16"
+                   TextColor="#1E1E1E"
+                   BackgroundColor="Transparent"
+                   HeightRequest="52"/>
+                            </Border>
+
+                            <!-- Kullanıcı Adı -->
+                            <Border Stroke="#BDBDBD" StrokeThickness="1"
+                Background="White" StrokeShape="RoundRectangle 12"
+                Padding="14,10">
+                                <Entry x:Name="entryKullaniciAdiMobile"
+                   Placeholder="Kullanıcı Adı"
+                   FontSize="16"
+                   TextColor="#1E1E1E"
+                   BackgroundColor="Transparent"
+                   HeightRequest="52"/>
+                            </Border>
+
+                            <!-- Şifre -->
+                            <Border Stroke="#BDBDBD" StrokeThickness="1"
+                Background="White" StrokeShape="RoundRectangle 12"
+                Padding="14,10">
+                                <Entry x:Name="entrySifreMobile"
+                   Placeholder="Şifre"
+                   IsPassword="True"
+                   FontSize="16"
+                   TextColor="#1E1E1E"
+                   BackgroundColor="Transparent"
+                   HeightRequest="52"/>
+                            </Border>
+
+                            <!-- Rol -->
+                            <Border Stroke="#BDBDBD" StrokeThickness="1"
+                Background="White" StrokeShape="RoundRectangle 12"
+                Padding="8,0">
+                                <Picker x:Name="pickerRolMobile"
+                    Title="Rol Seçiniz"
+                    FontSize="16"
+                    TextColor="#1E1E1E"
+                    BackgroundColor="Transparent"
+                    HeightRequest="52">
+                                    <Picker.Items>
+                                        <x:String>admin</x:String>
+                                        <x:String>calisan</x:String>
+                                    </Picker.Items>
+                                </Picker>
+                            </Border>
 
                             <Button Text="KAYDET"
-                                    BackgroundColor="#8cb388"
-                                    TextColor="Black"
-                                    CornerRadius="18"
-                                    HeightRequest="44"
-                                    Clicked="BtnKaydet_Clicked"/>
+                BackgroundColor="#8cb388"
+                TextColor="Black"
+                CornerRadius="18"
+                HeightRequest="52"
+                FontSize="16"
+                Clicked="BtnKaydet_Clicked"/>
                         </VerticalStackLayout>
                     </Frame>
+
 
                 </VerticalStackLayout>
             </ScrollView>

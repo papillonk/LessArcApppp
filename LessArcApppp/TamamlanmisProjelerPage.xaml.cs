@@ -25,6 +25,9 @@ namespace LessArcApppp
         private readonly ObservableCollection<ProjeViewModel> filtreliProjeler = new();
         private readonly UiScale _ui = new();
 
+        // 👇 Eklendi
+        private bool _firstAppearDone;
+
         public TamamlanmisProjelerPage(HttpClient httpClient, string kullaniciToken, string? baseUrlOverride = null)
         {
             InitializeComponent();
@@ -61,6 +64,21 @@ namespace LessArcApppp
             ApplyResponsiveSizing(isInitial: true);
 
             _ = ProjeleriYukleAsync();
+        }
+
+        // ===== OnAppearing: geri gelince yenile =====
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            if (_firstAppearDone)
+                _ = RefreshTamamlanmisAsync();
+            _firstAppearDone = true;
+        }
+
+        private async Task RefreshTamamlanmisAsync()
+        {
+            await ProjeleriYukleAsync(); // API'den tazele
+            Filtrele();                  // aktif arama/yıl filtresi uygula
         }
 
         // ===== VM =====
@@ -199,17 +217,6 @@ namespace LessArcApppp
                 // ---- Yıl seçenekleri ----
                 int minYil = DateTime.Now.Year - 5;
                 int maxYil = DateTime.Now.Year + 5;
-
-                // (Opsiyonel) veri tabanından türet:
-                // if (tumProjeler.Any())
-                // {
-                //     var dataMin = new[] { tumProjeler.Min(p => p.BaslangicTarihi?.Year ?? int.MaxValue),
-                //                           tumProjeler.Min(p => p.BitisTarihi?.Year      ?? int.MaxValue) }.Min();
-                //     var dataMax = new[] { tumProjeler.Max(p => p.BaslangicTarihi?.Year ?? int.MinValue),
-                //                           tumProjeler.Max(p => p.BitisTarihi?.Year      ?? int.MinValue) }.Max();
-                //     minYil = Math.Min(minYil, dataMin);
-                //     maxYil = Math.Max(maxYil, dataMax);
-                // }
 
                 var yilSecenekleri = new List<string> { "Tüm Yıllar" };
                 yilSecenekleri.AddRange(Enumerable.Range(minYil, maxYil - minYil + 1).Select(y => y.ToString()));
