@@ -183,9 +183,13 @@
                                     </Grid>
                                 </Frame>
 
-                                <CollectionView x:Name="lstGecmisBildirimler" BackgroundColor="Transparent">
+                                <!-- GEÇMİŞ BİLDİRİMLER: Kartlar arası boşluk eklendi -->
+                                <CollectionView x:Name="lstGecmisBildirimler"
+                                                BackgroundColor="Transparent"
+                                                Margin="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallPadding}">
                                     <CollectionView.ItemsLayout>
-                                        <LinearItemsLayout Orientation="Vertical" />
+                                        <LinearItemsLayout Orientation="Vertical"
+                                                           ItemSpacing="{Binding Source={x:Reference __page}, Path=BindingContext.ScaledSmallSpacing}" />
                                     </CollectionView.ItemsLayout>
                                     <CollectionView.ItemTemplate>
                                         <DataTemplate>
